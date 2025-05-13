@@ -6,12 +6,13 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    if (Auth::check()) {
+        // If user is logged in, show dashboard or redirect
+        return redirect()->route('dashboard');
+    } else {
+        // If user is not logged in, show the login page
+        return Inertia::render('Auth/Login');
+    }
 });
 
 Route::get('/dashboard', function () {
