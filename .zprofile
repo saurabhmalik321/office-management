@@ -1,0 +1,2 @@
+export PATH="/opt/homebrew/opt/php@8.2/bin:$PATH"
+
