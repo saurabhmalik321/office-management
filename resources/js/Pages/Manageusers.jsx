@@ -40,7 +40,7 @@ export default function ManageUsers() {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    All users
+                    Manage All users
                 </h2>
             }
         >
