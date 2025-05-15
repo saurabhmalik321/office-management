@@ -12,4 +12,6 @@ interface UserInterface
     public function delete($id);
     public function userLeaves($userId);
     public function userSalary($userId);
+    public function sendNotification(array $data);
+    public function allEmployee();
 }

@@ -1,6 +1,7 @@
 <?php
 namespace App\Repositories;
 use App\Models\User;
+use App\Models\Notification;
 use App\Interface\UserInterface;
 
 class UserRepository implements UserInterface
@@ -49,5 +50,19 @@ class UserRepository implements UserInterface
 
         $salary = $user->salary;
         return response()->json($salary);
+    }
+     public function sendNotification(array $data)
+    {
+        $notification = Notification::create([
+            'hr_id' => auth()->id(),
+            'employee_id' => $data['employee_id'],
+            'title' => $data['title'],
+            'message' => $data['message'],
+        ]);
+        return $notification;
+    }
+    public function allEmployee()
+    {
+        return User::where('user_role', 'employee')->get();
     }
 }

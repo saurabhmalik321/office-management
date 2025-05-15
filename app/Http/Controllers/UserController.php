@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Services\SalaryService;
 use App\Services\LeaveService;
+use App\Models\Notification;
 
 class UserController extends Controller
 {
@@ -34,8 +35,8 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        //  $this->authorize('create', User::class);
-        return response()->json($this->userInterface->create($request->all()));
+         $this->authorize('create', User::class);
+         return response()->json($this->userInterface->create($request->all()));
     }
 
     public function show($id)
@@ -77,13 +78,8 @@ class UserController extends Controller
 
     public function storeSalary(Request $request)
     {
-        $data = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'amount' => 'required|numeric',
-        ]);
-
         $salary = $this->salaryService->create($data);
-        return response()->json($salary, 201);
+        return response()->json($salary, 200);
     }
 
     public function markSalaryAsPaid(Salary $salary)
@@ -126,4 +122,17 @@ class UserController extends Controller
             'authUserRole' => $userRole,
         ]);
     }
+
+    public function sendNotification(Request $request)
+    {
+        $this->authorize('notify', User::class);
+         return response()->json($this->userInterface->sendNotification($request->all()));
+    }
+    
+     public function onlyEmployee()
+    {
+          return response()->json($this->userInterface->allEmployee());
+    }
 }
+
+

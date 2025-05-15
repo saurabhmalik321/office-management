@@ -3,19 +3,32 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import AddUser from './Users/AddUser';
+import SendNotification from './Users/SendNotification'; // Make sure this exists
 
 export default function ManageUsers() {
     const [users, setUsers] = useState([]);
+    const [employee, setEmployee] = useState([]);
     const [showAddUserModal, setShowAddUserModal] = useState(false);
-
+    const [showNotificationModal, setShowNotificationModal] = useState(false);
+    console.log(employee,"employeesss");
     useEffect(() => {
         fetchUsers();
+        fetchEmlployee();
     }, []);
 
     const fetchUsers = () => {
         axios.get('/list')
             .then((response) => {
                 setUsers(response.data);
+            })
+            .catch((error) => {
+                console.error('Error fetching users:', error);
+            });
+    };
+     const fetchEmlployee = () => {
+        axios.get('/employee')
+            .then((response) => {
+                setEmployee(response.data);
             })
             .catch((error) => {
                 console.error('Error fetching users:', error);
@@ -40,14 +53,14 @@ export default function ManageUsers() {
 
     const handleUserAdded = (newUser) => {
         setUsers(prev => [...prev, newUser]);
-        setShowAddUserModal(false); // close modal after adding user
+        setShowAddUserModal(false);
     };
 
     return (
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Manage All users
+                    Manage All Users
                 </h2>
             }
         >
@@ -55,7 +68,14 @@ export default function ManageUsers() {
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                   <div className="mb-4 flex justify-end">
+                    {/* Buttons */}
+                    <div className="mb-4 flex justify-end space-x-2">
+                        <button
+                            onClick={() => setShowNotificationModal(true)}
+                            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                        >
+                            Send Notification
+                        </button>
                         <button
                             onClick={() => setShowAddUserModal(true)}
                             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -64,7 +84,7 @@ export default function ManageUsers() {
                         </button>
                     </div>
 
-                    {/* Modal */}
+                    {/* Add User Modal */}
                     {showAddUserModal && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                             <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
@@ -80,6 +100,26 @@ export default function ManageUsers() {
                         </div>
                     )}
 
+                    {/* Notification Modal */}
+                    {showNotificationModal && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                            <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
+                                <button
+                                    onClick={() => setShowNotificationModal(false)}
+                                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl font-bold"
+                                >
+                                    &times;
+                                </button>
+                                <h2 className="text-lg font-bold mb-4">Send Notification</h2>
+                                <SendNotification
+                                    onSent={() => setShowNotificationModal(false)}
+                                    employees={employee}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Users Table */}
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900">
                             <h3 className="mb-4 text-lg font-medium">Here is a list of current users:</h3>
@@ -93,7 +133,7 @@ export default function ManageUsers() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {users.map((user) => (
+                                    {users?.map((user) => (
                                         <tr key={user.id}>
                                             <td className="border px-4 py-2">{user.name}</td>
                                             <td className="border px-4 py-2">{user.email}</td>
@@ -101,13 +141,13 @@ export default function ManageUsers() {
                                             <td className="border px-4 py-2 space-x-2">
                                                 <button
                                                     onClick={() => handleEdit(user.id)}
-                                                    className="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700"
+                                                    className="inline-flex items-center rounded-md bg-gray-800 px-4 py-2 text-xs text-white hover:bg-gray-700"
                                                 >
                                                     Edit
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(user.id)}
-                                                    className="inline-flex items-center rounded-md border border-transparent bg-red-500 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-red-700"
+                                                    className="inline-flex items-center rounded-md bg-red-500 px-4 py-2 text-xs text-white hover:bg-red-700"
                                                 >
                                                     Delete
                                                 </button>

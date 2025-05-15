@@ -49,14 +49,17 @@ Route::get('/list', [UserController::class, 'index'])
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
 Route::group(['prefix' => 'admin'], function () {
-    // Route::post('/users', [UserController::class, 'store']);
+    Route::post('/users', [UserController::class, 'store'])->middleware(['auth']);
     Route::get('/users/{id}', [UserController::class, 'show']);
     Route::put('/users/{id}', [UserController::class, 'update']);
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
     Route::post('/user/leaves/{id}', [UserController::class, 'userLeaves']);
     Route::post('/user/salary/{id}', [UserController::class, 'userSalary']);
 });
-Route::post('/admin/users', [UserController::class, 'store'])->middleware(['auth']);
+Route::middleware(['auth'])->group(function () {
+    Route::post('/notifications', [UserController::class, 'sendNotification']);
+    Route::get('/employee', [UserController::class, 'onlyEmployee']);
+});
 
 Route::middleware('auth')->group(function () {
     // Salary

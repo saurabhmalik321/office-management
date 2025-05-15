@@ -28,7 +28,11 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+         return in_array($user->user_role, ['admin', 'hr']);
+    }
+     public function notify(User $user): bool
+    {
+         return in_array($user->user_role, ['hr']);
     }
 
     /**

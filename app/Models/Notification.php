@@ -1,0 +1,22 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Notification extends Model
+{
+    protected $fillable = [
+        'hr_id', 'employee_id', 'title', 'message',
+    ];
+
+    public function employee()
+    {
+        return $this->belongsTo(User::class, 'employee_id');
+    }
+
+    public function hr()
+    {
+        return $this->belongsTo(User::class, 'hr_id');
+    }
+}

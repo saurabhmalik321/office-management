@@ -36,12 +36,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     Manage users
                                 </NavLink>
-                                  {/* <NavLink
-                                    href={route('manageusers')}
-                                    active={route().current('manageusers')}
-                                >
-                                    Leave
-                                </NavLink> */}
                             </div>
                         </div>
  
