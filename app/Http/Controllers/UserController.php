@@ -34,6 +34,7 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        //  $this->authorize('create', User::class);
         return response()->json($this->userInterface->create($request->all()));
     }
 

@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
+import AddUser from './Users/AddUser';
 
 export default function ManageUsers() {
     const [users, setUsers] = useState([]);
+    const [showAddUserModal, setShowAddUserModal] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -36,6 +38,11 @@ export default function ManageUsers() {
         window.location.href = `/admin/users/${id}/edit`;
     };
 
+    const handleUserAdded = (newUser) => {
+        setUsers(prev => [...prev, newUser]);
+        setShowAddUserModal(false); // close modal after adding user
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -48,6 +55,31 @@ export default function ManageUsers() {
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                   <div className="mb-4 flex justify-end">
+                        <button
+                            onClick={() => setShowAddUserModal(true)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                        >
+                            Add User
+                        </button>
+                    </div>
+
+                    {/* Modal */}
+                    {showAddUserModal && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                            <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
+                                <button
+                                    onClick={() => setShowAddUserModal(false)}
+                                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl font-bold"
+                                >
+                                    &times;
+                                </button>
+                                <h2 className="text-lg font-bold mb-4">Add New User</h2>
+                                <AddUser onUserAdded={handleUserAdded} />
+                            </div>
+                        </div>
+                    )}
+
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900">
                             <h3 className="mb-4 text-lg font-medium">Here is a list of current users:</h3>
@@ -69,13 +101,13 @@ export default function ManageUsers() {
                                             <td className="border px-4 py-2 space-x-2">
                                                 <button
                                                     onClick={() => handleEdit(user.id)}
-                                                    className="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700"
+                                                    className="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700"
                                                 >
                                                     Edit
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(user.id)}
-                                                    className="inline-flex items-center rounded-md border border-transparent bg-red-500 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700"
+                                                    className="inline-flex items-center rounded-md border border-transparent bg-red-500 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-red-700"
                                                 >
                                                     Delete
                                                 </button>
