@@ -15,11 +15,17 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
-        //
+
         $middleware->alias([
-           'check.user.role' => \App\Http\Middleware\CheckUserRole::class,
-           ]);
+            'check.user.role' => \App\Http\Middleware\CheckUserRole::class,
+        ]);
     })
+    ->withProviders([
+        \App\Providers\AuthServiceProvider::class,
+        \App\Providers\AppServiceProvider::class,
+        // add more providers here if needed
+    ])
     ->withExceptions(function (Exceptions $exceptions) {
-        //
-    })->create();
+        // customize exceptions if needed
+    })
+    ->create();

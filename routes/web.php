@@ -1,15 +1,32 @@
 <?php
-
-use Illuminate\Support\Facades\Route;
+ 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-
+ 
 Route::get('/', function () {
-    return Auth::check() ? redirect()->route('dashboard') : Inertia::render('Auth/Login');
+    if (Auth::check()) {
+        // If user is logged in, show dashboard or redirect
+        return redirect()->route('dashboard');
+    } else {
+        // If user is not logged in, show the login page
+        return Inertia::render('Auth/Login');
+    }
 });
-
+ 
+Route::get('/admin', function () {
+    if (Auth::check()) {
+        // If user is logged in, show dashboard or redirect
+        return redirect()->route('dashboard');
+    } else {
+        // If user is not logged in, show the login page
+        return Inertia::render('Auth/AdminLogin');
+    }
+});
+ 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -26,9 +43,10 @@ Route::middleware(['auth', 'check.user.role:admin,hr'])->group(function () {
 
 });
 
-// Route::get('/list', [UserController::class, 'index'])
-//     ->name('user.list')
-//     ->middleware(['auth', 'check.user.role:admin,hr']);
+Route::get('/list', [UserController::class, 'index'])
+    ->name('user.list')
+    ->middleware(['auth', 'check.user.role:admin,hr']);
+    Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
 Route::group(['prefix' => 'admin'], function () {
     Route::post('/usersdata', [UserController::class, 'store']);
@@ -40,14 +58,24 @@ Route::group(['prefix' => 'admin'], function () {
 });
 
 Route::middleware('auth')->group(function () {
+    // Salary
+    Route::get('/salaries', [UserController::class, 'indexSalaries']);
+    Route::post('/salaries', [UserController::class, 'storeSalary']);
+    Route::post('/salaries/{salary}/paid', [UserController::class, 'markSalaryAsPaid']);
+
+    // Leave
+    Route::get('/leaves', [UserController::class, 'indexLeaves']);
+    Route::post('/leaves', [UserController::class, 'storeLeave']);
+    Route::patch('/leaves/{leave}/status', [UserController::class, 'updateLeaveStatus']);
+
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-
-// Keep this at the bottom and exclude admin/api
+// Route::middleware('auth')->group(function () {
 // Route::get('/{any}', function () {
 //     return \File::get(public_path('spa/index.html'));
-// })->where('any', '^(?!admin|api).*$');
-
+// })->where('any', '^(?!api).*$');
+ 
 require __DIR__.'/auth.php';

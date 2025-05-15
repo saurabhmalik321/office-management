@@ -13,6 +13,11 @@ return [
     |
     */
 
+    // // 'providers' => [
+    //      App\Providers\AuthServiceProvider::class,
+    //      App\Providers\AppServiceProvider::class,
+    // // ],
+
     'name' => env('APP_NAME', 'Laravel'),
 
     /*
@@ -122,8 +127,6 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
-    // 'providers' => [
-    //      App\Providers\AuthServiceProvider::class,
-    // ],
+    
 
 ];

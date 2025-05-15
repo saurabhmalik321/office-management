@@ -3,22 +3,27 @@ import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
-export default function Dashboard() {
+export default function Dashboard({ authUserRole }) {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        axios.get('/list')
-            .then(response => {
-                setUsers(response.data); 
-            })
-            .catch(error => {
-                console.error('Error fetching users:', error);
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    }, []);
+        if (authUserRole === 'admin' || authUserRole === 'hr') {
+            axios.get('/list')
+                .then(response => {
+                    setUsers(response.data);
+                })
+                .catch(error => {
+                    console.error('Error fetching users:', error);
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+        } else {
+            setLoading(false);
+        }
+    }, [authUserRole]);
+
     return (
         <AuthenticatedLayout
             header={
@@ -36,13 +41,17 @@ export default function Dashboard() {
                             {loading ? (
                                 <p>Loading users...</p>
                             ) : (
-                                <ul className="space-y-2">
-                                    {users.map(user => (
-                                        <li key={user.id} className="border-b py-2">
-                                            {user.name} - {user.email}
-                                        </li>
-                                    ))}
-                                </ul>
+                                authUserRole === 'admin' || authUserRole === 'hr' ? (
+                                    <ul className="space-y-2">
+                                        {users.map(user => (
+                                            <li key={user.id} className="border-b py-2">
+                                                {user.name} - {user.email}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-red-500">You are not authorized to view this list.</p>
+                                )
                             )}
                         </div>
                     </div>
