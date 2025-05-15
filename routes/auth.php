@@ -58,10 +58,7 @@ Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
 });
- Route::group(['prefix' => 'admin'], function () {
-    Route::get('/users', [UserController::class, 'index']);
-    Route::post('/usersdata', [UserController::class, 'store']);
-    Route::get('/users/id', [UserController::class, 'show']);
-    Route::put('/users/id', [UserController::class, 'update']);
-    Route::delete('/users/id', [UserController::class, 'destroy']);
-});
+
+
+
+

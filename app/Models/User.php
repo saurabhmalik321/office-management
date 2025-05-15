@@ -23,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'user_role',
     ];
 
     /**
@@ -57,3 +58,4 @@ class User extends Authenticatable
         return $this->hasOne(Salary::class);
     }
 }
+

@@ -10,5 +10,6 @@ interface UserInterface
     public function create(array $data);
     public function update($id, array $data);
     public function delete($id);
-
+    public function userLeaves($userId);
+    public function userSalary($userId);
 }

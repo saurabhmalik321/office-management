@@ -1,16 +1,17 @@
 <?php
-
+ 
 namespace App\Http\Controllers\Auth;
-
+ 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
-
+ 
 class AuthenticatedSessionController extends Controller
 {
     /**
@@ -23,30 +24,96 @@ class AuthenticatedSessionController extends Controller
             'status' => session('status'),
         ]);
     }
-
+ 
+     public function adminCreate(): Response
+    {
+        return Inertia::render('Auth/AdminLogin', [
+            'canResetPassword' => Route::has('password.request'),
+            'status' => session('status'),
+        ]);
+    }
+ 
     /**
      * Handle an incoming authentication request.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
-
-        $request->session()->regenerate();
-
-        return redirect()->intended(route('dashboard', absolute: false));
+        // $request->authenticate();
+ 
+        // $request->session()->regenerate();
+ 
+        // return redirect()->intended(route('dashboard', absolute: false));
+ 
+         $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+    
+        // Find user by email
+        $user = User::where('email', $credentials['email'])->first();
+        //  dd($user);
+        // Ensure the user exists and has the 'admin' role
+        if ($user==null || $user->user_role === 'admin') {
+            return redirect()->route('login')->withErrors([
+                'email' => 'Invalid credentials or unauthorized access.',
+            ]);
+        }
+    
+ 
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->intended(route('dashboard', absolute: false));
+        }
+    
+        return back()->withErrors(['email' => 'Invalid user credentials']);
     }
-
+ 
+    public function adminstore(LoginRequest $request): RedirectResponse
+    {
+        // $request->authenticate();
+ 
+        // $request->session()->regenerate();
+ 
+        // return redirect()->intended(route('dashboard', absolute: false));
+ 
+        ////////////////
+ 
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+    
+        // Find user by email
+        $user = User::where('email', $credentials['email'])->first();
+        //  dd($user);
+        // Ensure the user exists and has the 'admin' role
+        if ($user==null || $user->user_role === 'employee' || $user->user_role === "hr") {
+            return redirect()->route('admin.login')->withErrors([
+                'email' => 'Invalid credentials or unauthorized access.',
+            ]);
+        }
+    
+ 
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->intended(route('dashboard', absolute: false));
+        }
+    
+        return back()->withErrors(['email' => 'Invalid admin credentials']);
+ 
+    }
+ 
     /**
      * Destroy an authenticated session.
      */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
-
+ 
         $request->session()->invalidate();
-
+ 
         $request->session()->regenerateToken();
-
+ 
         return redirect('/');
     }
 }

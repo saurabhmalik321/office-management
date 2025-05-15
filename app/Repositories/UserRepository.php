@@ -9,7 +9,6 @@ class UserRepository implements UserInterface
     {
         return User::all();
     }
-
     public function find($id)
     {
         return User::findOrFail($id);
@@ -39,5 +38,16 @@ class UserRepository implements UserInterface
         }
         $leaves = $user->leaves;
         return response()->json($leaves);
+    }
+    public function userSalary($userId)
+    {
+        $user = User::find($userId);
+        
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $salary = $user->salary;
+        return response()->json($salary);
     }
 }
