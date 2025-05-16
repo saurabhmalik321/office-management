@@ -1,0 +1,13 @@
+name: office-management
+recipe: laravel
+config:
+  webroot: public
+  php: 8.3
+
+services:
+  phpmyadmin:
+    type: phpmyadmin
+    port: 8081 
+
+
+

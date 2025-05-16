@@ -16,21 +16,54 @@ export default function AddUser({ onUserAdded }) {
     };
 
     const handleSubmit = (e) => {
-        e.preventDefault();
-        setErrors({});
-        axios.post('/admin/users', form)
-            .then(response => {
-                onUserAdded(response.data);
-                setForm({ name: '', email: '', user_role: '', password: '' });
-            })
-            .catch(error => {
-                if (error.response?.data?.errors) {
-                    setErrors(error.response.data.errors);
-                } else {
-                    console.error('Error adding user:', error);
-                }
-            });
-    };
+    e.preventDefault();
+    const newErrors = {};
+
+    // 1. Client-side validation
+    if (!form.email.trim()) {
+        newErrors.email = ['Email is required'];
+    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+        newErrors.email = ['Invalid email format'];
+    }
+
+    if (!form.name.trim()) {
+        newErrors.name = ['Name is required'];
+    }
+
+    if (!form.password.trim()) {
+        newErrors.password = ['Password is required'];
+    } else if (form.password.length < 6) {
+        newErrors.password = ['Password must be at least 6 characters'];
+    }
+
+    if (!form.user_role) {
+        newErrors.user_role = ['Role is required'];
+    }
+
+    // Stop if client-side validation failed
+    if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return;
+    }
+
+    // 2. Send request to server
+    setErrors({}); // Clear previous errors
+    axios.post('/admin/users', form)
+        .then(response => {
+            onUserAdded(response.data);
+            setForm({ name: '', email: '', user_role: '', password: '' });
+        })
+        .catch(error => {
+            if (error.response?.status === 422 && error.response.data.errors) {
+                setErrors(error.response.data.errors); // Laravel validation errors
+            } else if (error.response?.status === 409) {
+                setErrors({ email: ['Email is already in use'] });
+            } else {
+                console.error('Unexpected error:', error);
+            }
+        });
+};
+
 
     return (
         <form onSubmit={handleSubmit} className="mb-6">
