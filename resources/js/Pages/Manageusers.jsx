@@ -21,6 +21,7 @@ export default function ManageUsers() {
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
+    const [sinleuser, setSingleUser] = useState(null);
 
   const [notification, setNotification] = useState({
     open: false,
@@ -47,6 +48,14 @@ export default function ManageUsers() {
       .catch((error) => {
         console.error('Error fetching users:', error);
         showNotification('error', 'Failed to load users.');
+      });
+  };
+   const fetchSingleUser = (id) => {
+    axios.get(`/admin/users/${id}`)
+      .then((response) => setSingleUser(response.data))
+      .catch((error) => {
+        console.error('Error fetching users:', error);
+        showNotification('error', 'Failed to load user.');
       });
   };
 
@@ -110,7 +119,7 @@ export default function ManageUsers() {
       renderCell: (params) => (
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, width: '100%' }}>
           <IconButton size="small" aria-label="view">
-            <VisibilityIcon />
+            <VisibilityIcon onClick={() => fetchSingleUser(params.row.id)} color="primary" size="small"/>
           </IconButton>
           <IconButton onClick={() => handleEdit(params.row.id)} color="primary" size="small">
             <EditIcon />

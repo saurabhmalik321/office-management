@@ -7,6 +7,7 @@ export default function AddUser({ onUserAdded }) {
         email: '',
         user_role: '',
         password: '',
+        salary:''
     });
 
     const [errors, setErrors] = useState({});
@@ -29,7 +30,9 @@ export default function AddUser({ onUserAdded }) {
     if (!form.name.trim()) {
         newErrors.name = ['Name is required'];
     }
-
+    if (!form.salary) {
+        newErrors.salary = ['Salary is required'];
+    }
     if (!form.password.trim()) {
         newErrors.password = ['Password is required'];
     } else if (form.password.length < 6) {
@@ -51,7 +54,7 @@ export default function AddUser({ onUserAdded }) {
     axios.post('/admin/users', form)
         .then(response => {
             onUserAdded(response.data);
-            setForm({ name: '', email: '', user_role: '', password: '' });
+            setForm({ name: '', email: '', user_role: '', password: '',salary:'' });
         })
         .catch(error => {
             if (error.response?.status === 422 && error.response.data.errors) {
@@ -101,6 +104,17 @@ export default function AddUser({ onUserAdded }) {
                     className="w-full border px-3 py-2"
                 />
                 {errors.password && <div className="text-red-500 text-sm">{errors.password[0]}</div>}
+            </div>
+            <div className="mb-2">
+                <label className="block font-medium">Salary</label>
+                <input
+                    type="number"
+                    name="salary"
+                    value={form.salary}
+                    onChange={handleChange}
+                    className="w-full border px-3 py-2"
+                />
+                {errors.salary && <div className="text-red-500 text-sm">{errors.salary[0]}</div>}
             </div>
 
             <div className="mb-4">

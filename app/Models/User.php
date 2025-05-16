@@ -8,6 +8,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Leave;
+use App\Models\Salary;
 
 class User extends Authenticatable
 {
@@ -50,12 +52,12 @@ class User extends Authenticatable
     }
     public function leaves()
     {
-        return $this->hasMany(Leave::class);
+        return $this->hasMany(Leave::class,'user_id');
     }
 
     public function salary()
     {
-        return $this->hasOne(Salary::class);
+        return $this->hasOne(Salary::class,'user_id');
     }
 }
 

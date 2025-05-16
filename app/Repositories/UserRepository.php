@@ -17,7 +17,14 @@ class UserRepository implements UserInterface
 
     public function create(array $data)
     {
-        return User::create($data);
+         $user = new User();
+         $user->name = $data['name'];
+         $user->email = $data['email'];
+         $user->user_role = $data['user_role'];
+         $user->password = $data['password'];
+         $user->salary = $data['salary'];
+         $user->save();
+        return $user;
     }
 
     public function update($id, array $data)
@@ -73,6 +80,12 @@ class UserRepository implements UserInterface
      }
     public function getUser($id)
     {
-         return $notifications = User::where('id',$id)->first();
+        $user = User::with(['leaves', 'salary'])->find($id)->toArray();
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        return response()->json($user);
     }
 }
