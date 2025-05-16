@@ -16,6 +16,10 @@ class Leave extends Model
         'reason',
         'status',
     ];
+    protected $casts = [
+    'start_date' => 'date',
+    'end_date' => 'date',
+  ];
     // Relation to User model
     public function user()
     {

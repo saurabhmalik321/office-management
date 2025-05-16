@@ -81,7 +81,7 @@ Route::middleware('auth')->group(function () {
     // Leave
     Route::get('/leaves', [UserController::class, 'indexLeaves']);
     Route::post('/leaves', [UserController::class, 'storeLeave']);
-    Route::patch('/leaves/{leave}/status', [UserController::class, 'updateLeaveStatus']);
+    Route::post('/leave-request/{id}', [UserController::class, 'updateLeaveStatus']);
 
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

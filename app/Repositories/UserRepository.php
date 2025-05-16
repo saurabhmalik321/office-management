@@ -71,4 +71,8 @@ class UserRepository implements UserInterface
             ->orderBy('created_at', 'desc')
             ->get();
      }
+    public function getUser($id)
+    {
+         return $notifications = User::where('id',$id)->first();
+    }
 }

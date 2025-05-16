@@ -99,29 +99,19 @@ class UserController extends Controller
     // leave
     public function indexLeaves()
     {
-        $leaves = $this->leaveService->getUserLeaves(Auth::user());
+        $leaves = $this->leaveService->getUserLeaves();
         return response()->json($leaves);
     }
 
     public function storeLeave(Request $request)
     {
-        $data = $request->validate([
-            'type' => 'required|string',
-            'reason' => 'required|string',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-        ]);
-
-        $data['user_id'] = Auth::id();
-        $leave = $this->leaveService->applyLeave($data);
-
+        $leave = $this->leaveService->applyLeave($request->all());
         return response()->json($leave, 201);
     }
 
-    public function updateLeaveStatus(Request $request, Leave $leave)
+    public function updateLeaveStatus(Request $request, $id)
     {
-        $status = $request->validate(['status' => 'required|in:pending,approved,rejected']);
-        return response()->json($this->leaveService->updateStatus($leave, $status['status']));
+        return response()->json($this->leaveService->updateStatus($request->all(), $id));
     }
     public function dashboard()
     {
@@ -153,6 +143,10 @@ class UserController extends Controller
      public function getNotification($id)
     {
           return response()->json($this->userInterface->getNotification($id));
+    }
+     public function getUser($id)
+    {
+          return response()->json($this->userInterface->getUser($id));
     }
 }
 
