@@ -19,7 +19,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const [hasUnread, setHasUnread] = useState(false);
     const toggleNotifications = () => {
         setShowNotifications(!showNotifications);
-        setHasUnread(false); 
+        setHasUnread(false);
     };
 
     useEffect(() => {
@@ -35,7 +35,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 });
         }
     }, [user?.id]);
-     
+
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -55,6 +55,25 @@ export default function AuthenticatedLayout({ header, children }) {
                                 <NavLink href={route('manageusers')} active={route().current('manageusers')}>
                                     Manage Users
                                 </NavLink>
+                                 <NavLink
+                                    href={route('managesalaries')}
+                                    active={route().current('managesalaries')}
+                                >
+                                    Manage salaries
+                                </NavLink>
+                                <NavLink
+                                    href={route('manageleaves')}
+                                    active={route().current('manageleaves')}
+                                >
+                                    Manage leaves
+                                </NavLink>
+
+                                  {/* <NavLink
+                                    href={route('manageusers')}
+                                    active={route().current('manageusers')}
+                                >
+                                    Leave
+                                </NavLink> */}
                             </div>
                         </div>
 

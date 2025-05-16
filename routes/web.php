@@ -1,12 +1,12 @@
 <?php
- 
+
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
- 
+
 Route::get('/', function () {
     if (Auth::check()) {
         // If user is logged in, show dashboard or redirect
@@ -16,7 +16,7 @@ Route::get('/', function () {
         return Inertia::render('Auth/Login');
     }
 });
- 
+
 Route::get('/admin', function () {
     if (Auth::check()) {
         // If user is logged in, show dashboard or redirect
@@ -26,7 +26,7 @@ Route::get('/admin', function () {
         return Inertia::render('Auth/AdminLogin');
     }
 });
- 
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -34,7 +34,17 @@ Route::get('/dashboard', function () {
 Route::get('/manageusers', function () {
     return Inertia::render('Manageusers');
 })->middleware(['auth', 'verified'])->name('manageusers');
- 
+
+Route::get('/manageleaves', function () {
+    return Inertia::render('ManageLeaves');
+})->middleware(['auth', 'verified'])->name('manageleaves');
+
+Route::get('/managesalaries', function () {
+    return Inertia::render('ManageSalaries');
+})->middleware(['auth', 'verified'])->name('managesalaries');
+
+
+
 Route::middleware(['auth', 'check.user.role:admin,hr'])->group(function () {
     Route::get('/list', [UserController::class, 'index'])->name('user.list');
     Route::delete('/admin/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
@@ -82,5 +92,5 @@ Route::middleware('auth')->group(function () {
 // Route::get('/{any}', function () {
 //     return \File::get(public_path('spa/index.html'));
 // })->where('any', '^(?!api).*$');
- 
+
 require __DIR__.'/auth.php';
