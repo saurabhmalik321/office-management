@@ -116,22 +116,34 @@ class UserController extends Controller
     }
     public function dashboard()
     {
-        $userRole = Auth::user()->user_role;
+          $user = Auth::user();
+    
+    $notifications = Notification::where('hr_id', $user->id)
+                        ->orderBy('created_at', 'desc')
+                        ->get(['id', 'title', 'message', 'created_at']);
 
-        return Inertia::render('Dashboard', [
-            'authUserRole' => $userRole,
-        ]);
+    return Inertia::render('Dashboard', [
+        'authUserRole' => $user->user_role,
+        'auth' => [
+            'user' => $user,
+        ],
+        'notifications' => $notifications,
+    ]);
     }
 
     public function sendNotification(Request $request)
     {
         $this->authorize('notify', User::class);
-         return response()->json($this->userInterface->sendNotification($request->all()));
+        return response()->json($this->userInterface->sendNotification($request->all()));
     }
     
      public function onlyEmployee()
     {
           return response()->json($this->userInterface->allEmployee());
+    }
+     public function getNotification($id)
+    {
+          return response()->json($this->userInterface->getNotification($id));
     }
 }
 

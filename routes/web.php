@@ -59,6 +59,7 @@ Route::group(['prefix' => 'admin'], function () {
 Route::middleware(['auth'])->group(function () {
     Route::post('/notifications', [UserController::class, 'sendNotification']);
     Route::get('/employee', [UserController::class, 'onlyEmployee']);
+    Route::get('/notification/{id}', [UserController::class, 'getNotification']);
 });
 
 Route::middleware('auth')->group(function () {

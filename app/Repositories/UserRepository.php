@@ -59,10 +59,16 @@ class UserRepository implements UserInterface
             'title' => $data['title'],
             'message' => $data['message'],
         ]);
-        return $notification;
+        return  $notification;
     }
     public function allEmployee()
     {
         return User::where('user_role', 'employee')->get();
     }
+     public function getNotification($id){
+        return $notifications = Notification::with(['hr:id,name,user_role'])
+            ->where('employee_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+     }
 }

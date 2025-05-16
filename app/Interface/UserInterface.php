@@ -14,4 +14,5 @@ interface UserInterface
     public function userSalary($userId);
     public function sendNotification(array $data);
     public function allEmployee();
+    public function getNotification(array $data);
 }
