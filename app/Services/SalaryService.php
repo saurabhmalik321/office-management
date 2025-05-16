@@ -14,7 +14,7 @@ class SalaryService
 
     public function getUserSalaries(User $user)
     {
-        return Salary::all();
+        return Salary::where('user_id', $user->id)->get();
     }
 
     public function markAsPaid(Salary $salary): Salary
