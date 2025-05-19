@@ -16,8 +16,13 @@ class SalaryService
 
     public function getUserSalaries()
     {
-     $salaries = Salary::with('user:id,name')->get(); 
-     return $salaries;
+        $salaries = Salary::with('user:id,name')
+                    ->whereHas('user', function ($query) {
+                        $query->where('user_role', 'employee');
+                    })
+                    ->get();
+
+        return $salaries;
     }
 
     public function markAsPaid(array $data,$id)

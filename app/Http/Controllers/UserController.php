@@ -37,14 +37,12 @@ class UserController extends Controller
     {
         $this->authorize('create', User::class);
 
-        // Added email uniqueness validation for user creation
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',  // Ensures email is unique before user creation
-            'user_role' => 'required|string|in:admin,hr,employee', // Validates user role
+            'email' => 'required|email|unique:users,email',  
+            'user_role' => 'required|string|in:admin,hr,employee',
         ]);
 
-        // Call user interface to create user and return response
         return response()->json($this->userInterface->create($request->all()));
     }
 
