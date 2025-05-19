@@ -14,7 +14,28 @@ class SalaryService
 
     public function getUserSalaries(User $user)
     {
-        return Salary::where('user_id', $user->id)->get();
+        $salaries = Salary::select('salaries.*', 'users.name')
+        ->join('users', 'users.id', '=', 'salaries.user_id')
+        ->where('users.user_role', 'employee')
+        ->get();
+
+    return $salaries;
+    }
+    public function updateSalary(object $data, $id)
+    {
+        $salary = Salary::where('id', $id)->first(); 
+        $salary->status = $data->status;
+        $salary->date = $data->date;
+        $salary->amount = $data->amount;
+        $salary->save();
+
+        $user = User::where('id', $salary->user_id)->first(); 
+        $user->name = $data->name;
+        $user->save();
+
+        $salary->user = $user->name; 
+
+        return $salary;
     }
 
     public function markAsPaid(Salary $salary): Salary

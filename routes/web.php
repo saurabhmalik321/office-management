@@ -66,8 +66,8 @@ Route::middleware('auth')->group(function () {
     // Salary
     Route::get('/salaries', [UserController::class, 'indexSalaries']);
     Route::post('/salaries', [UserController::class, 'storeSalary']);
-    Route::post('/salaries/{salary}/paid', [UserController::class, 'markSalaryAsPaid']);
-
+    Route::post('/salaries/paid/{id}', [UserController::class, 'markSalaryAsPaid']);
+    Route::put('/salaries/edit/{id}', [UserController::class, 'updateSalary']);
     // Leave
     Route::get('/leaves', [UserController::class, 'indexLeaves']);
     Route::post('/leaves', [UserController::class, 'storeLeave']);
