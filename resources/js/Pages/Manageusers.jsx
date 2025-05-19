@@ -259,7 +259,7 @@ export default function ManageUsers() {
             </div>
             <div>
             <span className="font-semibold">Salary Status:</span>{' '}
-            {singleUser.salary && singleUser.salary > 0 ? 'Defined' : 'Undefined'}
+            {singleUser.salary && singleUser.salary > 0 ? 'Paid' : 'Pending'}
             </div>
             <div>
             <span className="font-semibold">User Status:</span>{' '}
