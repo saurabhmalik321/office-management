@@ -11,7 +11,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import Box from '@mui/material/Box';
 import { TextField } from '@mui/material';
-import Notification from '@/Components/Notification'; // Add this import
+import Notification from '@/Components/Notification';
 
 export default function ManageUsers() {
   const [users, setUsers] = useState([]);

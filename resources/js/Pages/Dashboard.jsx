@@ -15,22 +15,29 @@ export default function Dashboard({ authUserRole }) {
     useEffect(() => {
         if (!isAuthorized) return setLoading(false);
 
-        const fetchData = async () => {
-            try {
-                const userRes = await axios.get('/list');
-                const userList = userRes.data;
-                setUsers(userList);
+       const fetchData = async () => {
+    try {
+        const [userRes, leaveRes] = await Promise.all([
+            axios.get('/list'),          // GET all users
+            axios.get('/leaves'),        // GET all leave requests
+        ]);
 
-                // Simulated metrics (replace with real API calls)
-                setLeavesRequested(23);
-                setDepartments(new Set(userList.map(u => u.department)).size || 0);
-                setActiveEmployees(userList.filter(u => u.status === 'active').length);
-            } catch (error) {
-                console.error('Dashboard fetch error:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
+        const userList = userRes.data;
+        const leaveList = leaveRes.data;
+
+        setUsers(userList);
+
+        setLeavesRequested(leaveList.length);
+
+        setDepartments(new Set(userList.map(u => u.department)).size || 0);
+        setActiveEmployees(userList.filter(u => u.status === 'active').length);
+    } catch (error) {
+        console.error('Dashboard fetch error:', error);
+    } finally {
+        setLoading(false);
+    }
+};
+
 
         fetchData();
     }, [authUserRole]);
@@ -76,7 +83,7 @@ export default function Dashboard({ authUserRole }) {
                                                         <td className="px-4 py-3 font-medium">{user.name}</td>
                                                         <td className="px-4 py-3">{user.email}</td>
                                                         <td className="px-4 py-3">{user.department || 'N/A'}</td>
-                                                        <td className="px-4 py-3 capitalize text-blue-600 font-semibold">{user.role}</td>
+                                                        <td className="px-4 py-3 capitalize text-blue-600 font-semibold">{users.role}</td>
                                                         <td className="px-4 py-3">
                                                             <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                                                                 user.status === 'active'
