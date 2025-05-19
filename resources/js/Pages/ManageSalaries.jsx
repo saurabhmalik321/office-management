@@ -18,7 +18,7 @@ import {
   Edit as EditIcon,
   Visibility as VisibilityIcon,
 } from '@mui/icons-material';
-import "jspdf-autotable"; 
+import "jspdf-autotable";
 import html2canvas from 'html2canvas';
 import DownloadingIcon from '@mui/icons-material/Downloading';
 import { DataGrid } from '@mui/x-data-grid';
@@ -111,10 +111,6 @@ export default function ManageSalaries() {
   };
 
 
-  const signatureImageUrl =
-    'https://upload.wikimedia.org/wikipedia/en/d/d4/Samantha_Signature.jpg';
-
-
 const handleDownloadPdf = (row) => {
   const pdfContainer = document.createElement('div');
   pdfContainer.style.position = 'absolute';
@@ -142,7 +138,7 @@ const handleDownloadPdf = (row) => {
 
   // Add inner HTML
 const pfCut = 1000;
-const taxCut = 2500; 
+const taxCut = 2500;
 const netSalary = row.amount - taxCut - pfCut;
 
 pdfContainer.innerHTML = `
@@ -231,7 +227,9 @@ pdfContainer.innerHTML = `
       flex: 1,
       headerAlign: 'center',
       align: 'center',
-      renderCell: (params) => <span>{params.row.user.name}</span>,
+      renderCell: (params) => {
+        return <span>{params.row.user.name}</span>;
+      },
     },
     {
       field: 'amount',
@@ -240,6 +238,9 @@ pdfContainer.innerHTML = `
       type: 'number',
       headerAlign: 'center',
       align: 'center',
+      renderCell: (params) =>{
+        return <span>{`₹ ${params.row.amount}`}</span>;
+      }
     },
     {
       field: 'date',

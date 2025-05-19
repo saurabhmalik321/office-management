@@ -53,20 +53,20 @@ export default function AuthenticatedLayout({ header, children }) {
                                     Dashboard
                                 </NavLink>
                               {(user.user_role == 'hr' || user.user_role == 'admin')  && <NavLink href={route('manageusers')} active={route().current('manageusers')}>
-                                    Manage Users
+                                    Users
                                 </NavLink>
                                 }
                                  <NavLink
                                     href={route('managesalaries')}
                                     active={route().current('managesalaries')}
                                 >
-                                    Manage salaries
+                                    Salaries
                                 </NavLink>
                                 <NavLink
                                     href={route('manageleaves')}
                                     active={route().current('manageleaves')}
                                 >
-                                    Manage leaves
+                                     Leaves
                                 </NavLink>
 
                                   {/* <NavLink

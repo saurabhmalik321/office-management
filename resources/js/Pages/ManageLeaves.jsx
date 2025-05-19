@@ -124,7 +124,7 @@ export default function ManageLeaves({ auth_user_id }) {
       status: '',
       title: '',
       message: '',
-      
+
     });
     setStatusDialogOpen(true);
   };
@@ -157,9 +157,7 @@ export default function ManageLeaves({ auth_user_id }) {
       header={
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold leading-tight text-gray-800">Leaves</h2>
-           { (user.user_role != 'hr' && user.user_role != 'admin')  && <Button variant="contained" color="primary" onClick={() => setOpen(true)} sx={{ textTransform: 'capitalize' }}>
-            Request Leave
-          </Button> }
+
         </div>
       }
     >
@@ -168,7 +166,12 @@ export default function ManageLeaves({ auth_user_id }) {
         <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
             <div className="p-6 text-gray-900">
+                <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold mb-4">Your Leave Requests</h3>
+              { (user.user_role != 'hr' && user.user_role != 'admin')  && <Button variant="contained" color="primary" onClick={() => setOpen(true)} sx={{ textTransform: 'capitalize' }}>
+            Request Leave
+          </Button> }
+          </div>
               {leaves.length === 0 ? (
                 <p>No leave requests found.</p>
               ) : (

@@ -23,7 +23,8 @@ export default function ManageUsers() {
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
-  const [sinleuser, setSingleUser] = useState(null);
+  const [singleUser, setSingleUser] = useState(null);
+  const [showUserDetailsModal, setShowUserDetailsModal] = useState(false);
 
   const [notification, setNotification] = useState({
     open: false,
@@ -52,9 +53,13 @@ export default function ManageUsers() {
         showNotification('error', 'Failed to load users.');
       });
   };
-   const fetchSingleUser = (id) => {
+
+  const fetchSingleUser = (id) => {
     axios.get(`/admin/users/${id}`)
-      .then((response) => setSingleUser(response.data))
+      .then((response) => {
+        setSingleUser(response.data);
+        setShowUserDetailsModal(true); // Show modal after data loads
+      })
       .catch((error) => {
         console.error('Error fetching users:', error);
         showNotification('error', 'Failed to load user.');
@@ -108,20 +113,15 @@ export default function ManageUsers() {
 
   const columns = [
     { field: 'id', headerName: 'ID', flex: 0.5, headerAlign: 'center', align: 'center' },
-    { field: 'name', headerName: 'Name', flex: 1, editable: true, headerAlign: 'center', align: 'center' },
+    { field: 'name', headerName: 'Name', flex: 1, editable: true, headerAlign: 'center', align: 'center', renderCell: (params) => <span style={{ textTransform: 'capitalize' }}>{params.value}</span> },
     { field: 'email', headerName: 'Email', flex: 1.5, editable: true, headerAlign: 'center', align: 'center' },
-    { field: 'user_role', headerName: 'Role', flex: 1, editable: true, headerAlign: 'center', align: 'center' },
+    { field: 'user_role', headerName: 'Role', flex: 1, editable: true, headerAlign: 'center', align: 'center', renderCell: (params) => <span style={{ textTransform: 'capitalize' }}>{params.value}</span> },
     {
-      field: 'actions',
-      headerName: 'Actions',
-      flex: 1,
-      headerAlign: 'center',
-      align: 'center',
-      sortable: false,
+      field: 'actions', headerName: 'Actions', flex: 1, headerAlign: 'center', align: 'center', sortable: false,
       renderCell: (params) => (
         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, width: '100%' }}>
           <IconButton size="small" aria-label="view">
-            <VisibilityIcon onClick={() => fetchSingleUser(params.row.id)} color="primary" size="small"/>
+            <VisibilityIcon onClick={() => fetchSingleUser(params.row.id)} color="primary" size="small" />
           </IconButton>
           <IconButton onClick={() => handleEdit(params.row.id)} color="primary" size="small">
             <EditIcon />
@@ -130,8 +130,8 @@ export default function ManageUsers() {
             <DeleteIcon />
           </IconButton>
         </Box>
-      ),
-    },
+      )
+    }
   ];
 
   const filteredUsers = users.filter(user =>
@@ -231,6 +231,63 @@ export default function ManageUsers() {
               </div>
             </div>
           )}
+
+          {/* User Details Modal */}
+          {showUserDetailsModal && singleUser && (
+        <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+        onClick={() => setShowUserDetailsModal(false)} // Close modal when clicking outside
+         >
+        <div
+        className="bg-white rounded-lg shadow-lg w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()} // Prevent modal from closing when clicking inside the modal
+        >
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">User Details</h2>
+
+        <div className="space-y-3 text-gray-700 text-sm">
+            <div><span className="font-semibold">Name:</span> {singleUser.name}</div>
+            <div><span className="font-semibold">Email:</span> {singleUser.email}</div>
+            <div>
+            <span className="font-semibold">Salary:</span>{' '}
+            {singleUser.salary
+                ? Number(singleUser.salary).toLocaleString('en-IN', {
+                    style: 'currency',
+                    currency: 'INR',
+                    minimumFractionDigits: 0,
+                })
+                : 'No salary recorded'}
+            </div>
+            <div>
+            <span className="font-semibold">Salary Status:</span>{' '}
+            {singleUser.salary && singleUser.salary > 0 ? 'Defined' : 'Undefined'}
+            </div>
+            <div>
+            <span className="font-semibold">User Status:</span>{' '}
+            <span
+                className={`inline-block px-2 py-1 rounded text-xs font-semibold capitalize ${
+                singleUser.status === 1
+                    ? 'border border-green-500 text-green-700 text-sm font-medium rounded-full'
+                    : 'border border-red-500 text-red-700 text-sm font-medium rounded-full'
+                }`}
+            >
+                {singleUser.status === 1 ? 'Active' : 'Inactive'}
+            </span>
+            </div>
+            <div><span className="font-semibold">Role:</span> {singleUser.user_role || 'Not specified'}</div>
+        </div>
+
+        <div className="mt-6 text-right">
+            <button
+            onClick={() => setShowUserDetailsModal(false)}
+            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700"
+            >
+            Close
+            </button>
+        </div>
+        </div>
+    </div>
+    )}
+
 
           {/* User Data Table */}
           <div className="overflow-x-auto bg-white shadow-sm sm:rounded-lg">

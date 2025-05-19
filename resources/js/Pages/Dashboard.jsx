@@ -6,8 +6,8 @@ import { useEffect, useState } from 'react';
 export default function Dashboard({ authUserRole }) {
     const [users, setUsers] = useState([]);
     const [leavesRequested, setLeavesRequested] = useState(0);
-    const [departments, setDepartments] = useState(0);
-    const [activeEmployees, setActiveEmployees] = useState(0);
+    const [payroll, setPayroll] = useState([]);
+    const [activeEmployees, setActiveEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const isAuthorized = authUserRole === 'admin' || authUserRole === 'hr';
@@ -29,8 +29,22 @@ export default function Dashboard({ authUserRole }) {
 
         setLeavesRequested(leaveList.length);
 
-        setDepartments(new Set(userList.map(u => u.department)).size || 0);
-        setActiveEmployees(userList.filter(u => u.status === 'active').length);
+        const totalPayroll = userList.reduce((sum, user) => sum + Number(user.salary || 0), 0);
+
+        if (!isFinite(totalPayroll) || totalPayroll <= 0) {
+        setPayroll('Unable to calculate');
+        } else {
+        const formatted = totalPayroll.toLocaleString('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 0
+        });
+        setPayroll(formatted); // e.g. ₹5,00,000.00
+        }
+
+
+
+        setActiveEmployees(userList.filter(u => u.status === 1).length);
     } catch (error) {
         console.error('Dashboard fetch error:', error);
     } finally {
@@ -44,7 +58,7 @@ export default function Dashboard({ authUserRole }) {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-2xl font-bold text-gray-800">Admin Dashboard</h2>}
+            header={<h2 className="text-2xl font-bold text-gray-800">Your Dashboard</h2>}
         >
             <Head title="Dashboard" />
 
@@ -58,7 +72,7 @@ export default function Dashboard({ authUserRole }) {
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                                 <DashboardCard label="Total Users" value={users.length} color="blue" />
                                 <DashboardCard label="Leaves Requested" value={leavesRequested} color="purple" />
-                                <DashboardCard label="Departments" value={departments} color="green" />
+                                <DashboardCard label="Monthy Payroll" value={payroll} color="green" />
                                 <DashboardCard label="Active Employees" value={activeEmployees} color="orange" />
                             </div>
 
@@ -68,29 +82,29 @@ export default function Dashboard({ authUserRole }) {
                                     <h3 className="text-xl font-bold text-gray-800 mb-4">User Directory</h3>
                                     <div className="overflow-x-auto">
                                         <table className="min-w-full text-sm text-gray-700">
-                                            <thead className="bg-gray-100 border-b text-gray-600 uppercase tracking-wide">
+                                            <thead className="bg-gray-100 border-b text-gray-600 capitalize tracking-wide">
                                                 <tr>
                                                     <th className="px-4 py-3 text-left">Name</th>
                                                     <th className="px-4 py-3 text-left">Email</th>
-                                                    <th className="px-4 py-3 text-left">Department</th>
-                                                    <th className="px-4 py-3 text-left">Role</th>
+                                                    <th className="px-4 py-3 text-left">Salary</th>
+                                                    <th className="px-4 py-3 text-left">role</th>
                                                     <th className="px-4 py-3 text-left">Status</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {users.map(user => (
                                                     <tr key={user.id} className="hover:bg-gray-50 transition">
-                                                        <td className="px-4 py-3 font-medium">{user.name}</td>
+                                                        <td className="px-4 py-3 font-medium capitalize">{user.name}</td>
                                                         <td className="px-4 py-3">{user.email}</td>
-                                                        <td className="px-4 py-3">{user.department || 'N/A'}</td>
-                                                        <td className="px-4 py-3 capitalize text-blue-600 font-semibold">{users.role}</td>
+                                                        <td className="px-4 py-3">{user.salary ? Number(user.salary).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0}) : 'No salary detected'}</td>
+                                                        <td className="px-4 py-3 capitalize">{user.user_role || 'No role given'}</td>
                                                         <td className="px-4 py-3">
-                                                            <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                                                                user.status === 'active'
-                                                                    ? 'bg-green-100 text-green-700'
-                                                                    : 'bg-red-100 text-red-700'
+                                                            <span className={`inline-block px-2 py-1 rounded text-xs font-semibold capitalize ${
+                                                                user.status === 1
+                                                                    ? 'border border-green-500 text-green-700 text-sm font-medium rounded-full'
+                                                                    : 'border border-red-500 text-red-700 text-sm font-medium rounded-full'
                                                             }`}>
-                                                                {user.status || 'unknown'}
+                                                                {user.status === 1 ? "Active" : "Inactive"}
                                                             </span>
                                                         </td>
                                                     </tr>
@@ -102,9 +116,29 @@ export default function Dashboard({ authUserRole }) {
                             </div>
                         </>
                     ) : (
-                        <div className="bg-white rounded-xl shadow p-6 text-center text-red-500 font-semibold">
-                            🚫 You are not authorized to view this dashboard.
+                        <div className="bg-white rounded-xl shadow p-6 text-gray-800">
+                        <h2 className="text-2xl font-bold mb-4">Welcome back</h2>
+                        <p className="text-lg mb-6">Here’s a quick summary of your employee dashboard.</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="bg-green-100 p-4 rounded-lg">
+                                <h3 className="font-semibold text-green-800 mb-1">My Leave Status</h3>
+                                <p className="text-sm text-gray-700">View or request leaves from your HR department.</p>
+                            </div>
+                            <div className="bg-blue-100 p-4 rounded-lg">
+                                <h3 className="font-semibold text-blue-800 mb-1">Payroll Information</h3>
+                                <p className="text-sm text-gray-700">Check your salary records and payslips.</p>
+                            </div>
+                            <div className="bg-yellow-100 p-4 rounded-lg">
+                                <h3 className="font-semibold text-yellow-800 mb-1">My Profile</h3>
+                                <p className="text-sm text-gray-700">Update your personal details or view profile info.</p>
+                            </div>
+                            <div className="bg-purple-100 p-4 rounded-lg">
+                                <h3 className="font-semibold text-purple-800 mb-1">Support & Contact</h3>
+                                <p className="text-sm text-gray-700">Need help? Contact your manager or HR.</p>
+                            </div>
                         </div>
+                    </div>
                     )}
                 </div>
             </div>
