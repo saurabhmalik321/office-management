@@ -12,8 +12,10 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import Box from '@mui/material/Box';
 import { TextField } from '@mui/material';
 import Notification from '@/Components/Notification';
-
+import { usePage } from '@inertiajs/react';
 export default function ManageUsers() {
+  const { auth } = usePage().props;
+    const user = auth.user;
   const [users, setUsers] = useState([]);
   const [employee, setEmployee] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,7 +23,7 @@ export default function ManageUsers() {
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
-    const [sinleuser, setSingleUser] = useState(null);
+  const [sinleuser, setSingleUser] = useState(null);
 
   const [notification, setNotification] = useState({
     open: false,
