@@ -110,7 +110,6 @@ export default function ManageUsers() {
     setShowAddUserModal(false);
     showNotification('success', 'User added successfully.');
   };
- console.log(singleUser,"singleuser");
   const columns = [
     { field: 'id', headerName: 'ID', flex: 0.5, headerAlign: 'center', align: 'center' },
     { field: 'name', headerName: 'Name', flex: 1, editable: true, headerAlign: 'center', align: 'center', renderCell: (params) => <span style={{ textTransform: 'capitalize' }}>{params.value}</span> },
@@ -250,8 +249,8 @@ export default function ManageUsers() {
 
               <div>
                 <span className="font-semibold">Salary:</span>{' '}
-                {(singleUser.salary?.amount || singleUser.salary)
-                  ? Number(singleUser.salary.amount).toLocaleString('en-IN', {
+                {(singleUser.salary?.amount || singleUser.direct_salary)
+                  ? Number(singleUser.salary?.amount || singleUser.direct_salary).toLocaleString('en-IN', {
                       style: 'currency',
                       currency: 'INR',
                       minimumFractionDigits: 0,

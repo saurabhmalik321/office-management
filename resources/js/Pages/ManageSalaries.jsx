@@ -238,7 +238,7 @@ pdfContainer.innerHTML = `
       headerAlign: 'center',
       align: 'center',
       renderCell: (params) =>{
-        return <span style={{marginBottom:'5px'}}>{`₹ ${params.row.amount}`}</span>;
+        return <span style={{marginBottom:'5px'}}>{params.row.amount ? Number(params.row.amount).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0}) : 'No salary detected'}</span>;
       }
     },
     {

@@ -12,12 +12,11 @@ class UserRepository implements UserInterface
     }
     public function find($id)
     {
-        $user = User::with(['leaves', 'salary'])->find($id)->toArray();
-
+         $user = User::with(['leaves', 'salary'])->find($id);
         if (!$user) {
-            return
-             response()->json(['message' => 'User not found'], 404);
+            return response()->json(['message' => 'User not found'], 404);
         }
+        $user->direct_salary = $user->salary; 
         return $user;
 
     }
