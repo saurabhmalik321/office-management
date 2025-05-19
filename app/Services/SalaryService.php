@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\Salary;
+use App\Models\Notification;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class SalaryService
 {
@@ -12,16 +14,24 @@ class SalaryService
         return Salary::create($data);
     }
 
-    public function getUserSalaries(User $user)
+    public function getUserSalaries()
     {
-        return Salary::all();
+     $salaries = Salary::with('user:id,name')->get(); 
+     return $salaries;
     }
 
-    public function markAsPaid(Salary $salary): Salary
+    public function markAsPaid(array $data,$id)
     {
+        $salary = Salary::where('id',$id)->first(); 
         $salary->status = 'paid';
-        $salary->paid_at = now();
+        $salary->date = now();
         $salary->save();
+        $notify = new Notification();
+        $notify->hr_id = Auth::id();
+        $notify->employee_id = $salary->user_id;
+        $notify->title = $data['title'];
+        $notify->message = $data['message'];
+        $notify->save();
         return $salary;
-    }
+    } 
 }

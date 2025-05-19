@@ -81,7 +81,7 @@ class UserController extends Controller
     // salary
     public function indexSalaries()
     {
-        $salaries = $this->salaryService->getUserSalaries(Auth::user());
+        $salaries = $this->salaryService->getUserSalaries();
         return response()->json($salaries);
     }
 
@@ -91,9 +91,9 @@ class UserController extends Controller
         return response()->json($salary, 200);
     }
 
-    public function markSalaryAsPaid(Salary $salary)
+    public function markSalaryAsPaid(Request $request,$id)
     {
-        return response()->json($this->salaryService->markAsPaid($salary));
+        return response()->json($this->salaryService->markAsPaid($request->all(),$id));
     }
 
     // leave
@@ -148,6 +148,7 @@ class UserController extends Controller
     {
           return response()->json($this->userInterface->getUser($id));
     }
+    
 }
 
 

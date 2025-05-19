@@ -15,7 +15,9 @@ class Salary extends Model
         'date',
         'status',
     ];
-
+ protected $casts = [
+    'date' => 'date'
+ ];
     public function user()
     {
         return $this->belongsTo(User::class,'user_id');

@@ -76,13 +76,12 @@ Route::middleware('auth')->group(function () {
     // Salary
     Route::get('/salaries', [UserController::class, 'indexSalaries']);
     Route::post('/salaries', [UserController::class, 'storeSalary']);
-    Route::post('/salaries/{salary}/paid', [UserController::class, 'markSalaryAsPaid']);
+    Route::post('/salaries/paid/{id}', [UserController::class, 'markSalaryAsPaid']);
 
     // Leave
     Route::get('/leaves', [UserController::class, 'indexLeaves']);
     Route::post('/leaves', [UserController::class, 'storeLeave']);
     Route::post('/leave-request/{id}', [UserController::class, 'updateLeaveStatus']);
-
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

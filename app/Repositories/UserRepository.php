@@ -3,7 +3,7 @@ namespace App\Repositories;
 use App\Models\User;
 use App\Models\Notification;
 use App\Interface\UserInterface;
-
+use App\Models\Salary;
 class UserRepository implements UserInterface
 {
     public function all()
@@ -17,13 +17,20 @@ class UserRepository implements UserInterface
 
     public function create(array $data)
     {
-         $user = new User();
-         $user->name = $data['name'];
-         $user->email = $data['email'];
-         $user->user_role = $data['user_role'];
-         $user->password = $data['password'];
-         $user->salary = $data['salary'];
-         $user->save();
+        $user = new User();
+        $user->name = $data['name'];
+        $user->email = $data['email'];
+        $user->user_role = $data['user_role'];
+        $user->password = bcrypt($data['password']); 
+        $user->salary = $data['salary'];
+        $user->save();
+
+        $salary = new Salary();
+        $salary->user_id = $user->id;
+        $salary->amount = $user->salary;
+        $salary->date = $user->created_at; 
+        $salary->status = 'pending';
+        $salary->save(); 
         return $user;
     }
 
