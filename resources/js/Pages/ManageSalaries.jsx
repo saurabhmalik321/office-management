@@ -22,7 +22,7 @@ import "jspdf-autotable";
 import html2canvas from 'html2canvas';
 import DownloadingIcon from '@mui/icons-material/Downloading';
 import { DataGrid } from '@mui/x-data-grid';
-import EditSalaryModal from './Users/EditSalary';
+import EditSalary from './Users/EditSalary';
 
 export default function ManageSalaries() {
   const { auth } = usePage().props;
@@ -31,7 +31,7 @@ export default function ManageSalaries() {
   const isHR = user.user_role === 'hr';
   const isAdmin = user.user_role === 'admin';
   const isRestricted = !isHR && !isAdmin;
-
+  const [salary, setSalary] = useState([]);
   const [salaries, setSalaries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -49,7 +49,6 @@ export default function ManageSalaries() {
     message: '',
   });
   const [currentSalaryId, setCurrentSalaryId] = useState(null);
-
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case 'pending':
@@ -60,7 +59,6 @@ export default function ManageSalaries() {
         return 'default';
     }
   };
-
   useEffect(() => {
     axios
       .get('/salaries')
@@ -70,12 +68,13 @@ export default function ManageSalaries() {
         setError('Something went wrong while fetching salaries.');
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [salary]);
 
   const handleEdit = (id) => {
     const salaryToEdit = salaries.find((s) => s.id === id);
     setSelectedSalary(salaryToEdit);
     setOpenEditModal(true);
+    
   };
 
   const handleOpenNotification = (salaryId) => {
@@ -114,8 +113,8 @@ export default function ManageSalaries() {
 const handleDownloadPdf = (row) => {
   const pdfContainer = document.createElement('div');
   pdfContainer.style.position = 'absolute';
-  pdfContainer.style.left = '-9999px'; // hide it
-  pdfContainer.style.width = '595px'; // A4 width in pixels
+  pdfContainer.style.left = '-9999px'; 
+  pdfContainer.style.width = '595px';
 
   const formattedDate = new Date(row.date).toLocaleDateString('en-IN', {
     day: '2-digit',
@@ -138,7 +137,7 @@ const handleDownloadPdf = (row) => {
 
   // Add inner HTML
 const pfCut = 1000;
-const taxCut = 2500;
+const taxCut = 2000;
 const netSalary = row.amount - taxCut - pfCut;
 
 pdfContainer.innerHTML = `
@@ -150,7 +149,7 @@ pdfContainer.innerHTML = `
     <h1 style="margin-bottom: 10px; font-weight: bold; color: #333;">Salary Slip</h1>
 
     <p style="font-size: 14px; line-height: 1.5; color: #555; margin-bottom: 30px;">
-      Dear <strong>${row.user.name}</strong>,<br />
+      Dear <strong>${row?.name}</strong>,<br />
       We are pleased to confirm the processing of your salary for the month of <strong>${monthName}</strong>. Below is the detailed breakdown:
     </p>
 
@@ -158,7 +157,7 @@ pdfContainer.innerHTML = `
       <tbody>
         <tr style="background-color: #f5f5f5;">
           <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; text-align: left;">Name</td>
-          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${row.user.name}</td>
+          <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">${row?.name}</td>
         </tr>
         <tr>
           <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; text-align: left;">Gross Salary</td>
@@ -200,7 +199,7 @@ pdfContainer.innerHTML = `
 
   html2canvas(pdfContainer, {
     scale: 2,
-    useCORS: true, // allow local images
+    useCORS: true, 
   }).then((canvas) => {
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF();
@@ -209,7 +208,7 @@ pdfContainer.innerHTML = `
     const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`${row.user.name}_SalarySlip.pdf`);
+    pdf.save(`${row?.name}_SalarySlip.pdf`);
 
     document.body.removeChild(pdfContainer);
   });
@@ -228,7 +227,7 @@ pdfContainer.innerHTML = `
       headerAlign: 'center',
       align: 'center',
       renderCell: (params) => {
-        return <span>{params.row.user.name}</span>;
+        return <span style={{marginBottom:'5px'}}>{params.row?.name}</span>;
       },
     },
     {
@@ -239,7 +238,7 @@ pdfContainer.innerHTML = `
       headerAlign: 'center',
       align: 'center',
       renderCell: (params) =>{
-        return <span>{`₹ ${params.row.amount}`}</span>;
+        return <span style={{marginBottom:'5px'}}>{`₹ ${params.row.amount}`}</span>;
       }
     },
     {
@@ -399,14 +398,15 @@ pdfContainer.innerHTML = `
       </div>
 
       {/* Edit Modal */}
-      <EditSalaryModal
+      <EditSalary
         open={openEditModal}
         onClose={() => setOpenEditModal(false)}
         salary={selectedSalary}
         onSalaryUpdated={(updatedSalary) =>
-          setSalaries((prev) =>
+          setSalary((prev) =>
             prev.map((s) => (s.id === updatedSalary.id ? updatedSalary : s))
           )
+
         }
       />
 

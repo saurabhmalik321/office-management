@@ -1,4 +1,3 @@
-// EditSalaryModal.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -28,10 +27,11 @@ export default function EditSalaryModal({ open, onClose, salary, onSalaryUpdated
 
   useEffect(() => {
     if (salary) {
+      const formattedDate = new Date(salary.date).toISOString().split('T')[0]; 
       setForm({
-        name: salary.name || '',
+        name: salary?.name || '',
         amount: salary.amount || '',
-        date: salary.date || '',
+        date: formattedDate,
         status: salary.status || '',
       });
     }
@@ -58,7 +58,7 @@ export default function EditSalaryModal({ open, onClose, salary, onSalaryUpdated
     setErrors({});
 
     axios
-      .put(`/salaries/${salary.id}`, form)
+      .put(`/salaries/edit/${salary.id}`, form)
       .then((response) => {
         onSalaryUpdated(response.data);
         onClose();
@@ -112,11 +112,7 @@ export default function EditSalaryModal({ open, onClose, salary, onSalaryUpdated
             helperText={errors.date?.[0]}
           />
 
-          <FormControl
-            fullWidth
-            margin="normal"
-            error={!!errors.status}
-          >
+          <FormControl fullWidth margin="normal" error={!!errors.status}>
             <InputLabel>Status</InputLabel>
             <Select
               name="status"

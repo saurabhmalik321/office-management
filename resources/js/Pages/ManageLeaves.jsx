@@ -168,7 +168,7 @@ export default function ManageLeaves({ auth_user_id }) {
             <div className="p-6 text-gray-900">
                 <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold mb-4">Your Leave Requests</h3>
-              { (user.user_role != 'hr' && user.user_role != 'admin')  && <Button variant="contained" color="primary" onClick={() => setOpen(true)} sx={{ textTransform: 'capitalize' }}>
+              { (user.user_role != 'hr' && user.user_role != 'admin')  && <Button variant="contained" color="primary" onClick={() => setOpen(true)} sx={{ marginBottom :'16px', textTransform: 'capitalize' }}>
             Request Leave
           </Button> }
           </div>

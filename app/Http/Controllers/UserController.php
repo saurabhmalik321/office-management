@@ -89,6 +89,13 @@ class UserController extends Controller
         return response()->json($salary, 200);
     }
 
+    public function updateSalary(Request $request,$id)
+    {
+         $data = (object) $request->all();
+         $salary = $this->salaryService->updateSalary($data, $id);
+        return response()->json($salary, 200);
+    }
+
     public function markSalaryAsPaid(Request $request,$id)
     {
         return response()->json($this->salaryService->markAsPaid($request->all(),$id));

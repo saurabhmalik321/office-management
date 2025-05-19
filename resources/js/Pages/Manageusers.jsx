@@ -58,7 +58,7 @@ export default function ManageUsers() {
     axios.get(`/admin/users/${id}`)
       .then((response) => {
         setSingleUser(response.data);
-        setShowUserDetailsModal(true); // Show modal after data loads
+        setShowUserDetailsModal(true); 
       })
       .catch((error) => {
         console.error('Error fetching users:', error);
@@ -110,7 +110,7 @@ export default function ManageUsers() {
     setShowAddUserModal(false);
     showNotification('success', 'User added successfully.');
   };
-
+ console.log(singleUser,"singleuser");
   const columns = [
     { field: 'id', headerName: 'ID', flex: 0.5, headerAlign: 'center', align: 'center' },
     { field: 'name', headerName: 'Name', flex: 1, editable: true, headerAlign: 'center', align: 'center', renderCell: (params) => <span style={{ textTransform: 'capitalize' }}>{params.value}</span> },
@@ -233,62 +233,90 @@ export default function ManageUsers() {
           )}
 
           {/* User Details Modal */}
-          {showUserDetailsModal && singleUser && (
+    {showUserDetailsModal && singleUser && (
         <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
-        onClick={() => setShowUserDetailsModal(false)} // Close modal when clicking outside
-         >
-        <div
-        className="bg-white rounded-lg shadow-lg w-full max-w-md p-6"
-        onClick={(e) => e.stopPropagation()} // Prevent modal from closing when clicking inside the modal
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+          onClick={() => setShowUserDetailsModal(false)}
         >
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">User Details</h2>
+          <div
+            className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">User Details</h2>
 
-        <div className="space-y-3 text-gray-700 text-sm">
-            <div><span className="font-semibold">Name:</span> {singleUser.name}</div>
-            <div><span className="font-semibold">Email:</span> {singleUser.email}</div>
-            <div>
-            <span className="font-semibold">Salary:</span>{' '}
-            {singleUser.salary
-                ? Number(singleUser.salary).toLocaleString('en-IN', {
-                    style: 'currency',
-                    currency: 'INR',
-                    minimumFractionDigits: 0,
-                })
-                : 'No salary recorded'}
+            <div className="space-y-3 text-gray-700 text-sm">
+              <div><span className="font-semibold">Name:</span> {singleUser.name}</div>
+              <div><span className="font-semibold">Email:</span> {singleUser.email}</div>
+
+              <div>
+                <span className="font-semibold">Salary:</span>{' '}
+                {(singleUser.salary?.amount || singleUser.salary)
+                  ? Number(singleUser.salary.amount).toLocaleString('en-IN', {
+                      style: 'currency',
+                      currency: 'INR',
+                      minimumFractionDigits: 0,
+                    })
+                  : 'No salary recorded'}
+              </div>
+              <div>
+                <span className="font-semibold">Salary Date:</span>{' '}
+                {singleUser.salary?.date
+                  ? new Date(singleUser.salary.date).toLocaleDateString('en-GB')
+                  : 'Not set'}
+
+              </div>
+              <div>
+                <span className="font-semibold">Salary Status:</span>{' '}
+                {singleUser.salary?.status || 'Not defined'}
+              </div>
+
+              <div>
+                <span className="font-semibold">User Status:</span>{' '}
+                <span
+                  className={`inline-block px-2 py-1 rounded text-xs font-semibold capitalize ${
+                    singleUser.status === 1
+                      ? 'border border-green-500 text-green-700 font-medium rounded-full'
+                      : 'border border-red-500 text-red-700 font-medium rounded-full'
+                  }`}
+                >
+                  {singleUser.status === 1 ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+
+              <div><span className="font-semibold">Role:</span> {singleUser.user_role || 'Not specified'}</div>
+
+              {singleUser.leaves?.length > 0 && (
+                <div className="mt-4 text-center">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Leave Details</h3>
+                  {singleUser.leaves.map((leave, index) => (
+                    <div key={index} className="mb-3 border p-2 rounded bg-gray-50">
+                      <div><span className="font-semibold">Type:</span> {leave.leave_type}</div>
+                      <div><span className="font-semibold">Reason:</span> {leave.reason}</div>
+                     <div>
+                        <span className="font-semibold">Start Date:</span>{' '}
+                        {leave.start_date ? new Date(leave.start_date).toLocaleDateString('en-GB') : 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-semibold">End Date:</span>{' '}
+                        {leave.end_date ? new Date(leave.end_date).toLocaleDateString('en-GB') : 'N/A'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div>
-            <span className="font-semibold">Salary Status:</span>{' '}
-            {singleUser.salary && singleUser.salary > 0 ? 'Paid' : 'Pending'}
+
+            <div className="mt-6">
+              <button
+                onClick={() => setShowUserDetailsModal(false)}
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700"
+              >
+                Close
+              </button>
             </div>
-            <div>
-            <span className="font-semibold">User Status:</span>{' '}
-            <span
-                className={`inline-block px-2 py-1 rounded text-xs font-semibold capitalize ${
-                singleUser.status === 1
-                    ? 'border border-green-500 text-green-700 text-sm font-medium rounded-full'
-                    : 'border border-red-500 text-red-700 text-sm font-medium rounded-full'
-                }`}
-            >
-                {singleUser.status === 1 ? 'Active' : 'Inactive'}
-            </span>
-            </div>
-            <div><span className="font-semibold">Role:</span> {singleUser.user_role || 'Not specified'}</div>
+          </div>
         </div>
-
-        <div className="mt-6 text-right">
-            <button
-            onClick={() => setShowUserDetailsModal(false)}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700"
-            >
-            Close
-            </button>
-        </div>
-        </div>
-    </div>
-    )}
-
-
+      )}
           {/* User Data Table */}
           <div className="overflow-x-auto bg-white shadow-sm sm:rounded-lg">
             <div className="p-4 text-gray-900 min-w-[500px]">
