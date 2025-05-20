@@ -2,8 +2,10 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { handleDownloadPdf } from '../Components/pdf';
+import LoadingSpinner from '../Components/LoadingSpinner'; 
 
-export default function Dashboard({ authUserRole }) {
+export default function Dashboard({ auth, authUserRole }) {
     const [users, setUsers] = useState([]);
     const [leavesRequested, setLeavesRequested] = useState(0);
     const [payroll, setPayroll] = useState([]);
@@ -15,43 +17,40 @@ export default function Dashboard({ authUserRole }) {
     useEffect(() => {
         if (!isAuthorized) return setLoading(false);
 
-       const fetchData = async () => {
-    try {
-        const [userRes, leaveRes] = await Promise.all([
-            axios.get('/list'),          // GET all users
-            axios.get('/leaves'),        // GET all leave requests
-        ]);
+        const fetchData = async () => {
+            try {
+                const [userRes, leaveRes] = await Promise.all([
+                    axios.get('/list'),          // GET all users
+                    axios.get('/leaves'),        // GET all leave requests
+                ]);
 
-        const userList = userRes.data;
-        const leaveList = leaveRes.data;
+                const userList = userRes.data;
+                const leaveList = leaveRes.data;
 
-        setUsers(userList);
+                setUsers(userList);
 
-        setLeavesRequested(leaveList.length);
+                setLeavesRequested(leaveList.length);
 
-        const totalPayroll = userList.reduce((sum, user) => sum + Number(user.salary || 0), 0);
+                const totalPayroll = userList.reduce((sum, user) => sum + Number(user.salary || 0), 0);
 
-        if (!isFinite(totalPayroll) || totalPayroll <= 0) {
-        setPayroll('Unable to calculate');
-        } else {
-        const formatted = totalPayroll.toLocaleString('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            minimumFractionDigits: 0
-        });
-        setPayroll(formatted); // e.g. ₹5,00,000.00
-        }
+                if (!isFinite(totalPayroll) || totalPayroll <= 0) {
+                    setPayroll('Unable to calculate');
+                } else {
+                    const formatted = totalPayroll.toLocaleString('en-IN', {
+                        style: 'currency',
+                        currency: 'INR',
+                        minimumFractionDigits: 0
+                    });
+                    setPayroll(formatted); // e.g. ₹5,00,000.00
+                }
 
-
-
-        setActiveEmployees(userList.filter(u => u.status === 1).length);
-    } catch (error) {
-        console.error('Dashboard fetch error:', error);
-    } finally {
-        setLoading(false);
-    }
-};
-
+                setActiveEmployees(userList.filter(u => u.status === 1).length);
+            } catch (error) {
+                console.error('Dashboard fetch error:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
         fetchData();
     }, [authUserRole]);
@@ -65,7 +64,8 @@ export default function Dashboard({ authUserRole }) {
             <div className="py-10 bg-gray-100 min-h-screen">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
                     {loading ? (
-                        <div className="text-center text-gray-500 text-lg font-medium">Loading dashboard...</div>
+                        // Use the LoadingSpinner component here
+                        <LoadingSpinner />
                     ) : isAuthorized ? (
                         <>
                             {/* Metric Cards */}
@@ -87,7 +87,7 @@ export default function Dashboard({ authUserRole }) {
                                                     <th className="px-4 py-3 text-left">Name</th>
                                                     <th className="px-4 py-3 text-left">Email</th>
                                                     <th className="px-4 py-3 text-left">Salary</th>
-                                                    <th className="px-4 py-3 text-left">role</th>
+                                                    <th className="px-4 py-3 text-left">Role</th>
                                                     <th className="px-4 py-3 text-left">Status</th>
                                                 </tr>
                                             </thead>
@@ -96,7 +96,7 @@ export default function Dashboard({ authUserRole }) {
                                                     <tr key={user.id} className="hover:bg-gray-50 transition">
                                                         <td className="px-4 py-3 font-medium capitalize">{user.name}</td>
                                                         <td className="px-4 py-3">{user.email}</td>
-                                                        <td className="px-4 py-3">{user.salary ? Number(user.salary).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0}) : 'No salary detected'}</td>
+                                                        <td className="px-4 py-3">{user.salary ? Number(user.salary).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }) : 'No salary detected'}</td>
                                                         <td className="px-4 py-3 capitalize">{user.user_role || 'No role given'}</td>
                                                         <td className="px-4 py-3">
                                                             <span className={`inline-block px-2 py-1 rounded text-xs font-semibold capitalize ${
@@ -117,28 +117,47 @@ export default function Dashboard({ authUserRole }) {
                         </>
                     ) : (
                         <div className="bg-white rounded-xl shadow p-6 text-gray-800">
-                        <h2 className="text-2xl font-bold mb-4">Welcome back</h2>
-                        <p className="text-lg mb-6">Here’s a quick summary of your employee dashboard.</p>
+                            <h2 className="text-2xl font-bold mb-4">Welcome back, {auth.user.name}</h2>
+                            <p className="text-lg mb-6">Here’s your personalized employee dashboard.</p>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="bg-green-100 p-4 rounded-lg">
-                                <h3 className="font-semibold text-green-800 mb-1">My Leave Status</h3>
-                                <p className="text-sm text-gray-700">View or request leaves from your HR department.</p>
-                            </div>
-                            <div className="bg-blue-100 p-4 rounded-lg">
-                                <h3 className="font-semibold text-blue-800 mb-1">Payroll Information</h3>
-                                <p className="text-sm text-gray-700">Check your salary records and payslips.</p>
-                            </div>
-                            <div className="bg-yellow-100 p-4 rounded-lg">
-                                <h3 className="font-semibold text-yellow-800 mb-1">My Profile</h3>
-                                <p className="text-sm text-gray-700">Update your personal details or view profile info.</p>
-                            </div>
-                            <div className="bg-purple-100 p-4 rounded-lg">
-                                <h3 className="font-semibold text-purple-800 mb-1">Support & Contact</h3>
-                                <p className="text-sm text-gray-700">Need help? Contact your manager or HR.</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="bg-blue-100 p-6 rounded-lg shadow">
+                                    <h3 className="text-xl font-semibold text-blue-800 mb-2">Your Details</h3>
+                                    <p><span className="font-medium">Name:</span> {auth.user.name}</p>
+                                    <p><span className="font-medium">Email:</span> {auth.user.email}</p>
+                                    <p><span className="font-medium">Salary:</span> {auth.user.salary ? Number(auth.user.salary).toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) : 'Not available'}</p>
+                                    <p>
+                                        <span className="font-medium">Status:</span>{' '}
+                                        <span className={`inline-block px-2 py-1 rounded text-sm font-semibold ${
+                                            auth.user.status === 1 ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'
+                                        }`}>
+                                            {auth.user.status === 1 ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </p>
+                                </div>
+
+                                <div className="bg-white p-6 rounded-lg shadow flex flex-col justify-between">
+                                    <div>
+                                        <h3 className="text-xl font-semibold text-green-800 mb-2">Latest Payslip</h3>
+                                        <p className="text-gray-700">You can download your latest salary receipt below.</p>
+                                    </div>
+                                    <button
+                                    onClick={() =>
+                                        handleDownloadPdf({
+                                        user: auth.user,
+                                        amount: auth.user.salary || 0,
+                                        status: auth.user.status === 1 ? 'paid' : 'pending',
+                                        date: new Date(), // or fetch from DB if available
+                                        })
+                                    }
+                                    className="mt-4 inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded transition"
+                                    >
+                                    Download Payslip
+                                    </button>
+
+                                </div>
                             </div>
                         </div>
-                    </div>
                     )}
                 </div>
             </div>
@@ -146,7 +165,7 @@ export default function Dashboard({ authUserRole }) {
     );
 }
 
-// ✅ DashboardCard component with colorful gradient backgrounds
+// DashboardCard component
 function DashboardCard({ label, value, color }) {
     const bgColorMap = {
         blue: 'bg-gradient-to-r from-blue-500 to-blue-700',

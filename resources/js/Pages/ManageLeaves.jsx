@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
+import LoadingSpinner from '../Components/LoadingSpinner';
 import {
   Box,
   Button,
@@ -28,6 +29,7 @@ export default function ManageLeaves({ auth_user_id }) {
   const { auth } = usePage().props;
   const user = auth.user;
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
     start_date: '',
     end_date: '',
@@ -42,8 +44,6 @@ export default function ManageLeaves({ auth_user_id }) {
     severity: 'success',
   });
   const [leaves, setLeaves] = useState([]);
-
-  // Leave response form dialog
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedLeaveId, setSelectedLeaveId] = useState(null);
   const [count,setCount] = useState(0);
@@ -67,10 +67,12 @@ export default function ManageLeaves({ auth_user_id }) {
   };
 
   const fetchLeaves = () => {
+    setLoading(true);
     axios
       .get('/leaves')
       .then((response) => setLeaves(response.data))
-      .catch((error) => console.error('Error fetching leaves:', error));
+      .catch((error) => console.error('Error fetching leaves:', error))
+      .finally(() => setLoading(false));
   };
     const pendingLeave = () => {
         axios
@@ -126,14 +128,13 @@ export default function ManageLeaves({ auth_user_id }) {
       });
   };
 
-  const openLeaveDialog = (leave_id,user_id) => {
+  const openLeaveDialog = (leave_id, user_id) => {
     setSelectedLeaveId(leave_id);
     setStatusForm({
-      user_id:user_id,
+      user_id: user_id,
       status: '',
       title: '',
       message: '',
-
     });
     setStatusDialogOpen(true);
   };
@@ -144,7 +145,7 @@ export default function ManageLeaves({ auth_user_id }) {
 
   const handleLeaveResponseSubmit = async () => {
     try {
-      await axios.post(`/leave-request/${selectedLeaveId}`, { statusForm});
+      await axios.post(`/leave-request/${selectedLeaveId}`, { statusForm });
       setSnackbar({
         open: true,
         message: 'Leave response submitted successfully!',
@@ -167,7 +168,6 @@ export default function ManageLeaves({ auth_user_id }) {
       header={
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold leading-tight text-gray-800">Leaves</h2>
-
         </div>
       }
       count={count}
@@ -177,13 +177,25 @@ export default function ManageLeaves({ auth_user_id }) {
         <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
             <div className="p-6 text-gray-900">
-                <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold mb-4">Your Leave Requests</h3>
-              { (user.user_role != 'hr' && user.user_role != 'admin')  && <Button variant="contained" color="primary" onClick={() => setOpen(true)} sx={{ marginBottom :'16px', textTransform: 'capitalize' }}>
-            Request Leave
-          </Button> }
-          </div>
-              {leaves.length === 0 ? (
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold mb-4">Your Leave Requests</h3>
+                {(user.user_role !== 'hr' && user.user_role !== 'admin') && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setOpen(true)}
+                    sx={{ marginBottom: '16px', textTransform: 'capitalize' }}
+                  >
+                    Request Leave
+                  </Button>
+                )}
+              </div>
+
+              {loading ? (
+                <div className="flex justify-center items-center h-64">
+                  <LoadingSpinner />
+                </div>
+              ) : leaves.length === 0 ? (
                 <p>No leave requests found.</p>
               ) : (
                 <TableContainer component={Paper}>
@@ -196,7 +208,7 @@ export default function ManageLeaves({ auth_user_id }) {
                         <TableCell>Type</TableCell>
                         <TableCell>Reason</TableCell>
                         <TableCell>Status</TableCell>
-                      { user.user_role == 'hr' && <TableCell>Leave Request</TableCell>}
+                        {user.user_role === 'hr' && <TableCell>Leave Request</TableCell>}
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -215,11 +227,18 @@ export default function ManageLeaves({ auth_user_id }) {
                               sx={{ textTransform: 'capitalize' }}
                             />
                           </TableCell>
-                           { user.user_role == 'hr' &&  <TableCell>
-                            <Button onClick={() => openLeaveDialog(leave.id,leave.user_id)} size="small" variant="outlined"  sx={{ textTransform: 'capitalize' }} color='blueviolet'>
-                              Leave
-                            </Button>
-                          </TableCell>}
+                          {user.user_role === 'hr' && (
+                            <TableCell>
+                              <Button
+                                onClick={() => openLeaveDialog(leave.id, leave.user_id)}
+                                size="small"
+                                variant="outlined"
+                                sx={{ textTransform: 'capitalize' }}
+                              >
+                                Leave
+                              </Button>
+                            </TableCell>
+                          )}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -235,6 +254,7 @@ export default function ManageLeaves({ auth_user_id }) {
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Request Leave</DialogTitle>
         <DialogContent dividers>
+
           <TextField
             label="Start Date"
             name="start_date"
@@ -244,7 +264,27 @@ export default function ManageLeaves({ auth_user_id }) {
             fullWidth
             InputLabelProps={{ shrink: true }}
             sx={{ my: 1 }}
+             InputProps={{
+                sx: {
+                borderRadius: 2,
+                '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                    borderColor: '#ccc',
+                    },
+                    '&:hover fieldset': {
+                    borderColor: '#bbb',
+                    },
+                    '&.Mui-focused fieldset': {
+                    borderColor: '#ccc',
+                    },
+                },
+                '& input': {
+                    boxShadow: 'none !important',
+                },
+                },
+            }}
           />
+
           <TextField
             label="End Date"
             name="end_date"
@@ -254,7 +294,27 @@ export default function ManageLeaves({ auth_user_id }) {
             fullWidth
             InputLabelProps={{ shrink: true }}
             sx={{ my: 1 }}
+             InputProps={{
+                sx: {
+                borderRadius: 2,
+                '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                    borderColor: '#ccc',
+                    },
+                    '&:hover fieldset': {
+                    borderColor: '#bbb',
+                    },
+                    '&.Mui-focused fieldset': {
+                    borderColor: '#ccc',
+                    },
+                },
+                '& input': {
+                    boxShadow: 'none !important',
+                },
+                },
+            }}
           />
+
           <TextField
             select
             label="Leave Type"
@@ -269,6 +329,7 @@ export default function ManageLeaves({ auth_user_id }) {
             <MenuItem value="casual">Casual Leave</MenuItem>
             <MenuItem value="earned">Earned Leave</MenuItem>
           </TextField>
+
           <TextField
             label="Reason"
             name="reason"
@@ -278,7 +339,29 @@ export default function ManageLeaves({ auth_user_id }) {
             multiline
             rows={3}
             sx={{ my: 1 }}
+             InputProps={{
+                sx: {
+                borderRadius: 2,
+                '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                    borderColor: '#ccc', // Border color when not focused
+                    },
+                    '&:hover fieldset': {
+                    borderColor: '#bbb', // Border color on hover
+                    },
+                    '&.Mui-focused fieldset': {
+                    borderColor: '#ccc', // Border color when focused
+                    },
+                },
+                '& textarea': {
+                    outline: 'none', // Removes the default focus outline from textarea
+                    border: 'none',  // Remove any inner border that appears
+                    boxShadow: 'none', // Remove any box shadow that may appear on focus
+                },
+                },
+            }}
           />
+
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)} color="secondary">Cancel</Button>
@@ -310,6 +393,25 @@ export default function ManageLeaves({ auth_user_id }) {
             onChange={handleStatusChange}
             fullWidth
             sx={{ my: 1 }}
+             InputProps={{
+                sx: {
+                borderRadius: 2,
+                '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                    borderColor: '#ccc',
+                    },
+                    '&:hover fieldset': {
+                    borderColor: '#bbb',
+                    },
+                    '&.Mui-focused fieldset': {
+                    borderColor: '#ccc',
+                    },
+                },
+                '& input': {
+                    boxShadow: 'none !important',
+                },
+                },
+            }}
           />
           <TextField
             label="Message"
@@ -320,6 +422,27 @@ export default function ManageLeaves({ auth_user_id }) {
             multiline
             rows={3}
             sx={{ my: 1 }}
+             InputProps={{
+                sx: {
+                borderRadius: 2,
+                '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                    borderColor: '#ccc', // Border color when not focused
+                    },
+                    '&:hover fieldset': {
+                    borderColor: '#bbb', // Border color on hover
+                    },
+                    '&.Mui-focused fieldset': {
+                    borderColor: '#ccc', // Border color when focused
+                    },
+                },
+                '& textarea': {
+                    outline: 'none', // Removes the default focus outline from textarea
+                    border: 'none',  // Remove any inner border that appears
+                    boxShadow: 'none', // Remove any box shadow that may appear on focus
+                },
+                },
+            }}
           />
         </DialogContent>
         <DialogActions>

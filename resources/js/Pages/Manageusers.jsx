@@ -13,6 +13,10 @@ import Box from '@mui/material/Box';
 import { TextField } from '@mui/material';
 import Notification from '@/Components/Notification';
 import { usePage } from '@inertiajs/react';
+import EditUser from './Users/EditUser';
+
+
+
 export default function ManageUsers() {
   const { auth } = usePage().props;
     const user = auth.user;
@@ -25,6 +29,9 @@ export default function ManageUsers() {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [singleUser, setSingleUser] = useState(null);
   const [showUserDetailsModal, setShowUserDetailsModal] = useState(false);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [userToEdit, setUserToEdit] = useState(null);
+
 
   const [notification, setNotification] = useState({
     open: false,
@@ -58,7 +65,7 @@ export default function ManageUsers() {
     axios.get(`/admin/users/${id}`)
       .then((response) => {
         setSingleUser(response.data);
-        setShowUserDetailsModal(true); 
+        setShowUserDetailsModal(true);
       })
       .catch((error) => {
         console.error('Error fetching users:', error);
@@ -101,9 +108,12 @@ export default function ManageUsers() {
     setSelectedUserId(null);
   };
 
-  const handleEdit = (id) => {
-    window.location.href = `/admin/users/${id}/edit`;
-  };
+ const handleEditUser = (id) => {
+  const user = users.find((u) => u.id === id);
+  setUserToEdit(user);
+  setShowEditUserModal(true);
+};
+
 
   const handleUserAdded = (newUser) => {
     setUsers(prev => [...prev, newUser]);
@@ -122,7 +132,7 @@ export default function ManageUsers() {
           <IconButton size="small" aria-label="view">
             <VisibilityIcon onClick={() => fetchSingleUser(params.row.id)} color="primary" size="small" />
           </IconButton>
-          <IconButton onClick={() => handleEdit(params.row.id)} color="primary" size="small">
+          <IconButton onClick={() => handleEditUser(params.row.id)} color="primary" size="small">
             <EditIcon />
           </IconButton>
           <IconButton onClick={() => handleDelete(params.row.id)} color="error" size="small">
@@ -149,13 +159,46 @@ export default function ManageUsers() {
           {/* Search & Buttons */}
           <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <TextField
-              label="Search"
-              variant="outlined"
-              size="small"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{ maxWidth: 300, width: '100%' }}
+            label="Search"
+            variant="outlined"
+            size="small"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            fullWidth
+            InputProps={{
+                sx: {
+                borderRadius: 2,
+                '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                    borderColor: '#ccc',
+                    },
+                    '&:hover fieldset': {
+                    borderColor: '#bbb',
+                    },
+                    '&.Mui-focused fieldset': {
+                    borderColor: '#ccc',
+                    },
+                },
+                '& input': {
+                    boxShadow: 'none !important',
+                },
+                },
+            }}
+            InputLabelProps={{
+                sx: {
+                color: '#666',
+                '&.Mui-focused': {
+                    color: '#666',
+                },
+                },
+            }}
+            sx={{
+                maxWidth: 320,
+                backgroundColor: 'background.paper',
+            }}
             />
+
+
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
              {(user.user_role == 'hr') && <button
                 onClick={() => setShowNotificationModal(true)}
@@ -230,6 +273,20 @@ export default function ManageUsers() {
               </div>
             </div>
           )}
+
+          {showEditUserModal && userToEdit && (
+            <EditUser
+                user={userToEdit}
+                onClose={() => {
+                setShowEditUserModal(false);
+                setUserToEdit(null);
+                }}
+                onUpdated={() => {
+                fetchUsers(); // refresh user list
+                showNotification('success', 'User updated successfully.');
+                }}
+            />
+            )}
 
           {/* User Details Modal */}
     {showUserDetailsModal && singleUser && (
@@ -316,6 +373,8 @@ export default function ManageUsers() {
           </div>
         </div>
       )}
+
+
           {/* User Data Table */}
           <div className="overflow-x-auto bg-white shadow-sm sm:rounded-lg">
             <div className="p-4 text-gray-900 min-w-[500px]">

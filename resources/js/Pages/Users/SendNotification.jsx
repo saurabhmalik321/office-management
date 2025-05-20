@@ -121,7 +121,7 @@ export default function SendNotification({ onSent, employees }) {
           ))}
         </TextField>
 
-        <TextField
+       <TextField
           label="Title"
           name="title"
           value={form.title}
@@ -130,6 +130,25 @@ export default function SendNotification({ onSent, employees }) {
           error={!!errors.title}
           helperText={errors.title?.[0] || ''}
           size="small"
+            InputProps={{
+                sx: {
+                borderRadius: 2,
+                '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                    borderColor: '#ccc',
+                    },
+                    '&:hover fieldset': {
+                    borderColor: '#bbb',
+                    },
+                    '&.Mui-focused fieldset': {
+                    borderColor: '#ccc',
+                    },
+                },
+                '& input': {
+                    boxShadow: 'none !important',
+                },
+                },
+            }}
         />
 
         <TextField
@@ -143,6 +162,27 @@ export default function SendNotification({ onSent, employees }) {
           error={!!errors.message}
           helperText={errors.message?.[0] || ''}
           size="small"
+          InputProps={{
+                sx: {
+                borderRadius: 2,
+                '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                    borderColor: '#ccc', // Border color when not focused
+                    },
+                    '&:hover fieldset': {
+                    borderColor: '#bbb', // Border color on hover
+                    },
+                    '&.Mui-focused fieldset': {
+                    borderColor: '#ccc', // Border color when focused
+                    },
+                },
+                '& textarea': {
+                    outline: 'none', // Removes the default focus outline from textarea
+                    border: 'none',  // Remove any inner border that appears
+                    boxShadow: 'none', // Remove any box shadow that may appear on focus
+                },
+                },
+            }}
         />
 
         <Button

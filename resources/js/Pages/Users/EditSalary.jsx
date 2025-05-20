@@ -27,7 +27,7 @@ export default function EditSalaryModal({ open, onClose, salary, onSalaryUpdated
 
   useEffect(() => {
     if (salary) {
-      const formattedDate = new Date(salary.date).toISOString().split('T')[0]; 
+      const formattedDate = new Date(salary.date).toISOString().split('T')[0];
       setForm({
         name: salary?.name || '',
         amount: salary.amount || '',
@@ -85,6 +85,25 @@ export default function EditSalaryModal({ open, onClose, salary, onSalaryUpdated
             margin="normal"
             error={!!errors.name}
             helperText={errors.name?.[0]}
+             InputProps={{
+                sx: {
+                borderRadius: 2,
+                '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                    borderColor: '#ccc',
+                    },
+                    '&:hover fieldset': {
+                    borderColor: '#bbb',
+                    },
+                    '&.Mui-focused fieldset': {
+                    borderColor: '#ccc',
+                    },
+                },
+                '& input': {
+                    boxShadow: 'none !important',
+                },
+                },
+            }}
           />
 
           <TextField
@@ -97,6 +116,25 @@ export default function EditSalaryModal({ open, onClose, salary, onSalaryUpdated
             margin="normal"
             error={!!errors.amount}
             helperText={errors.amount?.[0]}
+             InputProps={{
+                sx: {
+                borderRadius: 2,
+                '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                    borderColor: '#ccc',
+                    },
+                    '&:hover fieldset': {
+                    borderColor: '#bbb',
+                    },
+                    '&.Mui-focused fieldset': {
+                    borderColor: '#ccc',
+                    },
+                },
+                '& input': {
+                    boxShadow: 'none !important',
+                },
+                },
+            }}
           />
 
           <TextField
@@ -110,6 +148,25 @@ export default function EditSalaryModal({ open, onClose, salary, onSalaryUpdated
             InputLabelProps={{ shrink: true }}
             error={!!errors.date}
             helperText={errors.date?.[0]}
+             InputProps={{
+                sx: {
+                borderRadius: 2,
+                '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                    borderColor: '#ccc',
+                    },
+                    '&:hover fieldset': {
+                    borderColor: '#bbb',
+                    },
+                    '&.Mui-focused fieldset': {
+                    borderColor: '#ccc',
+                    },
+                },
+                '& input': {
+                    boxShadow: 'none !important',
+                },
+                },
+            }}
           />
 
           <FormControl fullWidth margin="normal" error={!!errors.status}>

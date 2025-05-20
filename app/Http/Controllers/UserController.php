@@ -39,7 +39,7 @@ class UserController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',  
+            'email' => 'required|email|unique:users,email',
             'user_role' => 'required|string|in:admin,hr,employee',
         ]);
 
@@ -68,7 +68,7 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         $user->update($request->only('name', 'email', 'user_role'));
 
-        return Inertia::location(route('dashboard'));
+        return Inertia::location(route('manageusers'));
     }
 
     public function destroy($id)
@@ -121,7 +121,7 @@ class UserController extends Controller
     public function dashboard()
     {
           $user = Auth::user();
-    
+
     $notifications = Notification::where('hr_id', $user->id)
                         ->orderBy('created_at', 'desc')
                         ->get(['id', 'title', 'message', 'created_at']);
@@ -158,7 +158,7 @@ class UserController extends Controller
     {
           return response()->json($this->userInterface->getUser($id));
     }
-    
+
 }
 
 

@@ -3,6 +3,7 @@ import axios from 'axios';
 import jsPDF from 'jspdf';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage } from '@inertiajs/react';
+import LoadingSpinner from '../Components/LoadingSpinner';
 import {
   Box,
   Typography,
@@ -59,7 +60,7 @@ export default function ManageSalaries() {
         return 'default';
     }
   };
-   
+
   useEffect(() => {
     axios
       .get('/salaries')
@@ -75,7 +76,7 @@ export default function ManageSalaries() {
     const salaryToEdit = salaries.find((s) => s.id === id);
     setSelectedSalary(salaryToEdit);
     setOpenEditModal(true);
-    
+
   };
 
   const handleOpenNotification = (salaryId) => {
@@ -114,7 +115,7 @@ export default function ManageSalaries() {
 const handleDownloadPdf = (row) => {
   const pdfContainer = document.createElement('div');
   pdfContainer.style.position = 'absolute';
-  pdfContainer.style.left = '-9999px'; 
+  pdfContainer.style.left = '-9999px';
   pdfContainer.style.width = '595px';
 
   const formattedDate = new Date(row.date).toLocaleDateString('en-IN', {
@@ -212,7 +213,7 @@ pdfContainer.innerHTML = `
 
   html2canvas(pdfContainer, {
     scale: 2,
-    useCORS: true, 
+    useCORS: true,
   }).then((canvas) => {
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF();
@@ -373,10 +374,10 @@ pdfContainer.innerHTML = `
           <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
             <div className="p-6 text-gray-900">
               <Typography variant="h6" gutterBottom>
-                Manage all salaries paid and pending
+                Employees salaries paid and pending
               </Typography>
 
-              {loading && <p className="text-blue-600">Loading salaries...</p>}
+              {loading && <LoadingSpinner/> }
               {error && <p className="text-red-600">{error}</p>}
 
               {!loading && !error && (
@@ -467,6 +468,25 @@ pdfContainer.innerHTML = `
               })
             }
             sx={{ mb: 2 }}
+            InputProps={{
+                sx: {
+                borderRadius: 2,
+                '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                    borderColor: '#ccc',
+                    },
+                    '&:hover fieldset': {
+                    borderColor: '#bbb',
+                    },
+                    '&.Mui-focused fieldset': {
+                    borderColor: '#ccc',
+                    },
+                },
+                '& input': {
+                    boxShadow: 'none !important',
+                },
+                },
+            }}
           />
           <TextField
             fullWidth
@@ -475,13 +495,35 @@ pdfContainer.innerHTML = `
             label="Message"
             value={notificationData.message}
             onChange={(e) =>
-              setNotificationData({
+                setNotificationData({
                 ...notificationData,
                 message: e.target.value,
-              })
+                })
             }
             sx={{ mb: 2 }}
-          />
+            InputProps={{
+                sx: {
+                borderRadius: 2,
+                '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                    borderColor: '#ccc', // Border color when not focused
+                    },
+                    '&:hover fieldset': {
+                    borderColor: '#bbb', // Border color on hover
+                    },
+                    '&.Mui-focused fieldset': {
+                    borderColor: '#ccc', // Border color when focused
+                    },
+                },
+                '& textarea': {
+                    outline: 'none', // Removes the default focus outline from textarea
+                    border: 'none',  // Remove any inner border that appears
+                    boxShadow: 'none', // Remove any box shadow that may appear on focus
+                },
+                },
+            }}
+            />
+
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Button onClick={handleCloseNotification}>Cancel</Button>
             <Button variant="contained" onClick={handleSendNotification}>
