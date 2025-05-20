@@ -66,7 +66,12 @@ Route::group(['prefix' => 'admin'], function () {
     Route::post('/user/leaves/{id}', [UserController::class, 'userLeaves']);
     Route::post('/user/salary/{id}', [UserController::class, 'userSalary']);
     Route::get('/pending-leave', [UserController::class, 'pendingLeave']);
+
 });
+Route::get('/chat', function () {
+    return Inertia::render('ChatBot');
+})->name('chat');
+Route::post('/chat', [UserController::class, 'handleMessage']);
 Route::middleware(['auth'])->group(function () {
     Route::post('/notifications', [UserController::class, 'sendNotification']);
     Route::get('/employee', [UserController::class, 'onlyEmployee']);

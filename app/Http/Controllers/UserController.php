@@ -12,6 +12,9 @@ use Inertia\Inertia;
 use App\Services\SalaryService;
 use App\Services\LeaveService;
 use App\Models\Notification;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
 
 class UserController extends Controller
 {
@@ -158,7 +161,56 @@ class UserController extends Controller
     {
           return response()->json($this->userInterface->getUser($id));
     }
+    public function handleMessage(Request $request)
+    {
+        $userMessage = $request->input('message');
 
+        try {
+            $keywordResponses = [
+                'hi' => 'Hello! I am ChatBot, your virtual HR assistant.',
+                'ceo' => 'Our CEO is Mr. Nitin Goswami.',
+                'address' => 'Our Company address is sector 74,mohali tower,mohali(punjab)',
+                'company' => 'Our Company name is Wepro Solutions.',
+                'name' => 'I am ChatBot, here to assist you with HR-related queries.',
+                'salary' => 'Our entry-level salary typically starts at ₹20,000 per month, depending on the role.',
+                'leave' => 'Employees are entitled to 21 paid leaves per year, including casual and sick leaves.',
+                'holiday' => 'You can view the holiday list in the HR portal under "Holiday Calendar".',
+                'bonus' => 'Performance-based bonuses are distributed annually based on appraisals.',
+                'appraisal' => 'Appraisals are conducted once a year, usually in March.',
+                'timing' => 'Our standard office hours are from 9:30 AM to 7:00 PM, Monday to Friday.',
+                'remote' => 'Remote work is allowed with prior manager approval.',
+                'late' => 'Please inform your manager if you are running late. Repeated late marks may affect appraisals.',
+                'dress' => 'We follow a smart casual dress code from Monday to Thursday. Fridays are casual.',
+                'id' => 'If you have lost your ID card, please contact the admin team for a replacement.',
+                'probation' => 'The probation period for new employees is 3 months.',
+                'notice' => 'The standard notice period is 30 days.',
+                'internship' => 'Yes, we offer internships. Check with HR for current openings.',
+                'experience' => 'Experience letters are provided post-resignation upon request.',
+                'resign' => 'You can submit your resignation through the HR portal.',
+                'location' => 'Our office is located at: 123 Corporate Park, Mumbai.',
+                'manager' => 'If you face any issues, please reach out to your reporting manager or HR.',
+                'policy' => 'Company policies are available in the HR portal under "Documents".',
+            ];
+
+            $userMessageNormalized = strtolower(trim($userMessage));
+            $userWords = explode(' ', $userMessageNormalized);
+
+            $botReply = 'Sorry, I didn’t understand that. Can you rephrase or ask something else?';
+
+            foreach ($userWords as $word) {
+                if (array_key_exists($word, $keywordResponses)) {
+                    $botReply = $keywordResponses[$word];
+                    break;
+                }
+            }
+
+            return response()->json(['reply' => $botReply]);
+
+        } catch (\Exception $e) {
+            Log::error('Chatbot Exception:', ['message' => $e->getMessage()]);
+            return response()->json(['reply' => 'Something went wrong.']);
+        }
+    }
 }
 
 

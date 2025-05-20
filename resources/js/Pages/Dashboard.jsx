@@ -11,8 +11,15 @@ export default function Dashboard({ auth, authUserRole }) {
     const [payroll, setPayroll] = useState([]);
     const [activeEmployees, setActiveEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [count,setCount] = useState(0);
 
     const isAuthorized = authUserRole === 'admin' || authUserRole === 'hr';
+     const pendingLeave = () => {
+        axios
+        .get('/admin/pending-leave')
+        .then((response) => setCount(response.data))
+        .catch((error) => console.error('Error fetching leaves:', error));
+     };
 
     useEffect(() => {
         if (!isAuthorized) return setLoading(false);
@@ -53,11 +60,13 @@ export default function Dashboard({ auth, authUserRole }) {
         };
 
         fetchData();
+        pendingLeave();
     }, [authUserRole]);
 
     return (
         <AuthenticatedLayout
             header={<h2 className="text-2xl font-bold text-gray-800">Your Dashboard</h2>}
+            count={count}
         >
             <Head title="Dashboard" />
 

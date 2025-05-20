@@ -8,21 +8,23 @@ import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import Badge from '@mui/material/Badge';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import NotificationsList from '@/Pages/Users/Notification';
+import ChatBot from '../Pages/ChatBot'; // ✅ Your existing ChatBot component
 import axios from 'axios';
 
-export default function AuthenticatedLayout({ header,count, children }) {
+export default function AuthenticatedLayout({ header, count, children }) {
     const { auth } = usePage().props;
     const user = auth.user;
     const [notifications, setNotifications] = useState([]);
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [hasUnread, setHasUnread] = useState(false);
+    const [showChatBot, setShowChatBot] = useState(false); // ✅ State to control chatbot popup
 
     const toggleNotifications = () => {
         setShowNotifications(!showNotifications);
         setHasUnread(false);
     };
-   
+
     useEffect(() => {
         if (user?.id) {
             axios
@@ -45,30 +47,27 @@ export default function AuthenticatedLayout({ header,count, children }) {
                         <div className="flex">
                             <div className="flex shrink-0 items-center">
                                 <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto  fill-current text-gray-800" />
+                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
                                 </Link>
-                            </div>    
+                            </div>
                             <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink href={route('dashboard')} active={route().current('dashboard')}>
                                     Dashboard
                                 </NavLink>
-                              {(user.user_role == 'hr' || user.user_role == 'admin')  && <NavLink href={route('manageusers')} active={route().current('manageusers')}>
-                                    Users
-                                </NavLink>
-                                }
-                                 <NavLink
-                                    href={route('managesalaries')}
-                                    active={route().current('managesalaries')}
-                                >
+
+                                {(user.user_role === 'hr' || user.user_role === 'admin') && (
+                                    <NavLink href={route('manageusers')} active={route().current('manageusers')}>
+                                        Users
+                                    </NavLink>
+                                )}
+
+                                <NavLink href={route('managesalaries')} active={route().current('managesalaries')}>
                                     Salaries
                                 </NavLink>
-                              <NavLink
-                                    href={route('manageleaves')}
-                                    active={route().current('manageleaves')}
-                                >
+
+                                <NavLink href={route('manageleaves')} active={route().current('manageleaves')}>
                                     <div style={{ position: 'relative', display: 'inline-block' }}>
                                         <span>Leaves</span>
-
                                         {(user?.user_role === 'hr' && count > 0) && (
                                             <span
                                                 style={{
@@ -89,6 +88,14 @@ export default function AuthenticatedLayout({ header,count, children }) {
                                     </div>
                                 </NavLink>
 
+                                {/* ✅ Chat Bot toggle button */}
+                                <button
+                                    type="button"
+                                    onClick={() => setShowChatBot(true)}
+                                    className="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 focus:outline-none"
+                                >
+                                    Chat Bot
+                                </button>
                             </div>
                         </div>
 
@@ -117,8 +124,8 @@ export default function AuthenticatedLayout({ header,count, children }) {
                                         )}
                                     </>
                                 )}
+                            </div>
 
-                           </div>
                             <div className="relative">
                                 <Dropdown>
                                     <Dropdown.Trigger>
@@ -161,6 +168,25 @@ export default function AuthenticatedLayout({ header,count, children }) {
             )}
 
             <main>{children}</main>
+                {showChatBot && (
+                    <div
+                        className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center"
+                        onClick={() => setShowChatBot(false)} 
+                    >
+                        <div
+                            className="relative bg-white rounded-xl shadow-lg w-full max-w-3xl h-[600px] p-4"
+                            onClick={(e) => e.stopPropagation()} 
+                        >
+                            <button
+                                onClick={() => setShowChatBot(false)}
+                                className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-xl font-bold"
+                            >
+                                ×
+                            </button>
+                            <ChatBot />
+                        </div>
+                    </div>
+                )}
         </div>
     );
 }

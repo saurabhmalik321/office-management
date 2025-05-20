@@ -32,13 +32,20 @@ export default function ManageUsers() {
   const [showEditUserModal, setShowEditUserModal] = useState(false);
   const [userToEdit, setUserToEdit] = useState(null);
 
+  const [count,setCount] = useState(0);
 
   const [notification, setNotification] = useState({
     open: false,
     message: '',
     severity: 'info',
   });
-
+  
+   const pendingLeave = () => {
+      axios
+      .get('/admin/pending-leave')
+      .then((response) => setCount(response.data))
+      .catch((error) => console.error('Error fetching leaves:', error));
+    };
   const showNotification = (severity, message) => {
     setNotification({ open: true, severity, message });
   };
@@ -50,6 +57,7 @@ export default function ManageUsers() {
   useEffect(() => {
     fetchUsers();
     fetchEmployee();
+    pendingLeave();
   }, []);
 
   const fetchUsers = () => {
@@ -151,6 +159,7 @@ export default function ManageUsers() {
   return (
     <AuthenticatedLayout
       header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Manage All Users</h2>}
+      count={count}
     >
       <Head title="Manage Users" />
 

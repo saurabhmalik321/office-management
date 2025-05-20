@@ -38,6 +38,7 @@ export default function ManageSalaries() {
   const [error, setError] = useState(null);
   const [selectedSalary, setSelectedSalary] = useState(null);
   const [openEditModal, setOpenEditModal] = useState(false);
+  const [count,setCount] = useState(0);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -50,6 +51,12 @@ export default function ManageSalaries() {
     message: '',
   });
   const [currentSalaryId, setCurrentSalaryId] = useState(null);
+  const pendingLeave = () => {
+      axios
+      .get('/admin/pending-leave')
+      .then((response) => setCount(response.data))
+      .catch((error) => console.error('Error fetching leaves:', error));
+    };
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case 'pending':
@@ -70,7 +77,7 @@ export default function ManageSalaries() {
         setError('Something went wrong while fetching salaries.');
       })
       .finally(() => setLoading(false));
-  }, [salary]);
+  }, [salary,pendingLeave()]);
 
   const handleEdit = (id) => {
     const salaryToEdit = salaries.find((s) => s.id === id);
@@ -367,6 +374,7 @@ pdfContainer.innerHTML = `
           Salaries
         </h2>
       }
+      count={count}
     >
       <Head title="Salaries" />
       <div className="py-12">
