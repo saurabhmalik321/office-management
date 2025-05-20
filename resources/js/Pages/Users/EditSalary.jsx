@@ -13,6 +13,8 @@ import {
   Select,
   FormHelperText,
   Box,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 
 export default function EditSalaryModal({ open, onClose, salary, onSalaryUpdated }) {
@@ -24,6 +26,8 @@ export default function EditSalaryModal({ open, onClose, salary, onSalaryUpdated
   });
 
   const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showSnackbar, setShowSnackbar] = useState(false);
 
   useEffect(() => {
     if (salary) {
@@ -61,6 +65,8 @@ export default function EditSalaryModal({ open, onClose, salary, onSalaryUpdated
       .put(`/salaries/edit/${salary.id}`, form)
       .then((response) => {
         onSalaryUpdated(response.data);
+        setSuccessMessage('Salary updated successfully!');
+        setShowSnackbar(true);
         onClose();
       })
       .catch((error) => {
@@ -72,130 +78,147 @@ export default function EditSalaryModal({ open, onClose, salary, onSalaryUpdated
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Edit Salary</DialogTitle>
-      <DialogContent>
-        <Box component="form" noValidate sx={{ mt: 1 }}>
-          <TextField
-            label="Name"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            error={!!errors.name}
-            helperText={errors.name?.[0]}
-             InputProps={{
-                sx: {
-                borderRadius: 2,
-                '&.MuiOutlinedInput-root': {
-                    '& fieldset': {
-                    borderColor: '#ccc',
-                    },
-                    '&:hover fieldset': {
-                    borderColor: '#bbb',
-                    },
-                    '&.Mui-focused fieldset': {
-                    borderColor: '#ccc',
-                    },
-                },
-                '& input': {
-                    boxShadow: 'none !important',
-                },
-                },
-            }}
-          />
-
-          <TextField
-            label="Amount"
-            name="amount"
-            type="number"
-            value={form.amount}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            error={!!errors.amount}
-            helperText={errors.amount?.[0]}
-             InputProps={{
-                sx: {
-                borderRadius: 2,
-                '&.MuiOutlinedInput-root': {
-                    '& fieldset': {
-                    borderColor: '#ccc',
-                    },
-                    '&:hover fieldset': {
-                    borderColor: '#bbb',
-                    },
-                    '&.Mui-focused fieldset': {
-                    borderColor: '#ccc',
-                    },
-                },
-                '& input': {
-                    boxShadow: 'none !important',
-                },
-                },
-            }}
-          />
-
-          <TextField
-            label="Date"
-            name="date"
-            type="date"
-            value={form.date}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            InputLabelProps={{ shrink: true }}
-            error={!!errors.date}
-            helperText={errors.date?.[0]}
-             InputProps={{
-                sx: {
-                borderRadius: 2,
-                '&.MuiOutlinedInput-root': {
-                    '& fieldset': {
-                    borderColor: '#ccc',
-                    },
-                    '&:hover fieldset': {
-                    borderColor: '#bbb',
-                    },
-                    '&.Mui-focused fieldset': {
-                    borderColor: '#ccc',
-                    },
-                },
-                '& input': {
-                    boxShadow: 'none !important',
-                },
-                },
-            }}
-          />
-
-          <FormControl fullWidth margin="normal" error={!!errors.status}>
-            <InputLabel>Status</InputLabel>
-            <Select
-              name="status"
-              value={form.status}
+    <>
+      <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+        <DialogTitle>Edit Salary</DialogTitle>
+        <DialogContent>
+          <Box component="form" noValidate sx={{ mt: 1 }}>
+            <TextField
+              label="Name"
+              name="name"
+              value={form.name}
               onChange={handleChange}
-              label="Status"
-            >
-              <MenuItem value="">
-                <em>Select Status</em>
-              </MenuItem>
-              <MenuItem value="paid">Paid</MenuItem>
-              <MenuItem value="pending">Pending</MenuItem>
-            </Select>
-            {errors.status && <FormHelperText>{errors.status[0]}</FormHelperText>}
-          </FormControl>
-        </Box>
-      </DialogContent>
+              fullWidth
+              margin="normal"
+              error={!!errors.name}
+              helperText={errors.name?.[0]}
+              InputProps={{
+                sx: {
+                  borderRadius: 2,
+                  '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: '#ccc',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#bbb',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#ccc',
+                    },
+                  },
+                  '& input': {
+                    boxShadow: 'none !important',
+                  },
+                },
+              }}
+            />
 
-      <DialogActions>
-        <Button onClick={onClose} color="secondary">
-          Cancel
-        </Button>
-        <Button onClick={handleSave} variant="contained" color="primary">
-          Save
-        </Button>
-      </DialogActions>
-    </Dialog>
+            <TextField
+              label="Amount"
+              name="amount"
+              type="number"
+              value={form.amount}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              error={!!errors.amount}
+              helperText={errors.amount?.[0]}
+              InputProps={{
+                sx: {
+                  borderRadius: 2,
+                  '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: '#ccc',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#bbb',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#ccc',
+                    },
+                  },
+                  '& input': {
+                    boxShadow: 'none !important',
+                  },
+                },
+              }}
+            />
+
+            <TextField
+              label="Date"
+              name="date"
+              type="date"
+              value={form.date}
+              onChange={handleChange}
+              fullWidth
+              margin="normal"
+              InputLabelProps={{ shrink: true }}
+              error={!!errors.date}
+              helperText={errors.date?.[0]}
+              InputProps={{
+                sx: {
+                  borderRadius: 2,
+                  '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: '#ccc',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#bbb',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#ccc',
+                    },
+                  },
+                  '& input': {
+                    boxShadow: 'none !important',
+                  },
+                },
+              }}
+            />
+
+            <FormControl fullWidth margin="normal" error={!!errors.status}>
+              <InputLabel>Status</InputLabel>
+              <Select
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+                label="Status"
+              >
+                <MenuItem value="">
+                  <em>Select Status</em>
+                </MenuItem>
+                <MenuItem value="paid">Paid</MenuItem>
+                <MenuItem value="pending">Pending</MenuItem>
+              </Select>
+              {errors.status && <FormHelperText>{errors.status[0]}</FormHelperText>}
+            </FormControl>
+          </Box>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={onClose} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleSave} variant="contained" color="primary">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={showSnackbar}
+        autoHideDuration={3000}
+        onClose={() => setShowSnackbar(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setShowSnackbar(false)}
+          severity="success"
+          sx={{ width: '100%' }}
+        >
+          {successMessage}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }

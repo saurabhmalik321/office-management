@@ -164,85 +164,101 @@ class UserController extends Controller
         $userMessage = $request->input('message');
 
         try {
-            $keywordResponses = [
+           $keywordResponses = [
 
-                'hi' => 'Hello! I am ChatBot, your virtual HR assistant.',
-                'hello' => 'Hello! I am ChatBot, your virtual HR assistant.',
-                'greetings' => 'Hello! I am ChatBot, your virtual HR assistant.',
+                // Greetings
+                'hi' => 'Hi there! I’m ChatBot, your virtual HR assistant. How can I help you today?',
+                'hello' => 'Hello! I’m ChatBot, your virtual HR assistant. Feel free to ask me about salary, leaves, holidays, and more.',
+                'greetings' => 'Greetings! I’m here to help you with HR-related queries.',
 
+                // Leadership
                 'ceo' => 'Our CEO is Mr. Nitin Goswami.',
                 'founder' => 'Our CEO is Mr. Nitin Goswami.',
                 'leader' => 'Our CEO is Mr. Nitin Goswami.',
 
-                'address' => 'Our Company address is sector 74, Mohali Tower, Mohali (Punjab).',
-                'location' => 'Our Company address is sector 74, Mohali Tower, Mohali (Punjab).',
-                'office' => 'Our Company address is sector 74, Mohali Tower, Mohali (Punjab).',
+                // Company Info
+                'company' => 'Our company name is Wepro Solutions.',
+                'about company' => 'Wepro Solutions is a growing tech firm based in Mohali.',
+                'address' => 'We are located at Sector 74, Mohali Tower, Mohali (Punjab).',
+                'location' => 'We are located at Sector 74, Mohali Tower, Mohali (Punjab).',
+                'office' => 'We are located at Sector 74, Mohali Tower, Mohali (Punjab).',
+                'employee' => 'We are 10 members staff',
 
-                'company' => 'a Company name is Wepro Solutions.',
-                'about company' => 'Our Company name is Wepro Solutions.',
+                // Identity
+                'name' => 'I’m ChatBot, your HR assistant. Ask me anything about work, policies, or support.',
 
-                'name' => 'I am ChatBot, here to assist you with HR-related queries.',
+                // Salary
+                'salary' => 'Salaries are credited on the 10th of every month.',
+                'pay' => 'Entry-level salary starts from ₹20,000 per month, depending on the role.',
+                'payment' => 'Salaries are credited monthly, usually on the 10th.',
 
-                'salary' => 'Our entry-level salary typically starts at ₹20,000 per month, depending on the role.',
-                'pay' => 'Our entry-level salary typically starts at ₹20,000 per month, depending on the role.',
+                // Leave
+                'leave' => 'Employees are entitled to 21 paid leaves per year (including casual and sick leaves).',
+                'leaves' => 'You get 21 paid leaves annually, including casual and sick leave.',
+                'leave balance' => 'You can check your leave balance in the HR portal.',
 
-                'leave' => 'Employees are entitled to 21 paid leaves per year, including casual and sick leaves.',
-                'leaves' => 'Employees are entitled to 21 paid leaves per year, including casual and sick leaves.',
+                // Holiday
+                'holiday' => 'Check the "Holiday Calendar" in the HR portal to see upcoming holidays.',
+                'holidays' => 'You can view all holidays in the HR portal under "Holiday Calendar".',
 
-                'holiday' => 'You can view the holiday list in the HR portal under "Holiday Calendar".',
-                'holidays' => 'You can view the holiday list in the HR portal under "Holiday Calendar".',
+                // Bonus / Appraisal
+                'bonus' => 'Performance bonuses are distributed annually based on your appraisal results.',
+                'incentive' => 'Annual incentives are based on your performance reviews.',
+                'reward' => 'Rewards are performance-linked and reviewed annually.',
+                'appraisal' => 'Appraisals happen once a year, typically in March.',
+                'performance' => 'Performance reviews are done yearly and influence appraisals.',
+                'review' => 'Annual performance reviews occur in March.',
+                'rating' => 'Performance ratings are assigned during yearly appraisals in March.',
 
-                'bonus' => 'Performance-based bonuses are distributed annually based on appraisals.',
-                'incentive' => 'Performance-based bonuses are distributed annually based on appraisals.',
-                'reward' => 'Performance-based bonuses are distributed annually based on appraisals.',
+                // Timing / Attendance
+                'timing' => 'Office hours are 9:30 AM to 7:00 PM, Monday to Friday.',
+                'time' => 'Working hours are 9:30 AM – 7:00 PM, Mon to Fri.',
+                'hours' => 'Standard office hours are 9:30 AM to 7:00 PM.',
+                'late' => 'Please inform your manager if you’re late. Frequent delays may affect your appraisal.',
+                'delay' => 'Let your manager know if you’re delayed. Repeated delays are monitored.',
 
-                'appraisal' => 'Appraisals are conducted once a year, usually in March.',
-                'performance' => 'Appraisals are conducted once a year, usually in March.',
-                'review' => 'Appraisals are conducted once a year, usually in March.',
+                // Work Flexibility
+                'remote' => 'Remote work is allowed with manager approval.',
+                'wfh' => 'Work from home is available upon request and approval.',
 
-                'rating' => 'Appraisals are conducted once a year, usually in March.',
+                // Dress Code
+                'dress' => 'Smart casuals from Mon–Thu, casuals on Fridays.',
+                'code' => 'Dress code: Smart casuals on weekdays; casual Fridays!',
+                'clothing' => 'We follow a smart casual dress code with casual Fridays.',
 
-                'timing' => 'Our standard office hours are from 9:30 AM to 7:00 PM, Monday to Friday.',
-                'time' => 'Our standard office hours are from 9:30 AM to 7:00 PM, Monday to Friday.',
-                'hours' => 'Our standard office hours are from 9:30 AM to 7:00 PM, Monday to Friday.',
+                // ID and Security
+                'id' => 'Lost your ID? Contact the admin team for a replacement.',
+                'idcard' => 'Please inform admin if you lose your ID card.',
+                'badge' => 'For lost badges, please reach out to admin for reissuance.',
 
-                'remote' => 'Remote work is allowed with prior manager approval.',
-                'wfh' => 'Remote work is allowed with prior manager approval.',
+                // Onboarding / Exit
+                'probation' => 'The standard probation period is 3 months.',
+                'probation period' => 'Employees are on a 3-month probation when joining.',
+                'notice' => 'Notice period is 30 days. Submit resignation through the HR portal.',
+                'resignation' => 'Submit your resignation through the HR portal with 30 days’ notice.',
+                'resign' => 'Use the HR portal to resign. Notice period: 30 days.',
+                'trial' => 'New hires undergo a 3-month trial (probation) period.',
 
-                'late' => 'Please inform your manager if you are running late. Repeated late marks may affect appraisals.',
-                'delay' => 'Please inform your manager if you are running late. Repeated late marks may affect appraisals.',
+                // Internships
+                'internship' => 'Yes, internships are available. Contact HR for open roles.',
+                'intern' => 'We offer internships! Reach out to HR to learn more.',
 
-                'dress' => 'We follow a smart casual dress code from Monday to Thursday. Fridays are casual.',
-                'code' => 'We follow a smart casual dress code from Monday to Thursday. Fridays are casual.',
-                'clothing' => 'We follow a smart casual dress code from Monday to Thursday. Fridays are casual.',
+                // Letters
+                'experience' => 'Experience letters are issued after resignation, upon request.',
+                'letter' => 'Request your experience letter from HR after you exit.',
 
-                'id' => 'If you have lost your ID card, please contact the admin team for a replacement.',
-                'idcard' => 'If you have lost your ID card, please contact the admin team for a replacement.',
-                'badge' => 'If you have lost your ID card, please contact the admin team for a replacement.',
+                // Escalations
+                'manager' => 'Facing an issue? Talk to your reporting manager or HR.',
+                'reporting' => 'Reach out to your manager or HR for help.',
+                'supervisor' => 'Please contact your supervisor or HR if needed.',
 
-                'probation' => 'The probation period for new employees is 3 months.',
-                'probation period' => 'The probation period for new employees is 3 months.',
-
-                'notice' => 'The standard notice period is 30 days. You can submit your resignation through the HR portal.',
-                'trial' => 'The standard notice period is 30 days. You can submit your resignation through the HR portal.',
-                'resignation' => 'The standard notice period is 30 days. You can submit your resignation through the HR portal.',
-                'resign' => 'You can submit your resignation through the HR portal. You can submit your resignation through the HR portal.',
-
-                'internship' => 'Yes, we offer internships. Check with HR for current openings.',
-                'intern' => 'Yes, we offer internships. Check with HR for current openings.',
-
-                'experience' => 'Experience letters are provided post-resignation upon request.',
-                'letter' => 'Experience letters are provided post-resignation upon request.',
-                
-                'manager' => 'If you face any issues, please reach out to your reporting manager or HR.',
-                'reporting' => 'If you face any issues, please reach out to your reporting manager or HR.',
-                'supervisor' => 'If you face any issues, please reach out to your reporting manager or HR.',
-
+                // Documents / Policies
                 'policy' => 'Company policies are available in the HR portal under "Documents".',
-                'policies' => 'Company policies are available in the HR portal under "Documents".',
-                'rules' => 'Company policies are available in the HR portal under "Documents".',
+                'policies' => 'You can find all HR policies in the "Documents" section of the HR portal.',
+                'rules' => 'HR rules and policies are stored in the portal under "Documents".',
 
             ];
+
 
             $userMessageNormalized = strtolower(trim($userMessage));
             $userWords = explode(' ', $userMessageNormalized);
