@@ -59,6 +59,7 @@ export default function ManageSalaries() {
         return 'default';
     }
   };
+   
   useEffect(() => {
     axios
       .get('/salaries')

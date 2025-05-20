@@ -65,6 +65,7 @@ Route::group(['prefix' => 'admin'], function () {
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
     Route::post('/user/leaves/{id}', [UserController::class, 'userLeaves']);
     Route::post('/user/salary/{id}', [UserController::class, 'userSalary']);
+    Route::get('/pending-leave', [UserController::class, 'pendingLeave']);
 });
 Route::middleware(['auth'])->group(function () {
     Route::post('/notifications', [UserController::class, 'sendNotification']);

@@ -10,18 +10,19 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import NotificationsList from '@/Pages/Users/Notification';
 import axios from 'axios';
 
-export default function AuthenticatedLayout({ header, children }) {
+export default function AuthenticatedLayout({ header,count, children }) {
     const { auth } = usePage().props;
     const user = auth.user;
     const [notifications, setNotifications] = useState([]);
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [hasUnread, setHasUnread] = useState(false);
+
     const toggleNotifications = () => {
         setShowNotifications(!showNotifications);
         setHasUnread(false);
     };
-
+   
     useEffect(() => {
         if (user?.id) {
             axios
@@ -36,7 +37,6 @@ export default function AuthenticatedLayout({ header, children }) {
         }
     }, [user?.id]);
 
-
     return (
         <div className="min-h-screen bg-gray-100">
             <nav className="border-b border-gray-100 bg-white">
@@ -45,9 +45,9 @@ export default function AuthenticatedLayout({ header, children }) {
                         <div className="flex">
                             <div className="flex shrink-0 items-center">
                                 <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
+                                    <ApplicationLogo className="block h-40 w-100 fill-current text-gray-800" />
                                 </Link>
-                            </div>
+                            </div>    
                             <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink href={route('dashboard')} active={route().current('dashboard')}>
                                     Dashboard
@@ -62,19 +62,33 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     Salaries
                                 </NavLink>
-                                <NavLink
+                              <NavLink
                                     href={route('manageleaves')}
                                     active={route().current('manageleaves')}
                                 >
-                                     Leaves
+                                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                                        <span>Leaves</span>
+
+                                        {(user?.user_role === 'hr' && count > 0) && (
+                                            <span
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: '-8px',
+                                                    right: '-12px',
+                                                    backgroundColor: 'green',
+                                                    color: 'white',
+                                                    borderRadius: '50%',
+                                                    padding: '2px 6px',
+                                                    fontSize: '12px',
+                                                    lineHeight: '1',
+                                                }}
+                                            >
+                                                {count}
+                                            </span>
+                                        )}
+                                    </div>
                                 </NavLink>
 
-                                  {/* <NavLink
-                                    href={route('manageusers')}
-                                    active={route().current('manageusers')}
-                                >
-                                    Leave
-                                </NavLink> */}
                             </div>
                         </div>
 

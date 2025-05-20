@@ -134,6 +134,11 @@ class UserController extends Controller
         'notifications' => $notifications,
     ]);
     }
+    public function pendingLeave()
+    {
+        $leaves = $this->leaveService->pendingLeave();
+        return response()->json($leaves);
+    }
 
     public function sendNotification(Request $request)
     {

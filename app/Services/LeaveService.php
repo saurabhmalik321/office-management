@@ -23,6 +23,10 @@ class LeaveService
     {
         return Leave::with('user:id,name')->get();
     }
+    public function pendingLeave()
+    {
+        return Leave::where('status','pending')->get()->count();
+    }
 
     public function updateStatus($data, $id)
     {

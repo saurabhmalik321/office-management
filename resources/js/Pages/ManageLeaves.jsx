@@ -46,6 +46,7 @@ export default function ManageLeaves({ auth_user_id }) {
   // Leave response form dialog
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedLeaveId, setSelectedLeaveId] = useState(null);
+  const [count,setCount] = useState(0);
   const [statusForm, setStatusForm] = useState({
     status: '',
     title: '',
@@ -71,8 +72,15 @@ export default function ManageLeaves({ auth_user_id }) {
       .then((response) => setLeaves(response.data))
       .catch((error) => console.error('Error fetching leaves:', error));
   };
+    const pendingLeave = () => {
+        axios
+        .get('/admin/pending-leave')
+        .then((response) => setCount(response.data))
+        .catch((error) => console.error('Error fetching leaves:', error));
+    };
 
   useEffect(() => {
+    pendingLeave();
     fetchLeaves();
   }, []);
 
@@ -102,6 +110,7 @@ export default function ManageLeaves({ auth_user_id }) {
           leave_type: '',
           reason: '',
         });
+        pendingLeave();
         fetchLeaves();
       })
       .catch((error) => {
@@ -143,6 +152,7 @@ export default function ManageLeaves({ auth_user_id }) {
       });
       setStatusDialogOpen(false);
       fetchLeaves();
+      pendingLeave();
     } catch (error) {
       setSnackbar({
         open: true,
@@ -160,6 +170,7 @@ export default function ManageLeaves({ auth_user_id }) {
 
         </div>
       }
+      count={count}
     >
       <Head title="Leaves" />
       <div className="py-12">
