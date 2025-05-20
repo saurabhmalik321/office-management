@@ -67,11 +67,9 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,' . $id,
             'user_role' => 'required|string',
         ]);
-
         $user = User::findOrFail($id);
         $user->update($request->only('name', 'email', 'user_role'));
-
-        return Inertia::location(route('manageusers'));
+        // return Inertia::location(route('manageusers'));
     }
 
     public function destroy($id)

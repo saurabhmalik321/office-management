@@ -27,7 +27,7 @@ export default function Dashboard({ auth, authUserRole }) {
         const fetchData = async () => {
             try {
                 const [userRes, leaveRes] = await Promise.all([
-                    axios.get('/list'),          // GET all users
+                    axios.get('/list'),          
                     axios.get('/leaves'),        // GET all leave requests
                 ]);
 
@@ -48,7 +48,7 @@ export default function Dashboard({ auth, authUserRole }) {
                         currency: 'INR',
                         minimumFractionDigits: 0
                     });
-                    setPayroll(formatted); // e.g. ₹5,00,000.00
+                    setPayroll(formatted); 
                 }
 
                 setActiveEmployees(userList.filter(u => u.status === 1).length);
