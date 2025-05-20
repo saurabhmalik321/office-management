@@ -165,29 +165,83 @@ class UserController extends Controller
 
         try {
             $keywordResponses = [
+
                 'hi' => 'Hello! I am ChatBot, your virtual HR assistant.',
+                'hello' => 'Hello! I am ChatBot, your virtual HR assistant.',
+                'greetings' => 'Hello! I am ChatBot, your virtual HR assistant.',
+
                 'ceo' => 'Our CEO is Mr. Nitin Goswami.',
-                'address' => 'Our Company address is sector 74,mohali tower,mohali(punjab)',
-                'company' => 'Our Company name is Wepro Solutions.',
+                'founder' => 'Our CEO is Mr. Nitin Goswami.',
+                'leader' => 'Our CEO is Mr. Nitin Goswami.',
+
+                'address' => 'Our Company address is sector 74, Mohali Tower, Mohali (Punjab).',
+                'location' => 'Our Company address is sector 74, Mohali Tower, Mohali (Punjab).',
+                'office' => 'Our Company address is sector 74, Mohali Tower, Mohali (Punjab).',
+
+                'company' => 'a Company name is Wepro Solutions.',
+                'about company' => 'Our Company name is Wepro Solutions.',
+
                 'name' => 'I am ChatBot, here to assist you with HR-related queries.',
+
                 'salary' => 'Our entry-level salary typically starts at ₹20,000 per month, depending on the role.',
+                'pay' => 'Our entry-level salary typically starts at ₹20,000 per month, depending on the role.',
+
                 'leave' => 'Employees are entitled to 21 paid leaves per year, including casual and sick leaves.',
+                'leaves' => 'Employees are entitled to 21 paid leaves per year, including casual and sick leaves.',
+
                 'holiday' => 'You can view the holiday list in the HR portal under "Holiday Calendar".',
+                'holidays' => 'You can view the holiday list in the HR portal under "Holiday Calendar".',
+
                 'bonus' => 'Performance-based bonuses are distributed annually based on appraisals.',
+                'incentive' => 'Performance-based bonuses are distributed annually based on appraisals.',
+                'reward' => 'Performance-based bonuses are distributed annually based on appraisals.',
+
                 'appraisal' => 'Appraisals are conducted once a year, usually in March.',
+                'performance' => 'Appraisals are conducted once a year, usually in March.',
+                'review' => 'Appraisals are conducted once a year, usually in March.',
+
+                'rating' => 'Appraisals are conducted once a year, usually in March.',
+
                 'timing' => 'Our standard office hours are from 9:30 AM to 7:00 PM, Monday to Friday.',
+                'time' => 'Our standard office hours are from 9:30 AM to 7:00 PM, Monday to Friday.',
+                'hours' => 'Our standard office hours are from 9:30 AM to 7:00 PM, Monday to Friday.',
+
                 'remote' => 'Remote work is allowed with prior manager approval.',
+                'wfh' => 'Remote work is allowed with prior manager approval.',
+
                 'late' => 'Please inform your manager if you are running late. Repeated late marks may affect appraisals.',
+                'delay' => 'Please inform your manager if you are running late. Repeated late marks may affect appraisals.',
+
                 'dress' => 'We follow a smart casual dress code from Monday to Thursday. Fridays are casual.',
+                'code' => 'We follow a smart casual dress code from Monday to Thursday. Fridays are casual.',
+                'clothing' => 'We follow a smart casual dress code from Monday to Thursday. Fridays are casual.',
+
                 'id' => 'If you have lost your ID card, please contact the admin team for a replacement.',
+                'idcard' => 'If you have lost your ID card, please contact the admin team for a replacement.',
+                'badge' => 'If you have lost your ID card, please contact the admin team for a replacement.',
+
                 'probation' => 'The probation period for new employees is 3 months.',
-                'notice' => 'The standard notice period is 30 days.',
+                'probation period' => 'The probation period for new employees is 3 months.',
+
+                'notice' => 'The standard notice period is 30 days. You can submit your resignation through the HR portal.',
+                'trial' => 'The standard notice period is 30 days. You can submit your resignation through the HR portal.',
+                'resignation' => 'The standard notice period is 30 days. You can submit your resignation through the HR portal.',
+                'resign' => 'You can submit your resignation through the HR portal. You can submit your resignation through the HR portal.',
+
                 'internship' => 'Yes, we offer internships. Check with HR for current openings.',
+                'intern' => 'Yes, we offer internships. Check with HR for current openings.',
+
                 'experience' => 'Experience letters are provided post-resignation upon request.',
-                'resign' => 'You can submit your resignation through the HR portal.',
-                'location' => 'Our office is located at: 123 Corporate Park, Mumbai.',
+                'letter' => 'Experience letters are provided post-resignation upon request.',
+                
                 'manager' => 'If you face any issues, please reach out to your reporting manager or HR.',
+                'reporting' => 'If you face any issues, please reach out to your reporting manager or HR.',
+                'supervisor' => 'If you face any issues, please reach out to your reporting manager or HR.',
+
                 'policy' => 'Company policies are available in the HR portal under "Documents".',
+                'policies' => 'Company policies are available in the HR portal under "Documents".',
+                'rules' => 'Company policies are available in the HR portal under "Documents".',
+
             ];
 
             $userMessageNormalized = strtolower(trim($userMessage));

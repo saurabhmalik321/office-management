@@ -12,10 +12,10 @@ const ChatbotIcon = () => {
     return (
         <>
             <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
-                 <div className="mb-2 bg-white text-blue-800 px-4 py-2 rounded-lg shadow-md border border-gray-200 max-w-xs flex items-center gap-1">
-                    Hey! Ask me anything 
+                {!showChatBot && <div className="mb-2 bg-white text-blue-800 px-4 py-2 rounded-lg shadow-md border border-gray-200 max-w-xs flex items-center gap-1">
+                    Hey! Ask me anything
                     <span className="animate-wave origin-[70%_70%] inline-block">👋</span>
-                </div>
+                </div> }
 
                 <button
                     onClick={handleClick}
