@@ -3,7 +3,7 @@ import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { handleDownloadPdf } from '../Components/pdf';
-import LoadingSpinner from '../Components/LoadingSpinner'; 
+import LoadingSpinner from '../Components/LoadingSpinner';
 
 export default function Dashboard({ auth, authUserRole }) {
     const [users, setUsers] = useState([]);
@@ -153,7 +153,7 @@ export default function Dashboard({ auth, authUserRole }) {
                                     <button
                                     onClick={() =>
                                         handleDownloadPdf({
-                                        user: auth.user,
+                                        user: auth.user.name,
                                         amount: auth.user.salary || 0,
                                         status: auth.user.status === 1 ? 'paid' : 'pending',
                                         date: new Date(), // or fetch from DB if available

@@ -39,7 +39,7 @@ export default function ManageUsers() {
     message: '',
     severity: 'info',
   });
-  
+
    const pendingLeave = () => {
       axios
       .get('/admin/pending-leave')
@@ -130,9 +130,9 @@ export default function ManageUsers() {
   };
   const columns = [
     { field: 'id', headerName: 'ID', flex: 0.5, headerAlign: 'center', align: 'center' },
-    { field: 'name', headerName: 'Name', flex: 1, editable: true, headerAlign: 'center', align: 'center', renderCell: (params) => <span style={{ textTransform: 'capitalize' }}>{params.value}</span> },
-    { field: 'email', headerName: 'Email', flex: 1.5, editable: true, headerAlign: 'center', align: 'center' },
-    { field: 'user_role', headerName: 'Role', flex: 1, editable: true, headerAlign: 'center', align: 'center', renderCell: (params) => <span style={{ textTransform: 'capitalize' }}>{params.value}</span> },
+    { field: 'name', headerName: 'Name', flex: 1, headerAlign: 'center', align: 'center', renderCell: (params) => <span style={{ textTransform: 'capitalize' }}>{params.value}</span> },
+    { field: 'email', headerName: 'Email', flex: 1.5, headerAlign: 'center', align: 'center' },
+    { field: 'user_role', headerName: 'Role', flex: 1, headerAlign: 'center', align: 'center', renderCell: (params) => <span style={{ textTransform: 'capitalize' }}>{params.value}</span> },
     {
       field: 'actions', headerName: 'Actions', flex: 1, headerAlign: 'center', align: 'center', sortable: false,
       renderCell: (params) => (
@@ -297,7 +297,7 @@ export default function ManageUsers() {
             />
             )}
 
-          {/* User Details Modal */}
+          {/* Show User Details Modal */}
     {showUserDetailsModal && singleUser && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
