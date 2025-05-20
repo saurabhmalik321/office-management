@@ -157,12 +157,13 @@ export default function ManageUsers() {
               sx={{ maxWidth: 300, width: '100%' }}
             />
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <button
+             {(user.user_role == 'hr') && <button
                 onClick={() => setShowNotificationModal(true)}
                 className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full sm:w-auto"
               >
                 Send Notification
               </button>
+              }
               <button
                 onClick={() => setShowAddUserModal(true)}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full sm:w-auto"
@@ -197,7 +198,6 @@ export default function ManageUsers() {
                 >
                   &times;
                 </button>
-                <h2 className="text-lg font-bold mb-4">Send Notification</h2>
                 <SendNotification
                   onSent={() => setShowNotificationModal(false)}
                   employees={employee}
