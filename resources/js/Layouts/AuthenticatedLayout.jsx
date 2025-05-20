@@ -89,13 +89,13 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                 </NavLink>
 
                                 {/* ✅ Chat Bot toggle button */}
-                                <button
+                                {/* <button
                                     type="button"
                                     onClick={() => setShowChatBot(true)}
                                     className="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 focus:outline-none"
                                 >
                                     Chat Bot
-                                </button>
+                                </button> */}
                             </div>
                         </div>
 
@@ -168,25 +168,6 @@ export default function AuthenticatedLayout({ header, count, children }) {
             )}
 
             <main>{children}</main>
-                {showChatBot && (
-                    <div
-                        className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center"
-                        onClick={() => setShowChatBot(false)} 
-                    >
-                        <div
-                            className="relative bg-white rounded-xl shadow-lg w-full max-w-3xl h-[600px] p-4"
-                            onClick={(e) => e.stopPropagation()} 
-                        >
-                            <button
-                                onClick={() => setShowChatBot(false)}
-                                className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-xl font-bold"
-                            >
-                                ×
-                            </button>
-                            <ChatBot />
-                        </div>
-                    </div>
-                )}
         </div>
     );
 }
