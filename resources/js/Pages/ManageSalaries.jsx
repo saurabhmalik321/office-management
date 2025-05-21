@@ -312,14 +312,14 @@ pdfContainer.innerHTML = `
             width: '100%',
           }}
         >
-          <IconButton
+         { ((user.user_role == 'employee' && params.row.status == 'paid') || user.user_role == 'admin') ? <IconButton
             color="default"
             size="small"
             onClick={() => handleDownloadPdf(params.row)}
           >
             <DownloadingIcon />
-          </IconButton>
-
+          </IconButton> : ''
+          }
           {!isRestricted && (
             <IconButton
               onClick={() => handleEdit(params.row.id)}
