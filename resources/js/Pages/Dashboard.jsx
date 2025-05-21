@@ -28,7 +28,7 @@ export default function Dashboard({ auth, authUserRole }) {
             try {
                 const [userRes, leaveRes] = await Promise.all([
                     axios.get('/list'),          
-                    axios.get('/leaves'),        // GET all leave requests
+                    axios.get('/leaves'),      
                 ]);
 
                 const userList = userRes.data;

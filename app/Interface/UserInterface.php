@@ -16,4 +16,8 @@ interface UserInterface
     public function allEmployee();
     public function getNotification(array $data);
     public function getUser($id);
+    public function handleMessage(array $data);
+    public function getAdminHrUsers();
+    public function sendInquiry(array $data);
+    public function getInquiry($id);
 }

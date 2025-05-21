@@ -43,6 +43,14 @@ export default function ManageLeaves({ auth_user_id }) {
     message: '',
     severity: 'success',
   });
+  const [inquiryOpen, setInquiryOpen] = useState(false);
+  const [inquiryForm, setInquiryForm] = useState({
+    type: '',
+    message: '',
+    to_user_id: '',
+  });
+  const [users, setUsers] = useState([]);
+
   const [leaves, setLeaves] = useState([]);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedLeaveId, setSelectedLeaveId] = useState(null);
@@ -65,6 +73,30 @@ export default function ManageLeaves({ auth_user_id }) {
         return 'default';
     }
   };
+  const handleInquiryChange = (e) => {
+  setInquiryForm({ ...inquiryForm, [e.target.name]: e.target.value });
+  };
+ 
+  const handleInquirySubmit = () => {
+    axios
+      .post('/inquiries',inquiryForm)
+      .then(() => {
+        setSnackbar({
+          open: true,
+          message: 'Inquiry sent successfully!',
+          severity: 'success',
+        });
+        setInquiryOpen(false);
+        setInquiryForm({ type: '', message: '', to_user_id: '' });
+      })
+      .catch(() => {
+        setSnackbar({
+          open: true,
+          message: 'Failed to send inquiry.',
+          severity: 'error',
+        });
+      });
+  };
 
   const fetchLeaves = () => {
     setLoading(true);
@@ -80,10 +112,17 @@ export default function ManageLeaves({ auth_user_id }) {
         .then((response) => setCount(response.data))
         .catch((error) => console.error('Error fetching leaves:', error));
     };
+    const fetchUserslist = () => {
+        axios
+        .get('/admin-hr-users')
+        .then((response) => setUsers(response.data))
+        .catch((error) => console.error('Error fetching leaves:', error));
+    };
 
   useEffect(() => {
     pendingLeave();
     fetchLeaves();
+    fetchUserslist();
   }, []);
 
   const handleChange = (e) => {
@@ -180,6 +219,14 @@ export default function ManageLeaves({ auth_user_id }) {
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold mb-4">Your Leave Requests</h3>
                 {(user.user_role !== 'hr' && user.user_role !== 'admin') && (
+                 <div className='flex justify-between gap-2'> <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setInquiryOpen(true)}
+                    sx={{  marginBottom: '16px',textTransform: 'capitalize' }}
+                  >
+                    Send Inquiry
+                  </Button>
                   <Button
                     variant="contained"
                     color="primary"
@@ -188,6 +235,7 @@ export default function ManageLeaves({ auth_user_id }) {
                   >
                     Request Leave
                   </Button>
+                  </div>
                 )}
               </div>
 
@@ -344,19 +392,19 @@ export default function ManageLeaves({ auth_user_id }) {
                 borderRadius: 2,
                 '&.MuiOutlinedInput-root': {
                     '& fieldset': {
-                    borderColor: '#ccc', // Border color when not focused
+                    borderColor: '#ccc', 
                     },
                     '&:hover fieldset': {
-                    borderColor: '#bbb', // Border color on hover
+                    borderColor: '#bbb', 
                     },
                     '&.Mui-focused fieldset': {
-                    borderColor: '#ccc', // Border color when focused
+                    borderColor: '#ccc', 
                     },
                 },
                 '& textarea': {
-                    outline: 'none', // Removes the default focus outline from textarea
-                    border: 'none',  // Remove any inner border that appears
-                    boxShadow: 'none', // Remove any box shadow that may appear on focus
+                    outline: 'none', 
+                    border: 'none', 
+                    boxShadow: 'none', 
                 },
                 },
             }}
@@ -368,6 +416,79 @@ export default function ManageLeaves({ auth_user_id }) {
           <Button onClick={handleSubmit} variant="contained" color="primary">Submit</Button>
         </DialogActions>
       </Dialog>
+      <Dialog open={inquiryOpen} onClose={() => setInquiryOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Send Inquiry</DialogTitle>
+        <DialogContent dividers>
+          <TextField
+            select
+            label="Type"
+            name="type"
+            value={inquiryForm.type}
+            onChange={handleInquiryChange}
+            fullWidth
+            sx={{ my: 1 }}
+          >
+            <MenuItem value="">Select Type</MenuItem>
+            <MenuItem value="complaint">Complaint</MenuItem>
+            <MenuItem value="suggestion">Suggestion</MenuItem>
+            <MenuItem value="question">Question</MenuItem>
+          </TextField>
+
+          <TextField
+            select
+            label="Select User"
+            name="to_user_id"
+            value={inquiryForm.to_user_id}
+            onChange={handleInquiryChange}
+            fullWidth
+            sx={{ my: 1 }}
+          >
+            <MenuItem value="">Select User</MenuItem>
+            {users.map((user) => (
+              <MenuItem key={user.id} value={user.id}>
+                {user.name}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            label="Message"
+            name="message"
+            value={inquiryForm.message}
+            onChange={handleInquiryChange}
+            fullWidth
+            multiline
+            rows={4}
+            sx={{ my: 1 }}
+             InputProps={{
+                sx: {
+                borderRadius: 2,
+                '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                    borderColor: '#ccc', 
+                    },
+                    '&:hover fieldset': {
+                    borderColor: '#bbb', 
+                    },
+                    '&.Mui-focused fieldset': {
+                    borderColor: '#ccc', 
+                    },
+                },
+                '& textarea': {
+                    outline: 'none', 
+                    border: 'none',  
+                    boxShadow: 'none',
+                },
+                },
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setInquiryOpen(false)} color="secondary">Cancel</Button>
+          <Button onClick={handleInquirySubmit} variant="contained" color="primary">Send</Button>
+        </DialogActions>
+      </Dialog>
+
 
       {/* Leave Response Dialog */}
       <Dialog open={statusDialogOpen} onClose={() => setStatusDialogOpen(false)} fullWidth maxWidth="sm">
@@ -427,19 +548,19 @@ export default function ManageLeaves({ auth_user_id }) {
                 borderRadius: 2,
                 '&.MuiOutlinedInput-root': {
                     '& fieldset': {
-                    borderColor: '#ccc', // Border color when not focused
+                    borderColor: '#ccc', 
                     },
                     '&:hover fieldset': {
-                    borderColor: '#bbb', // Border color on hover
+                    borderColor: '#bbb', 
                     },
                     '&.Mui-focused fieldset': {
-                    borderColor: '#ccc', // Border color when focused
+                    borderColor: '#ccc', 
                     },
                 },
                 '& textarea': {
-                    outline: 'none', // Removes the default focus outline from textarea
-                    border: 'none',  // Remove any inner border that appears
-                    boxShadow: 'none', // Remove any box shadow that may appear on focus
+                    outline: 'none', 
+                    border: 'none',  
+                    boxShadow: 'none',
                 },
                 },
             }}
