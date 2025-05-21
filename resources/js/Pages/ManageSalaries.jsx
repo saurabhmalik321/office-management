@@ -24,6 +24,9 @@ import html2canvas from 'html2canvas';
 import DownloadingIcon from '@mui/icons-material/Downloading';
 import { DataGrid } from '@mui/x-data-grid';
 import EditSalary from './Users/EditSalary';
+import { useMediaQuery, useTheme } from '@mui/material';
+
+
 
 export default function ManageSalaries() {
   const { auth } = usePage().props;
@@ -237,135 +240,125 @@ pdfContainer.innerHTML = `
 
 
 
-
+const theme = useTheme();
+const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
 
   const columns = [
-    {
-      field: 'name',
-      headerName: 'Name',
-      flex: 1,
-      headerAlign: 'center',
-      align: 'center',
-      renderCell: (params) => {
-        return <span style={{marginBottom:'5px'}}>{params.row?.name}</span>;
-      },
-    },
-    {
-      field: 'amount',
-      headerName: 'Amount',
-      flex: 1,
-      type: 'number',
-      headerAlign: 'center',
-      align: 'center',
-      renderCell: (params) =>{
-        return <span style={{marginBottom:'5px'}}>{params.row.amount ? Number(params.row.amount).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0}) : 'No salary detected'}</span>;
-      }
-    },
-    {
-      field: 'date',
-      headerName: 'Date',
-      flex: 1,
-      headerAlign: 'center',
-      align: 'center',
-      renderCell: (params) =>
-        new Date(params.row.date).toLocaleDateString('en-IN', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        }),
-    },
-    {
-      field: 'status',
-      headerName: 'Status',
-      flex: 0.5,
-      headerAlign: 'center',
-      align: 'center',
-      renderCell: (params) => (
-        <Chip
-          label={params.row.status}
-          color={getStatusColor(params.row.status)}
-          variant="outlined"
-          sx={{
-            textTransform: 'capitalize',
-            mb: 2,
-            backgroundColor:
-              params.row.status === 'pending' ? '#ffe6ea' : 'lightgreen',
-            color: '#000',
-          }}
-        />
-      ),
-    },
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      flex: 1,
-      headerAlign: 'center',
-      align: 'center',
-      sortable: false,
-      renderCell: (params) => (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: 1,
-            width: '100%',
-          }}
-        >
-         { ((user.user_role == 'employee' && params.row.status == 'paid') || user.user_role == 'admin') ? <IconButton
-            color="default"
+  {
+    field: 'name',
+    headerName: 'Name',
+    flex: 1,
+    minWidth: 150,
+    headerAlign: 'center',
+    align: 'center',
+    renderCell: (params) => <span>{params.row?.name}</span>,
+  },
+  {
+    field: 'amount',
+    headerName: 'Amount',
+    flex: 1,
+    minWidth: 150,
+    headerAlign: 'center',
+    align: 'center',
+    renderCell: (params) =>
+      params.row.amount
+        ? Number(params.row.amount).toLocaleString('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 0,
+          })
+        : 'No salary detected',
+  },
+  {
+    field: 'date',
+    headerName: 'Date',
+    flex: 1,
+    minWidth: 130,
+    hide: isMobile, // Hides on mobile
+    headerAlign: 'center',
+    align: 'center',
+    renderCell: (params) =>
+      new Date(params.row.date).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }),
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    flex: 0.5,
+    minWidth: 100,
+    headerAlign: 'center',
+    align: 'center',
+    renderCell: (params) => (
+      <Chip
+        label={params.row.status}
+        variant="outlined"
+        sx={{
+          textTransform: 'capitalize',
+          backgroundColor:
+            params.row.status === 'pending' ? '#ffe6ea' : 'lightgreen',
+          color: '#000',
+          marginBottom:2.5,
+        }}
+      />
+    ),
+  },
+  {
+    field: 'actions',
+    headerName: 'Actions',
+    flex: 1,
+    minWidth: 120,
+    headerAlign: 'center',
+    align: 'center',
+    sortable: false,
+    renderCell: (params) => (
+      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+        <IconButton size="small" onClick={() => handleDownloadPdf(params.row)}>
+          <DownloadingIcon />
+        </IconButton>
+        {!isRestricted && (
+          <IconButton
             size="small"
-            onClick={() => handleDownloadPdf(params.row)}
+            onClick={() => handleEdit(params.row.id)}
+            color="primary"
           >
-            <DownloadingIcon />
-          </IconButton> : ''
-          }
-          {!isRestricted && (
-            <IconButton
-              onClick={() => handleEdit(params.row.id)}
-              color="primary"
+            <EditIcon />
+          </IconButton>
+        )}
+      </Box>
+    ),
+  },
+  ...(!isRestricted
+    ? [
+        {
+          field: 'Salary Status',
+          headerName: 'Salary Status',
+          flex: 1,
+          minWidth: 160,
+          hide: isMobile || isTablet, // Hides on tablet & mobile
+          headerAlign: 'center',
+          align: 'center',
+          sortable: false,
+          renderCell: (params) => (
+            <Button
+              onClick={() => handleOpenNotification(params.row.id)}
               size="small"
+              variant="outlined"
+              color="secondary"
+              sx={{ textTransform: 'capitalize', marginBottom:2.5}}
             >
-              <EditIcon />
-            </IconButton>
-          )}
-        </Box>
-      ),
-    },
-    ...(!isRestricted
-      ? [
-          {
-            field: 'Salary Status',
-            headerName: 'Salary Status',
-            flex: 1,
-            headerAlign: 'center',
-            align: 'center',
-            sortable: false,
-            renderCell: (params) => (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: 1,
-                  width: '100%',
-                  textTransform: 'capitalize',
-                }}
-              >
-                <Button
-                  onClick={() => handleOpenNotification(params.row.id)}
-                  size="small"
-                  variant="outlined"
-                  sx={{ textTransform: 'capitalize' }}
-                  color="secondary"
-                >
-                  Mark Paid
-                </Button>
-              </Box>
-            ),
-          },
-        ]
-      : []),
-  ];
+              Mark Paid
+            </Button>
+          ),
+        },
+      ]
+    : []),
+];
+
 
   return (
     <AuthenticatedLayout
@@ -389,7 +382,7 @@ pdfContainer.innerHTML = `
               {error && <p className="text-red-600">{error}</p>}
 
               {!loading && !error && (
-                <Box sx={{ width: '100%', minWidth: '600px' }}>
+                <Box sx={{ width: '100%',  overflowX: 'auto'}}>
                   <DataGrid
                     rows={salaries}
                     columns={columns}
