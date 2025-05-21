@@ -8,7 +8,7 @@ import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import Badge from '@mui/material/Badge';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import NotificationsList from '@/Pages/Users/Notification';
-import ChatBot from '../Pages/ChatBot'; // ✅ Your existing ChatBot component
+import ChatBot from '../Pages/ChatBot'; 
 import axios from 'axios';
 
 export default function AuthenticatedLayout({ header, count, children }) {
@@ -18,13 +18,18 @@ export default function AuthenticatedLayout({ header, count, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [hasUnread, setHasUnread] = useState(false);
-    const [showChatBot, setShowChatBot] = useState(false); // ✅ State to control chatbot popup
+    const [read, setRead] = useState(false);
+    const [inquiry, setInquiry] = useState([]);
+    const [showChatBot, setShowChatBot] = useState(false); 
 
     const toggleNotifications = () => {
         setShowNotifications(!showNotifications);
         setHasUnread(false);
+        setRead(false);
     };
-
+   useEffect(()=>{
+     inquiryData()
+   },[])
     useEffect(() => {
         if (user?.id) {
             axios
@@ -38,6 +43,16 @@ export default function AuthenticatedLayout({ header, count, children }) {
                 });
         }
     }, [user?.id]);
+    const inquiryData=()=>{
+        axios.get('/admin/employee-inquiry')
+        .then((res)=>{
+           setInquiry(res.data);
+           setRead(res.data.length > 0);
+        })
+        .catch((error) => {
+            console.error('Failed to fetch inquiry details:', error);
+        })
+    }
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -101,7 +116,7 @@ export default function AuthenticatedLayout({ header, count, children }) {
 
                         <div className="relative hidden sm:ms-6 sm:flex sm:items-center gap-4">
                             <div>
-                                {user.user_role !== 'admin' && user.user_role !== 'hr' && (
+                                {(user.user_role !== 'admin' && user.user_role !== 'hr') ? (
                                     <>
                                         <Badge badgeContent={hasUnread ? notifications.length : 0} color="error">
                                             <button
@@ -118,6 +133,28 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                                 <div onClick={() => setShowNotifications(false)} className="absolute inset-0" />
                                                 <NotificationsList
                                                     notifications={notifications}
+                                                    onClose={toggleNotifications}
+                                                />
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Badge badgeContent={read ? inquiry.length : 0} color="error">
+                                            <button
+                                                type="button"
+                                                className="text-gray-500 hover:text-gray-700 transition duration-150 ease-in-out"
+                                                onClick={toggleNotifications}
+                                            >
+                                                <NotificationsIcon />
+                                            </button>
+                                        </Badge>
+
+                                        {showNotifications && (
+                                            <div className="fixed inset-0 bg-black bg-opacity-30 z-40 flex justify-center items-center">
+                                                <div onClick={() => setShowNotifications(false)} className="absolute inset-0" />
+                                                <NotificationsList
+                                                    notifications={inquiry}
                                                     onClose={toggleNotifications}
                                                 />
                                             </div>

@@ -4,6 +4,7 @@ use App\Models\User;
 use App\Models\Notification;
 use App\Interface\UserInterface;
 use App\Models\Salary;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Inquiry;
 class UserRepository implements UserInterface
 {
@@ -227,11 +228,13 @@ class UserRepository implements UserInterface
             'user_id' => $data['to_user_id'],
             'type' => $data['type'],
             'message' => $data['message'],
+            'employee_id' => Auth::id(),
         ]);
         return  $inquiry;
     }
     public function getInquiry($id){
-        $inquiry = Inquiry::where('user_id',$id)->get();
-        return  $inquiry;
+        return Inquiry::with('user')->where('user_id',$id)->get();
     }
 }
+
+

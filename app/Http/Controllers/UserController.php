@@ -83,6 +83,11 @@ class UserController extends Controller
         $salaries = $this->salaryService->getUserSalaries();
         return response()->json($salaries);
     }
+    public function getSalaryStatus()
+    {
+          $salaries = $this->salaryService->getSalaryStatus();
+        return response()->json($salaries);
+    }
 
     public function storeSalary(Request $request)
     {

@@ -23,6 +23,10 @@ class SalaryService
 
     return $salaries;
     }
+    public function getSalaryStatus()
+    {
+         return Salary::where('user_id',Auth::id())->get();
+    }
     public function updateSalary(object $data, $id)
     {
         $salary = Salary::where('id', $id)->first(); 

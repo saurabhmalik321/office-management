@@ -9,6 +9,11 @@ class Inquiry extends Model
    protected $fillable=[
     'type',
     'message',
-    'user_id'
+    'user_id',
+    'employee_id'
    ];
+   public function user()
+   {
+      return $this->belongsTo(User::class,'employee_id');
+   }
 }

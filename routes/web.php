@@ -66,7 +66,7 @@ Route::group(['prefix' => 'admin'], function () {
     Route::post('/user/leaves/{id}', [UserController::class, 'userLeaves']);
     Route::post('/user/salary/{id}', [UserController::class, 'userSalary']);
     Route::get('/pending-leave', [UserController::class, 'pendingLeave']);
-     Route::get('/employee-inquiry', [UserController::class, 'getInquiry']);
+    Route::get('/employee-inquiry', [UserController::class, 'getInquiry']);
 
 });
 Route::get('/chat', function () {
@@ -82,6 +82,7 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware('auth')->group(function () {
     // Salary
     Route::get('/salaries', [UserController::class, 'indexSalaries']);
+    Route::get('/salary-status', [UserController::class, 'getSalaryStatus']);
     Route::post('/salaries', [UserController::class, 'storeSalary']);
     Route::post('/salaries/paid/{id}', [UserController::class, 'markSalaryAsPaid']);
     Route::put('/salaries/edit/{id}', [UserController::class, 'updateSalary']);

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Leave;
 use App\Models\Salary;
+use App\Models\Inquiry;
 
 class User extends Authenticatable
 {
@@ -58,6 +59,10 @@ class User extends Authenticatable
     public function salary()
     {
         return $this->hasOne(Salary::class,'user_id');
+    }
+    public function inquiry()
+    {
+        return $this->hasOne(Inquiry::class,'employee_id');
     }
 }
 

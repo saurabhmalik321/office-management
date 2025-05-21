@@ -12,6 +12,7 @@ export default function Dashboard({ auth, authUserRole }) {
     const [activeEmployees, setActiveEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [count,setCount] = useState(0);
+    const [salary,setSalaries] = useState([]);
 
     const isAuthorized = authUserRole === 'admin' || authUserRole === 'hr';
      const pendingLeave = () => {
@@ -20,7 +21,16 @@ export default function Dashboard({ auth, authUserRole }) {
         .then((response) => setCount(response.data))
         .catch((error) => console.error('Error fetching leaves:', error));
      };
-
+     useEffect(() => {
+         axios
+           .get('/salary-status')
+           .then((response) => setSalaries(response.data))
+           .catch((error) => {
+             console.error('Error fetching salary status:', error);
+             setError('Something went wrong while fetching salaries.');
+           })
+           .finally(() => setLoading(false));
+       }, []);
     useEffect(() => {
         if (!isAuthorized) return setLoading(false);
 
@@ -145,7 +155,7 @@ export default function Dashboard({ auth, authUserRole }) {
                                     </p>
                                 </div>
 
-                                <div className="bg-white p-6 rounded-lg shadow flex flex-col justify-between">
+                               { (salary[0]?.status == 'paid') ? (<div className="bg-white p-6 rounded-lg shadow flex flex-col justify-between">
                                     <div>
                                         <h3 className="text-xl font-semibold text-green-800 mb-2">Latest Payslip</h3>
                                         <p className="text-gray-700">You can download your latest salary receipt below.</p>
@@ -164,7 +174,7 @@ export default function Dashboard({ auth, authUserRole }) {
                                     Download Payslip
                                     </button>
 
-                                </div>
+                                </div>) : <div style={{textAlign:'center', alignContent:'center'}}>Your salary status is pending</div> }
                             </div>
                         </div>
                     )}
