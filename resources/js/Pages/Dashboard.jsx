@@ -87,7 +87,7 @@ export default function Dashboard({ auth, authUserRole }) {
 
                             {/* User Table */}
                             <div className="bg-white shadow-xl rounded-2xl mt-10 p-8">
-                                <h3 className="text-2xl font-semibold text-gray-800 mb-4">User Directory</h3>
+                                <h3 className="text-2xl font-semibold text-gray-800 mb-4">All Users</h3>
                                 <div className="overflow-x-auto rounded-lg">
                                     <table className="min-w-full text-sm text-gray-800">
                                         <thead className="bg-gray-200">

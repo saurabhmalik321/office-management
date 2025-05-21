@@ -3,6 +3,8 @@
 namespace App\Observers;
 
 use App\Models\User;
+use App\Models\UserHistory;
+use Illuminate\Support\Facades\Auth;
 
 class UserObserver
 {
@@ -11,7 +13,12 @@ class UserObserver
      */
     public function created(User $user): void
     {
-        //
+        UserHistory::create([
+         'user_id' => $user->id ?? null,
+         'user_role' => $user->user_role,
+         'description' => "created user: ". json_encode($user->attributesToArray()),
+         'updated_by' => Auth::id() ?? null,
+        ]);
     }
 
     /**

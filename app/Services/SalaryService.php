@@ -37,6 +37,7 @@ class SalaryService
 
         $user = User::where('id', $salary->user_id)->first(); 
         $user->name = $data->name;
+        $user->salary = $data->amount;
         $user->save();
 
         $salary->user = $user->name; 

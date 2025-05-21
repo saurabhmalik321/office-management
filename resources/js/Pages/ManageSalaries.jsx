@@ -317,9 +317,10 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
     sortable: false,
     renderCell: (params) => (
       <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-        <IconButton size="small" onClick={() => handleDownloadPdf(params.row)}>
+        { ((user.user_role == 'employee' && params.row.status == 'paid') || user.user_role == 'admin') ? <IconButton size="small" onClick={() => handleDownloadPdf(params.row)}>
           <DownloadingIcon />
-        </IconButton>
+        </IconButton> :''
+        }
         {!isRestricted && (
           <IconButton
             size="small"
