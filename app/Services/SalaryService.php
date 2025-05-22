@@ -23,6 +23,14 @@ class SalaryService
 
     return $salaries;
     }
+    public function getSingleUserSalaries()
+    {
+       $salaries = Salary::select('salaries.*', 'users.name')
+            ->join('users', 'users.id', '=', 'salaries.user_id')
+            ->where('salaries.user_id', Auth::id())
+            ->get();
+        return $salaries;
+    }
     public function getSalaryStatus()
     {
          return Salary::where('user_id',Auth::id())->get();

@@ -26,6 +26,28 @@ class UserObserver
      */
     public function updated(User $user): void
     {
+         $original = $user->getOriginal();
+        foreach ($user->getAttributes() as $field => $value) {
+            if ($field === 'updated_at') {
+                continue;
+            }
+    
+            if ($user->isDirty($field)) {
+                if(isset($original[$field])){
+                    $originalValue = $original[$field]; 
+                }else{
+                    $originalValue = ''; 
+                }
+                $newValue = $user->$field; 
+    
+                UserHistory::create([
+                    'user_id' => $user->id,
+                    'user_role' => $user->user_role,
+                    'description' => "modified ". $field .": ". $originalValue ." to ". $newValue,
+                    'updated_by' => Auth::id() ?? null, 
+                ]);
+            }
+        }
         //  UserHistory::create([
         //  'user_id' => $user->id ?? null,
         //  'user_role' => $user->user_role,

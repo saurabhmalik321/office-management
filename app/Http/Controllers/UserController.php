@@ -52,7 +52,8 @@ class UserController extends Controller
 
     public function show($id)
     {
-        return response()->json($this->userInterface->find($id));
+          $user = $this->userInterface->find($id);
+          return Inertia::render('Users/UserDetails', ['user' => $user]);
     }
 
     public function edit($id)
@@ -84,6 +85,12 @@ class UserController extends Controller
         $salaries = $this->salaryService->getUserSalaries();
         return response()->json($salaries);
     }
+    public function getSingleUserSalaries()
+    {
+        $salaries = $this->salaryService->getSingleUserSalaries();
+        return response()->json($salaries);
+    }
+    
     public function getSalaryStatus()
     {
           $salaries = $this->salaryService->getSalaryStatus();

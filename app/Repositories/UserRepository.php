@@ -14,7 +14,7 @@ class UserRepository implements UserInterface
     }
     public function find($id)
     {
-         $user = User::with(['leaves', 'salary'])->find($id);
+         $user = User::with(['leaves', 'salary','history.user'])->find($id);
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }

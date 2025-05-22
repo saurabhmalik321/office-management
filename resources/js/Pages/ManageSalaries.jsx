@@ -54,6 +54,7 @@ export default function ManageSalaries() {
     message: '',
   });
   const [currentSalaryId, setCurrentSalaryId] = useState(null);
+
   const pendingLeave = () => {
       axios
       .get('/admin/pending-leave')
@@ -120,8 +121,18 @@ export default function ManageSalaries() {
       });
     }
   };
-
-
+  if(user.user_role == 'employee'){
+    useEffect(()=>{
+       axios.get('/single-salaries')
+      .then((response) => setSalaries(response.data))
+      .catch((error) => {
+        console.error('Error fetching single user salary:', error);
+        setError('Something went wrong while fetching salaries.');
+      })
+      .finally(() => setLoading(false));
+    },[])
+  }
+console.log(salaries,"salariesdata");
 const handleDownloadPdf = (row) => {
   const pdfContainer = document.createElement('div');
   pdfContainer.style.position = 'absolute';

@@ -82,6 +82,7 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware('auth')->group(function () {
     // Salary
+    Route::get('/single-salaries', [UserController::class, 'getSingleUserSalaries']);
     Route::get('/salaries', [UserController::class, 'indexSalaries']);
     Route::get('/salary-status', [UserController::class, 'getSalaryStatus']);
     Route::post('/salaries', [UserController::class, 'storeSalary']);
