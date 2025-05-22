@@ -1,10 +1,48 @@
+// npm install axios chart.js react-chartjs-2
+
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { handleDownloadPdf } from '../Components/pdf';
 import LoadingSpinner from '../Components/LoadingSpinner';
-import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
+import { ExpandMore, ExpandLess } from '@mui/icons-material';
+import {
+    Avatar,
+    Chip,
+    CircularProgress,
+    Collapse,
+    IconButton,
+    Skeleton
+} from '@mui/material';
+
+import {
+    Chart as ChartJS,
+    ArcElement,
+    Tooltip,
+    Legend,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    PointElement,
+    LineElement,
+    Filler
+} from 'chart.js';
+import { Doughnut, Bar, Line } from 'react-chartjs-2';
+
+ChartJS.register(
+    ArcElement,
+    Tooltip,
+    Legend,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    PointElement,
+    LineElement,
+    Filler
+);
 
 export default function Dashboard({ auth, authUserRole }) {
     const [users, setUsers] = useState([]);
@@ -15,6 +53,7 @@ export default function Dashboard({ auth, authUserRole }) {
     const [count, setCount] = useState(0);
     const [salary, setSalaries] = useState([]);
     const [expandedUserId, setExpandedUserId] = useState(null);
+    const [performanceData, setPerformanceData] = useState([]);
 
     const isAuthorized = authUserRole === 'admin' || authUserRole === 'hr';
 
@@ -34,6 +73,25 @@ export default function Dashboard({ auth, authUserRole }) {
             .then((response) => setSalaries(response.data))
             .catch((error) => console.error('Error fetching salary status:', error))
             .finally(() => setLoading(false));
+    }, []);
+
+    useEffect(() => {
+        // Mock performance data - this must come from an API
+        setPerformanceData([
+            { month: 'Jan', value: 65 },
+            { month: 'Feb', value: 59 },
+            { month: 'Mar', value: 80 },
+            { month: 'Apr', value: 81 },
+            { month: 'May', value: 56 },
+            { month: 'Jun', value: 55 },
+            { month: 'Jul', value: 40 },
+            { month: 'Ago', value: 65 },
+            { month: 'Sep', value: 59 },
+            { month: 'Oct', value: 80 },
+            { month: 'Nov', value: 81 },
+            { month: 'Dec', value: 56 }
+
+        ]);
     }, []);
 
     useEffect(() => {
@@ -77,89 +135,351 @@ export default function Dashboard({ auth, authUserRole }) {
         pendingLeave();
     }, [authUserRole]);
 
+    // Chart data with modern color schemes
+    const userStatusChart = {
+        labels: ['Active', 'Inactive'],
+        datasets: [
+            {
+                label: 'Employees',
+                data: [
+                    activeEmployees,
+                    users.length - activeEmployees
+                ],
+                backgroundColor: ['#10b981', '#ef4444'],
+                borderColor: ['#ffffff', '#ffffff'],
+                borderWidth: 2,
+                hoverOffset: 10,
+                cutout: '70%',
+            },
+        ],
+    };
+
+    const payrollBarChart = {
+        labels: users.map(u => u.name.split(' ')[0]), // Show only first names
+        datasets: [
+            {
+                label: 'Salary',
+                data: users.map(u => Number(u.salary || 0)),
+                backgroundColor: '#3b82f6',
+                borderRadius: 6,
+                hoverBackgroundColor: '#2563eb',
+            },
+        ],
+    };
+
+    const performanceLineChart = {
+        labels: performanceData.map(item => item.month),
+        datasets: [
+            {
+                label: 'Performance',
+                data: performanceData.map(item => item.value),
+                fill: true,
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                borderColor: '#3b82f6',
+                tension: 0.4,
+                pointBackgroundColor: '#3b82f6',
+                pointBorderColor: '#fff',
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: '#3b82f6',
+                pointHoverBorderColor: '#fff',
+                pointHitRadius: 10,
+                pointBorderWidth: 2,
+            }
+        ]
+    };
+
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-extrabold text-indigo-900">Your Dashboard</h2>}
+            header={<h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>}
             count={count}
         >
             <Head title="Dashboard" />
 
-            <div className="py-12 bg-gradient-to-r from-indigo-50 to-indigo-100 min-h-screen">
-                <div className="max-w-7xl mx-auto px-6 lg:px-8 space-y-10">
+            <div className="py-8 bg-gray-50 min-h-screen">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
                     {loading ? (
-                        <LoadingSpinner />
+                        <div className="space-y-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {[...Array(4)].map((_, i) => (
+                                    <Skeleton key={i} variant="rounded" height={120} />
+                                ))}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <Skeleton variant="rounded" height={400} />
+                                <Skeleton variant="rounded" height={400} />
+                            </div>
+                            <Skeleton variant="rounded" height={500} />
+                        </div>
                     ) : isAuthorized ? (
                         <>
                             {/* Metric Cards */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                                <DashboardCard label="Total Users" value={users.length} color="blue" />
-                                <DashboardCard label="Leaves Requested" value={leavesRequested} color="purple" />
-                                <DashboardCard label="Monthly Payroll" value={payroll} color="green" />
-                                <DashboardCard label="Active Employees" value={activeEmployees} color="orange" />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <DashboardCard
+                                    label="Total Users"
+                                    value={users.length}
+                                    icon="👥"
+                                    trend="up"
+                                    trendValue="12%"
+                                />
+                                <DashboardCard
+                                    label="Leaves Requested"
+                                    value={leavesRequested}
+                                    icon="🍃"
+                                    trend="down"
+                                    trendValue="5%"
+                                />
+                                <DashboardCard
+                                    label="Monthly Payroll"
+                                    value={payroll}
+                                    icon="💰"
+                                    trend="up"
+                                    trendValue="18%"
+                                />
+                                <DashboardCard
+                                    label="Active Employees"
+                                    value={activeEmployees}
+                                    icon="✅"
+                                    trend="neutral"
+                                />
+                            </div>
+
+                            {/* Charts Section */}
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Employee Status</h3>
+                                    <div className="h-64">
+                                        <Doughnut data={userStatusChart} options={{
+                                            maintainAspectRatio: false,
+                                            plugins: {
+                                                tooltip: {
+                                                    backgroundColor: '#1f2937',
+                                                    titleColor: '#f9fafb',
+                                                    bodyColor: '#f9fafb',
+                                                    padding: 12,
+                                                    cornerRadius: 8,
+                                                    usePointStyle: true,
+                                                },
+                                                legend: {
+                                                    position: 'bottom',
+                                                    labels: {
+                                                        padding: 20,
+                                                        usePointStyle: true,
+                                                        pointStyle: 'circle',
+                                                        font: {
+                                                            family: 'Inter, sans-serif'
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            cutout: '65%',
+                                        }} />
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 lg:col-span-2">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Salary Distribution</h3>
+                                    <div className="h-64">
+                                        <Bar data={payrollBarChart} options={{
+                                            maintainAspectRatio: false,
+                                            responsive: true,
+                                            scales: {
+                                                y: {
+                                                    beginAtZero: true,
+                                                    grid: {
+                                                        drawBorder: false,
+                                                    },
+                                                    ticks: {
+                                                        callback: (value) => `₹${value.toLocaleString('en-IN')}`,
+                                                        font: {
+                                                            family: 'Inter, sans-serif'
+                                                        }
+                                                    },
+                                                },
+                                                x: {
+                                                    grid: {
+                                                        display: false,
+                                                        drawBorder: false
+                                                    },
+                                                    ticks: {
+                                                        font: {
+                                                            family: 'Inter, sans-serif'
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            plugins: {
+                                                tooltip: {
+                                                    backgroundColor: '#1f2937',
+                                                    titleColor: '#f9fafb',
+                                                    bodyColor: '#f9fafb',
+                                                    padding: 12,
+                                                    cornerRadius: 8,
+                                                    usePointStyle: true,
+                                                    callbacks: {
+                                                        label: (context) => {
+                                                            return `Salary: ₹${context.raw.toLocaleString('en-IN')}`;
+                                                        }
+                                                    }
+                                                },
+                                                legend: {
+                                                    display: false
+                                                }
+                                            }
+                                        }} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Performance Trend */}
+                            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4">Team Performance Trend</h3>
+                                <div className="h-64">
+                                    <Line data={performanceLineChart} options={{
+                                        maintainAspectRatio: false,
+                                        responsive: true,
+                                        plugins: {
+                                            legend: {
+                                                position: 'bottom',
+                                                labels: {
+                                                    padding: 20,
+                                                    usePointStyle: true,
+                                                    font: {
+                                                        family: 'Inter, sans-serif'
+                                                    }
+                                                }
+                                            },
+                                            tooltip: {
+                                                backgroundColor: '#1f2937',
+                                                titleColor: '#f9fafb',
+                                                bodyColor: '#f9fafb',
+                                                padding: 12,
+                                                cornerRadius: 8,
+                                            }
+                                        },
+                                        scales: {
+                                            y: {
+                                                suggestedMin: 0,
+                                                suggestedMax: 100,
+                                                grid: {
+                                                    drawBorder: false,
+                                                },
+                                                ticks: {
+                                                    font: {
+                                                        family: 'Inter, sans-serif'
+                                                    }
+                                                }
+                                            },
+                                            x: {
+                                                grid: {
+                                                    display: false,
+                                                    drawBorder: false
+                                                },
+                                                ticks: {
+                                                    font: {
+                                                        family: 'Inter, sans-serif'
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }} />
+                                </div>
                             </div>
 
                             {/* User Table */}
-                            <div className="bg-white shadow-xl rounded-2xl mt-10 p-8">
-                                <h3 className="text-2xl font-semibold text-gray-800 mb-4">All Users</h3>
-                                <div className="overflow-x-auto rounded-lg">
-                                    <table className="min-w-full text-sm text-gray-800">
-                                        <thead className="bg-gray-200">
+                            <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                                    <h3 className="text-lg font-semibold text-gray-900">Employee Directory</h3>
+                                    <div className="text-sm text-gray-500">
+                                        {users.length} employees
+                                    </div>
+                                </div>
+                                <div className="overflow-x-auto hide-scrollbar">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
                                             <tr>
-                                                <th className="px-6 py-4 text-left font-medium">Name</th>
-                                                <th className="px-6 py-4 text-left font-medium">Email</th>
-                                                <th className="px-6 py-4 text-left font-medium">Salary</th>
-                                                <th className="px-6 py-4 text-left font-medium">Role</th>
-                                                <th className="px-6 py-4 text-left font-medium">Status</th>
-                                                <th className="px-6 py-4 text-left font-medium">Action</th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Employee
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Role
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Salary
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Status
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Actions
+                                                </th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody className="bg-white divide-y divide-gray-200">
                                             {users.map((user) => (
                                                 <>
-                                                    <tr key={user.id} className="hover:bg-gray-100">
-                                                        <td className="px-6 py-4">{user.name}</td>
-                                                        <td className="px-6 py-4">{user.email}</td>
-                                                        <td className="px-6 py-4">
-                                                            {user.salary
-                                                                ? Number(user.salary).toLocaleString('en-IN', {
-                                                                    style: 'currency',
-                                                                    currency: 'INR',
-                                                                    minimumFractionDigits: 0
-                                                                })
-                                                                : 'Not available'}
+                                                    <tr key={user.id} className="hover:bg-gray-50">
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="flex items-center">
+                                                                <Avatar className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 capitalize">
+                                                                    {user.name.charAt(0)}
+                                                                </Avatar>
+                                                                <div className="ml-4">
+                                                                    <div className="text-sm font-medium text-gray-900 capitalize">{user.name}</div>
+                                                                    <div className="text-sm text-gray-500">{user.email}</div>
+                                                                </div>
+                                                            </div>
                                                         </td>
-                                                        <td className="px-6 py-4">{user.user_role || 'No role assigned'}</td>
-                                                        <td className="px-6 py-4">
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="text-sm text-gray-900 capitalize">{user.user_role || 'No role assigned'}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="text-sm text-gray-900">
+                                                                {user.salary
+                                                                    ? Number(user.salary).toLocaleString('en-IN', {
+                                                                        style: 'currency',
+                                                                        currency: 'INR',
+                                                                        minimumFractionDigits: 0
+                                                                    })
+                                                                    : 'N/A'}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
                                                             <span className={`inline-block px-4 py-2 text-xs font-semibold rounded-full ${user.status === 1 ? 'bg-[#c0feb4] text-green-950' : 'bg-red-100 text-red-800'}`}>
                                                                 {user.status === 1 ? 'Active' : 'Inactive'}
                                                             </span>
                                                         </td>
-                                                        <td className="px-6 py-4">
-                                                            <button onClick={() => toggleUserHistory(user.id)}>
-                                                                <RemoveRedEyeIcon className="text-indigo-600 hover:text-indigo-800 cursor-pointer" />
-                                                            </button>
+                                                        <td className="px-6 py-4 whitespace-nowrap ">
+                                                            <IconButton
+                                                                onClick={() => toggleUserHistory(user.id)}
+                                                                size="small"
+                                                                color="primary"
+                                                            >
+                                                                {expandedUserId === user.id ? <ExpandLess /> : <ExpandMore />}
+                                                            </IconButton>
                                                         </td>
                                                     </tr>
-                                                    {expandedUserId === user.id && (
-                                                        <tr>
-                                                            <td colSpan="6" className="px-6 py-4 bg-gray-50">
-                                                                <div className="space-y-2">
-                                                                    {user.history ? (
-                                                                        <div className="p-3 rounded-lg bg-white border border-gray-300 shadow-sm">
-                                                                            <p>
-                                                                                <strong>{user.history.user?.name} : </strong> {user.history.description}
-                                                                            </p>
-                                                                            <p className="text-sm text-gray-500">
-                                                                                {new Date(user.history.created_at).toLocaleString()}
-                                                                            </p>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <div className="text-center text-gray-500 italic">No history found</div>
-                                                                    )}
+                                                    <tr>
+                                                        <td colSpan={5} className="px-6 py-0">
+                                                            <Collapse in={expandedUserId === user.id} timeout="auto" unmountOnExit>
+                                                                <div className="bg-gray-50 p-4">
+                                                                    <div className="space-y-2">
+                                                                        {user.history ? (
+                                                                            <div className="p-3 rounded-lg bg-white border border-gray-200 shadow-xs">
+                                                                                <p className="text-sm font-medium text-gray-900">
+                                                                                    <span className="font-semibold">{user.history.user?.name}</span>: {user.history.description}
+                                                                                </p>
+                                                                                <p className="text-xs text-gray-500 mt-1">
+                                                                                    {new Date(user.history.created_at).toLocaleString()}
+                                                                                </p>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="text-center text-gray-500 text-sm italic py-2">No history found for this employee</div>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
-                                                            </td>
-                                                        </tr>
-                                                    )}
+                                                            </Collapse>
+                                                        </td>
+                                                    </tr>
                                                 </>
                                             ))}
                                         </tbody>
@@ -168,53 +488,161 @@ export default function Dashboard({ auth, authUserRole }) {
                             </div>
                         </>
                     ) : (
-                        <div className="bg-white rounded-2xl shadow-xl p-8 text-gray-800">
-                            <h2 className="text-3xl font-extrabold mb-6">Welcome back, {auth.user.name}</h2>
-                            <p className="text-lg mb-8">Here’s your personalized employee dashboard.</p>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="bg-blue-100 p-8 rounded-xl shadow-lg">
-                                    <h3 className="text-xl font-semibold text-blue-700 mb-4">Your Details</h3>
-                                    <p><span className="font-medium">Name:</span> {auth.user.name}</p>
-                                    <p><span className="font-medium">Email:</span> {auth.user.email}</p>
-                                    <p><span className="font-medium">Salary:</span> {auth.user.salary ? Number(auth.user.salary).toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) : 'Not available'}</p>
-                                    <p>
-                                        <span className="font-medium">Status:</span>{' '}
-                                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                                            auth.user.status === 1 ? 'bg-green-200 text-green-700' : 'bg-red-200 text-red-700'
-                                        }`}>
-                                            {auth.user.status === 1 ? 'Active' : 'Inactive'}
+                        <div className="space-y-8">
+                            {/* Employee Welcome Section */}
+                            <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                                    <div>
+                                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {auth.user.name}</h2>
+                                        <p className="text-lg text-gray-600">Here's your personalized dashboard for {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}</p>
+                                    </div>
+                                    <div className="mt-4 md:mt-0">
+                                        <span className={`inline-block px-4 py-2 text-xs font-semibold rounded-full
+                                         ${auth.user.status === 1 ? 'bg-[#c0feb4] text-green-950' : 'bg-red-100 text-red-800'}`}>
+                                         {auth.user.status === 1 ? 'Active' : 'Inactive'}
                                         </span>
-                                    </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Employee Details Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <p className="text-sm text-gray-500">Full Name</p>
+                                            <p className="text-base font-medium text-gray-900">{auth.user.name}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-500">Email Address</p>
+                                            <p className="text-base font-medium text-gray-900">{auth.user.email}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-500">Role</p>
+                                            <p className="text-base font-medium text-gray-900 capitalize">{auth.user.user_role || 'Not specified'}</p>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {(salary[0]?.status === 'paid') ? (
-                                    <div className="bg-blue-100 p-8 rounded-xl shadow-lg flex items-center justify-center text-center">
-                                        <h3 className="text-xl font-semibold text-green-700 mb-4">Latest Payslip</h3>
-                                        {auth.user.status === 1 ? (
-                                            <>
-                                                <p className="text-gray-700">You can download your latest salary receipt below.</p>
-                                                <button
-                                                    onClick={() => handleDownloadPdf({
-                                                        user: auth.user.name,
-                                                        amount: auth.user.salary || 0,
-                                                        status: auth.user.status === 1 ? 'paid' : 'pending',
-                                                        date: new Date(),
-                                                    })}
-                                                    className="mt-6 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition"
-                                                >
-                                                    Download Payslip
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <p className="text-gray-700"> 🚫 Your salary status is pending. <br /> ⚠️ We’ll notify once updated.</p>
-                                        )}
+                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Compensation</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <p className="text-sm text-gray-500">Monthly Salary</p>
+                                            <p className="text-2xl font-bold text-gray-900">
+                                                {auth.user.salary
+                                                    ? Number(auth.user.salary).toLocaleString('en-IN', {
+                                                        style: 'currency',
+                                                        currency: 'INR',
+                                                        minimumFractionDigits: 0
+                                                    })
+                                                    : 'N/A'}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-500">Payment Status</p>
+                                            <div className="flex items-center">
+                                                {salary[0]?.status === 'paid' ? (
+                                                    <>
+                                                        <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                                                        <span className="text-sm font-medium text-green-700">Paid</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="h-2 w-2 rounded-full bg-yellow-500 mr-2"></div>
+                                                        <span className="text-sm font-medium text-yellow-700">Pending</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                ) : (
-                                    <p className="text-gray-700 flex items-center justify-center text-center">
-                                        🚫 Your salary status is pending. <br /> ⚠️ We’ll notify once updated.
-                                    </p>
-                                )}
+                                </div>
+
+                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                                    <div className="space-y-3">
+                                        {salary[0]?.status === 'paid' ? (
+                                            <button
+                                                onClick={() => handleDownloadPdf({
+                                                    user: auth.user.name,
+                                                    amount: auth.user.salary || 0,
+                                                    status: 'paid',
+                                                    date: new Date(),
+                                                })}
+                                                className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-500 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+                                            >
+                                                Download Payslip
+                                            </button>
+                                        ) : (
+                                            <div className="p-3 rounded-lg bg-yellow-50 border border-yellow-100 text-center">
+                                                <p className="text-sm text-yellow-700">
+                                                  ⚠️ Your salary status is pending. We'll notify you once updated.
+                                                </p>
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={() => window.location.href = '/manageleaves'}
+                                            className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+                                        >
+                                            Request Time Off
+                                        </button>
+                                        <button
+                                            onClick={() => window.location.href = '/profile'}
+                                            className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+                                        >
+                                            Update Profile
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Performance Section */}
+                            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Performance</h3>
+                                <div className="h-64">
+                                    <Line data={performanceLineChart} options={{
+                                        maintainAspectRatio: false,
+                                        responsive: true,
+                                        plugins: {
+                                            legend: {
+                                                display: false
+                                            },
+                                            tooltip: {
+                                                backgroundColor: '#1f2937',
+                                                titleColor: '#f9fafb',
+                                                bodyColor: '#f9fafb',
+                                                padding: 12,
+                                                cornerRadius: 8,
+                                            }
+                                        },
+                                        scales: {
+                                            y: {
+                                                suggestedMin: 0,
+                                                suggestedMax: 100,
+                                                grid: {
+                                                    drawBorder: false,
+                                                },
+                                                ticks: {
+                                                    font: {
+                                                        family: 'Inter, sans-serif'
+                                                    }
+                                                }
+                                            },
+                                            x: {
+                                                grid: {
+                                                    display: false,
+                                                    drawBorder: false
+                                                },
+                                                ticks: {
+                                                    font: {
+                                                        family: 'Inter, sans-serif'
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }} />
+                                </div>
                             </div>
                         </div>
                     )}
@@ -224,18 +652,37 @@ export default function Dashboard({ auth, authUserRole }) {
     );
 }
 
-function DashboardCard({ label, value, color }) {
-    const bgColorMap = {
-        blue: 'bg-gradient-to-r from-blue-500 to-blue-600',
-        green: 'bg-gradient-to-r from-green-500 to-green-600',
-        purple: 'bg-gradient-to-r from-purple-500 to-purple-600',
-        orange: 'bg-gradient-to-r from-orange-400 to-orange-500',
+function DashboardCard({ label, value, icon, trend, trendValue }) {
+    const trendColors = {
+        up: 'text-green-600 bg-green-100',
+        down: 'text-red-600 bg-red-100',
+        neutral: 'text-gray-600 bg-gray-100'
     };
 
+    const trendIcons = {
+        up: '↑',
+        down: '↓',
+        neutral: '→'
+    };
+
+
+
     return (
-        <div className={`${bgColorMap[color]} text-white p-8 rounded-xl shadow-lg`}>
-            <p className="text-sm uppercase tracking-wide font-medium">{label}</p>
-            <p className="text-4xl font-semibold mt-2">{value}</p>
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition">
+            <div className="flex justify-between items-start">
+                <div>
+                    <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">{label}</p>
+                    <p className="mt-2 text-3xl font-semibold text-gray-900">{value}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-indigo-100 text-indigo-600">
+                    <span className="text-xl">{icon}</span>
+                </div>
+            </div>
+            {trend && (
+                <div className={`mt-4 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${trendColors[trend]}`}>
+                    {trendIcons[trend]} {trendValue || 'No change'} from last month
+                </div>
+            )}
         </div>
     );
 }
