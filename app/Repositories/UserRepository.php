@@ -10,7 +10,7 @@ class UserRepository implements UserInterface
 {
     public function all()
     {
-        return User::all();
+        return User::with('history.user')->get();
     }
     public function find($id)
     {

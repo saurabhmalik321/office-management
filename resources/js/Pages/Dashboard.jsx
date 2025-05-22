@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { handleDownloadPdf } from '../Components/pdf';
 import LoadingSpinner from '../Components/LoadingSpinner';
+import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 
 export default function Dashboard({ auth, authUserRole }) {
     const [users, setUsers] = useState([]);
@@ -12,9 +13,14 @@ export default function Dashboard({ auth, authUserRole }) {
     const [activeEmployees, setActiveEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [count, setCount] = useState(0);
-     const [salary,setSalaries] = useState([]);
-     
+    const [salary, setSalaries] = useState([]);
+    const [expandedUserId, setExpandedUserId] = useState(null);
+
     const isAuthorized = authUserRole === 'admin' || authUserRole === 'hr';
+
+    const toggleUserHistory = (userId) => {
+        setExpandedUserId(prevId => (prevId === userId ? null : userId));
+    };
 
     const pendingLeave = () => {
         axios
@@ -24,13 +30,20 @@ export default function Dashboard({ auth, authUserRole }) {
     };
 
     useEffect(() => {
+        axios.get('/salary-status')
+            .then((response) => setSalaries(response.data))
+            .catch((error) => console.error('Error fetching salary status:', error))
+            .finally(() => setLoading(false));
+    }, []);
+
+    useEffect(() => {
         if (!isAuthorized) return setLoading(false);
 
         const fetchData = async () => {
             try {
                 const [userRes, leaveRes] = await Promise.all([
                     axios.get('/list'),
-                    axios.get('/leaves'), // GET all leave requests
+                    axios.get('/leaves'),
                 ]);
 
                 const userList = userRes.data;
@@ -97,35 +110,57 @@ export default function Dashboard({ auth, authUserRole }) {
                                                 <th className="px-6 py-4 text-left font-medium">Salary</th>
                                                 <th className="px-6 py-4 text-left font-medium">Role</th>
                                                 <th className="px-6 py-4 text-left font-medium">Status</th>
+                                                <th className="px-6 py-4 text-left font-medium">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {users.map((user) => (
-                                                <tr key={user.id} className="hover:bg-gray-100">
-                                                    <td className="px-6 py-4">{user.name}</td>
-                                                    <td className="px-6 py-4">{user.email}</td>
-                                                    <td className="px-6 py-4">
-                                                        {user.salary
-                                                            ? Number(user.salary).toLocaleString('en-IN', {
-                                                                  style: 'currency',
-                                                                  currency: 'INR',
-                                                                  minimumFractionDigits: 0
-                                                              })
-                                                            : 'Not available'}
-                                                    </td>
-                                                    <td className="px-6 py-4">{user.user_role || 'No role assigned'}</td>
-                                                    <td className="px-6 py-4">
-                                                        <span
-                                                            className={`inline-block px-4 py-2 text-xs font-semibold rounded-full ${
-                                                                user.status === 1
-                                                                    ? 'bg-[#c0feb4] text-green-950'
-                                                                    : 'bg-red-100 text-red-800'
-                                                            }`}
-                                                        >
-                                                            {user.status === 1 ? 'Active' : 'Inactive'}
-                                                        </span>
-                                                    </td>
-                                                </tr>
+                                                <>
+                                                    <tr key={user.id} className="hover:bg-gray-100">
+                                                        <td className="px-6 py-4">{user.name}</td>
+                                                        <td className="px-6 py-4">{user.email}</td>
+                                                        <td className="px-6 py-4">
+                                                            {user.salary
+                                                                ? Number(user.salary).toLocaleString('en-IN', {
+                                                                    style: 'currency',
+                                                                    currency: 'INR',
+                                                                    minimumFractionDigits: 0
+                                                                })
+                                                                : 'Not available'}
+                                                        </td>
+                                                        <td className="px-6 py-4">{user.user_role || 'No role assigned'}</td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`inline-block px-4 py-2 text-xs font-semibold rounded-full ${user.status === 1 ? 'bg-[#c0feb4] text-green-950' : 'bg-red-100 text-red-800'}`}>
+                                                                {user.status === 1 ? 'Active' : 'Inactive'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <button onClick={() => toggleUserHistory(user.id)}>
+                                                                <RemoveRedEyeIcon className="text-indigo-600 hover:text-indigo-800 cursor-pointer" />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                    {expandedUserId === user.id && (
+                                                        <tr>
+                                                            <td colSpan="6" className="px-6 py-4 bg-gray-50">
+                                                                <div className="space-y-2">
+                                                                    {user.history ? (
+                                                                        <div className="p-3 rounded-lg bg-white border border-gray-300 shadow-sm">
+                                                                            <p>
+                                                                                <strong>{user.history.user?.name} : </strong> {user.history.description}
+                                                                            </p>
+                                                                            <p className="text-sm text-gray-500">
+                                                                                {new Date(user.history.created_at).toLocaleString()}
+                                                                            </p>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="text-center text-gray-500 italic">No history found</div>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </>
                                             ))}
                                         </tbody>
                                     </table>
@@ -153,28 +188,33 @@ export default function Dashboard({ auth, authUserRole }) {
                                     </p>
                                 </div>
 
-                                <div className="bg-blue-100 p-8 rounded-xl shadow-lg">
-                                    <h3 className="text-xl font-semibold text-green-700 mb-4">Latest Payslip</h3>
-                                     { auth.user.status === 1 ?
-                                    <>
-                                    <p className="text-gray-700">You can download your latest salary receipt below.</p>
-                                    <button
-                                     onClick={() => handleDownloadPdf({
-                                     user: auth.user.name,
-                                     amount: auth.user.salary || 0,
-                                     status: auth.user.status === 1 ? 'paid' : 'pending',
-                                     date: new Date(),
-                                      })}
-                                     className="mt-6 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition"
-                                     >
-                                    Download Payslip
-                                    </button>
-                                    </>
-                                    :
-                                    <p className="text-gray-700"> 🚫 Your salary status is pending. <br /> ⚠️ We’ll notify once updated.</p>
-
-                                    }
-                                </div>
+                                {(salary[0]?.status === 'paid') ? (
+                                    <div className="bg-blue-100 p-8 rounded-xl shadow-lg flex items-center justify-center text-center">
+                                        <h3 className="text-xl font-semibold text-green-700 mb-4">Latest Payslip</h3>
+                                        {auth.user.status === 1 ? (
+                                            <>
+                                                <p className="text-gray-700">You can download your latest salary receipt below.</p>
+                                                <button
+                                                    onClick={() => handleDownloadPdf({
+                                                        user: auth.user.name,
+                                                        amount: auth.user.salary || 0,
+                                                        status: auth.user.status === 1 ? 'paid' : 'pending',
+                                                        date: new Date(),
+                                                    })}
+                                                    className="mt-6 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition"
+                                                >
+                                                    Download Payslip
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <p className="text-gray-700"> 🚫 Your salary status is pending. <br /> ⚠️ We’ll notify once updated.</p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <p className="text-gray-700 flex items-center justify-center text-center">
+                                        🚫 Your salary status is pending. <br /> ⚠️ We’ll notify once updated.
+                                    </p>
+                                )}
                             </div>
                         </div>
                     )}
@@ -184,7 +224,6 @@ export default function Dashboard({ auth, authUserRole }) {
     );
 }
 
-// DashboardCard component
 function DashboardCard({ label, value, color }) {
     const bgColorMap = {
         blue: 'bg-gradient-to-r from-blue-500 to-blue-600',

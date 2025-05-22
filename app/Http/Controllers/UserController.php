@@ -12,6 +12,7 @@ use Inertia\Inertia;
 use App\Services\SalaryService;
 use App\Services\LeaveService;
 use App\Models\Notification;
+use App\Models\UserHistory;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -167,7 +168,8 @@ class UserController extends Controller
     public function handleMessage(Request $request)
     {
         try {
-            return response()->json($this->userInterface->handleMessage($request->all()));
+            $reply = $this->userInterface->handleMessage($request->all());
+            return $reply;
         } catch (\Exception $e) {
             Log::error('Chatbot Exception:', ['message' => $e->getMessage()]);
             return response()->json(['reply' => 'Something went wrong.']);
@@ -184,6 +186,11 @@ class UserController extends Controller
      public function getInquiry()
     {
        return response()->json($this->userInterface->getInquiry(Auth::id()));
+    }
+     public function getHistory()
+    {
+     $history = UserHistory::all();
+     return $history;  
     }
 }
 

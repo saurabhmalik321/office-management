@@ -67,6 +67,7 @@ Route::group(['prefix' => 'admin'], function () {
     Route::post('/user/salary/{id}', [UserController::class, 'userSalary']);
     Route::get('/pending-leave', [UserController::class, 'pendingLeave']);
     Route::get('/employee-inquiry', [UserController::class, 'getInquiry']);
+     Route::get('/histories', [UserController::class, 'getHistory']);
 
 });
 Route::get('/chat', function () {

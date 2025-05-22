@@ -26,7 +26,12 @@ class UserObserver
      */
     public function updated(User $user): void
     {
-        //
+        //  UserHistory::create([
+        //  'user_id' => $user->id ?? null,
+        //  'user_role' => $user->user_role,
+        //  'description' => "Updated user: ". json_encode($user->attributesToArray()),
+        //  'updated_by' => Auth::id() ?? null,
+        // ]);
     }
 
     /**

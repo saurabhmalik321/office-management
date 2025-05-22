@@ -11,6 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 use App\Models\Leave;
 use App\Models\Salary;
 use App\Models\Inquiry;
+use App\Models\UserHistory;
 
 class User extends Authenticatable
 {
@@ -63,6 +64,10 @@ class User extends Authenticatable
     public function inquiry()
     {
         return $this->hasOne(Inquiry::class,'employee_id');
+    }
+     public function history()
+    {
+        return $this->hasOne(UserHistory::class,'user_id');
     }
 }
 

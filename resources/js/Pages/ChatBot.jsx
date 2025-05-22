@@ -4,7 +4,6 @@ import { router } from '@inertiajs/react';
 const ChatBot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -12,8 +11,7 @@ const ChatBot = () => {
     setMessages(prev => [...prev, userMessage]);
 
     const response = await axios.post('/chat', { message: input });
-    const botMessage = { sender: 'bot', text: response.data.reply };
-
+    const botMessage = { sender: 'bot', text: response.data };
     setMessages(prev => [...prev, botMessage]);
     setInput('');
   };
