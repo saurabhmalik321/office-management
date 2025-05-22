@@ -61,6 +61,10 @@ export default function ManageSalaries() {
       .then((response) => setCount(response.data))
       .catch((error) => console.error('Error fetching leaves:', error));
     };
+
+    useEffect(()=>{
+      pendingLeave();
+    },[])
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case 'pending':
@@ -81,7 +85,7 @@ export default function ManageSalaries() {
         setError('Something went wrong while fetching salaries.');
       })
       .finally(() => setLoading(false));
-  }, [salary,pendingLeave()]);
+  }, [salary]);
 
   const handleEdit = (id) => {
     const salaryToEdit = salaries.find((s) => s.id === id);
@@ -132,7 +136,6 @@ export default function ManageSalaries() {
       .finally(() => setLoading(false));
     },[])
   }
-console.log(salaries,"salariesdata");
 const handleDownloadPdf = (row) => {
   const pdfContainer = document.createElement('div');
   pdfContainer.style.position = 'absolute';

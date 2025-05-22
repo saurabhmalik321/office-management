@@ -26,34 +26,34 @@ class UserObserver
      */
     public function updated(User $user): void
     {
-         $original = $user->getOriginal();
+        $original = $user->getOriginal();
+        $changes = [];
+
         foreach ($user->getAttributes() as $field => $value) {
             if ($field === 'updated_at') {
                 continue;
             }
-    
+
             if ($user->isDirty($field)) {
-                if(isset($original[$field])){
-                    $originalValue = $original[$field]; 
-                }else{
-                    $originalValue = ''; 
+                $originalValue = $original[$field] ?? '';
+                $newValue = $value;
+                if (in_array($field, ['salary', 'amount', 'direct_salary'])) {
+                    $originalValue = '₹' . number_format((float)$originalValue, 2, '.', ',');
+                    $newValue = '₹' . number_format((float)$newValue, 2, '.', ',');
                 }
-                $newValue = $user->$field; 
-    
-                UserHistory::create([
-                    'user_id' => $user->id,
-                    'user_role' => $user->user_role,
-                    'description' => "modified ". $field .": ". $originalValue ." to ". $newValue,
-                    'updated_by' => Auth::id() ?? null, 
-                ]);
+
+                $changes[] = " {$field} from  {$originalValue} to {$newValue} ";
             }
         }
-        //  UserHistory::create([
-        //  'user_id' => $user->id ?? null,
-        //  'user_role' => $user->user_role,
-        //  'description' => "Updated user: ". json_encode($user->attributesToArray()),
-        //  'updated_by' => Auth::id() ?? null,
-        // ]);
+
+        if (!empty($changes)) {
+            UserHistory::create([
+                'user_id' => $user->id,
+                'user_role' => $user->user_role,
+                'description' =>'modified '. implode("; ", $changes),
+                'updated_by' => Auth::id() ?? null,
+            ]);
+        }
     }
 
     /**
