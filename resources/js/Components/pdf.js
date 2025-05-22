@@ -34,7 +34,7 @@ export const handleDownloadPdf = (row) => {
     
     <!-- Header -->
     <div style="text-align: center; margin-bottom: 30px;">
-      <img src="/wepro.png" alt="Company Logo" style="width: 120px; background-color:black" />
+      <img src="/image.png" alt="Company Logo" style="width: 120px; background-color:black" />
       <h2 style="margin: 10px 0 0; color: #222;">Wepro Solutions Pvt. Ltd.</h2>
       <p style="margin: 2px 0; font-size: 12px; color: #555;">Sector 74 , Industrial Area, Mohali City(Punjab), India</p>
       <p style="margin: 2px 0 0; font-size: 12px; color: #555;">Email: hr@weproinc.com | Phone: +91 98765 43210</p>
