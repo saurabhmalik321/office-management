@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { Head } from '@inertiajs/react';
 import {
@@ -38,6 +38,18 @@ ChartJS.register(
     Filler
 );
 
+// Debounce utility to limit frequent API calls
+const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
+};
+
+// Simple in-memory cache for API responses
+const cache = new Map();
+
 export default function Dashboard({ auth, authUserRole }) {
     const [users, setUsers] = useState([]);
     const [leaveData, setLeaveData] = useState({
@@ -57,44 +69,16 @@ export default function Dashboard({ auth, authUserRole }) {
     const [count, setCount] = useState(0);
 
     const isAuthorized = authUserRole === 'admin' || authUserRole === 'hr';
-     const months = [
+
+    const months = [
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ];
-    useEffect(() => {
-        axios.get('/admin/performance')
-            .then((response) => setPerformanceData(response.data))
-            .catch((error) => console.error('Error fetching performances:', error));
-    }, []);
-       const performanceLineChart = useMemo(() => {
-        if (!performanceData || performanceData.length === 0) return { labels: [], datasets: [] };
-
-        const usersMap = {};
-        performanceData.forEach(item => {
-            const userName = item.user?.name || 'Unknown';
-            if (!usersMap[userName]) {
-                usersMap[userName] = {};
-            }
-            usersMap[userName][item.evaluated_at] = item.score;
-        });
-
-        const allDates = Array.from(new Set(performanceData.map(item => item.evaluated_at))).sort();
-
-        const datasets = Object.entries(usersMap).map(([userName, scoresByDate]) => ({
-            label: userName,
-            data: allDates.map(date => scoresByDate[date] ?? 0),
-            borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
-            tension: 0.4,
-            fill: false,
-        }));
-
-        return { labels: allDates, datasets };
-    }, [performanceData]);
 
     useEffect(() => {
         axios.get('/available-years')
             .then(response => {
-                setAvailableYears(["data"]);
+                setAvailableYears(response.data);
             })
             .catch(error => {
                 console.error('Error fetching available years:', error);
@@ -196,36 +180,41 @@ export default function Dashboard({ auth, authUserRole }) {
             .finally(() => setLoading(false));
     }, [selectedMonth, selectedYear]);
 
-    // useEffect(() => {
-    //     setSectionLoading(prev => ({ ...prev, charts: true }));
-    //     axios.get('/performance-data', {
-    //         params: {
-    //             month: selectedMonth,
-    //             year: selectedYear
-    //         }
-    //     })
-    //         .then(response => {
-    //             setPerformanceData(response.data);
-    //         })
-    //         .catch(error => {
-    //             console.error('Error fetching performance data:', error);
-    //             setPerformanceData([
-    //                 { month: 'Jan', value: 65 },
-    //                 { month: 'Feb', value: 59 },
-    //                 { month: 'Mar', value: 80 },
-    //                 { month: 'Apr', value: 81 },
-    //                 { month: 'May', value: 56 },
-    //                 { month: 'Jun', value: 55 },
-    //                 { month: 'Jul', value: 40 },
-    //                 { month: 'Aug', value: 65 },
-    //                 { month: 'Sep', value: 59 },
-    //                 { month: 'Oct', value: 80 },
-    //                 { month: 'Nov', value: 81 },
-    //                 { month: 'Dec', value: 56 }
-    //             ]);
-    //         })
-    //         .finally(() => setSectionLoading(prev => ({ ...prev, charts: false })));
-    // }, [selectedMonth, selectedYear]);
+    // Fetch performance data with debouncing and caching
+    const fetchPerformance = useCallback(() => {
+        const cacheKey = `performance_${selectedMonth}_${selectedYear}`;
+        if (cache.has(cacheKey)) {
+            setPerformanceData(cache.get(cacheKey));
+            setSectionLoading(prev => ({ ...prev, charts: false }));
+            return;
+        }
+
+        setSectionLoading(prev => ({ ...prev, charts: true }));
+        axios.get('/admin/performance', {
+            params: {
+                month: selectedMonth,
+                year: selectedYear
+            }
+        })
+            .then(response => {
+                const data = Array.isArray(response.data) ? response.data : [];
+                setPerformanceData(data);
+                cache.set(cacheKey, data);
+            })
+            .catch(error => {
+                console.error('Error fetching performance data:', error);
+                setPerformanceData([]);
+            })
+            .finally(() => setSectionLoading(prev => ({ ...prev, charts: false })));
+    }, [selectedMonth, selectedYear]);
+
+    const debouncedFetchPerformance = useCallback(debounce(fetchPerformance, 300), [fetchPerformance]);
+
+    useEffect(() => {
+        if (isAuthorized) {
+            debouncedFetchPerformance();
+        }
+    }, [isAuthorized, selectedMonth, selectedYear, debouncedFetchPerformance]);
 
     const MonthYearFilter = () => {
         const handleMonthChange = (e) => {
@@ -315,7 +304,32 @@ export default function Dashboard({ auth, authUserRole }) {
         ],
     }), [leaveData]);
 
+    const performanceLineChart = useMemo(() => {
+        if (!performanceData || performanceData.length === 0) {
+            return { labels: [], datasets: [] };
+        }
 
+        const usersMap = {};
+        performanceData.forEach(item => {
+            const userName = item.user?.name || 'Unknown';
+            if (!usersMap[userName]) {
+                usersMap[userName] = {};
+            }
+            usersMap[userName][item.evaluated_at] = item.score;
+        });
+
+        const allDates = Array.from(new Set(performanceData.map(item => item.evaluated_at))).sort();
+
+        const datasets = Object.entries(usersMap).map(([userName, scoresByDate]) => ({
+            label: userName,
+            data: allDates.map(date => scoresByDate[date] ?? 0),
+            borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
+            tension: 0.4,
+            fill: false,
+        }));
+
+        return { labels: allDates, datasets };
+    }, [performanceData]);
 
     const getCardTitle = (baseTitle) => {
         if (selectedMonth === 0 && selectedYear === 0) {
@@ -332,12 +346,9 @@ export default function Dashboard({ auth, authUserRole }) {
 
         return `${baseTitle} (${period})`;
     };
-// if (loading) return <LoadingSpinner />;
+
     return (
-        <AuthenticatedLayout
-            // header={<h2 className="text-3xl font-bold text-gray-900">Dashboard Overview</h2>}
-            count={count}
-        >
+        <AuthenticatedLayout count={count}>
             <Head title="Dashboard" />
 
             <div className="py-8 bg-gray-50 min-h-screen">
@@ -567,11 +578,15 @@ export default function Dashboard({ auth, authUserRole }) {
                                 className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow"
                             >
                                 <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                                    Employee Performance Trend - {months[selectedMonth - 1] || 'All'} {selectedYear || 'All'}
+                                    {getCardTitle("Team Performance Trend")}
                                 </h3>
                                 {sectionLoading.charts ? (
                                     <div className="flex justify-center items-center h-64">
                                         <CircularProgress size={40} sx={{ color: '#4F46E5' }} />
+                                    </div>
+                                ) : performanceData.length === 0 ? (
+                                    <div className="text-center py-6 text-gray-600">
+                                        No performance data available for this period.
                                     </div>
                                 ) : (
                                     <div className="h-64">
@@ -687,6 +702,7 @@ export default function Dashboard({ auth, authUserRole }) {
                                             <p className="text-sm text-gray-600">Monthly Salary</p>
                                             <p className="text-2xl font-bold text-gray-900">
                                                 {auth.user.salary
+
                                                     ? Number(auth.user.salary).toLocaleString('en-IN', {
                                                         style: 'currency',
                                                         currency: 'INR',
@@ -773,6 +789,10 @@ export default function Dashboard({ auth, authUserRole }) {
                                 {sectionLoading.charts ? (
                                     <div className="flex justify-center items-center h-64">
                                         <CircularProgress size={40} sx={{ color: '#4F46E5' }} />
+                                    </div>
+                                ) : performanceData.length === 0 ? (
+                                    <div className="text-center py-6 text-gray-600">
+                                        No performance data available for this period.
                                     </div>
                                 ) : (
                                     <div className="h-64">
