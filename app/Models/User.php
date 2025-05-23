@@ -12,6 +12,7 @@ use App\Models\Leave;
 use App\Models\Salary;
 use App\Models\Inquiry;
 use App\Models\UserHistory;
+use App\Models\Performance;
 
 class User extends Authenticatable
 {
@@ -68,6 +69,10 @@ class User extends Authenticatable
      public function history()
     {
         return $this->hasMany(UserHistory::class,'user_id');
+    }
+    public function user()
+    {
+        return $this->hasMany(Performance::class,'user_id');
     }
 }
 

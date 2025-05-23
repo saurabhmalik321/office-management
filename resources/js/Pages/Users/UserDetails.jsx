@@ -16,10 +16,12 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilitySharpIcon from '@mui/icons-material/VisibilitySharp';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 
 import Notification from '@/Components/Notification';
 import EditUser from './EditUser';
 import { StatusChip } from '@/utils/StatusChip';
+import { Upcoming } from '@mui/icons-material';
 
 export default function UserDetail() {
   const { props } = usePage();
@@ -81,6 +83,7 @@ export default function UserDetail() {
               <Typography mt={1} sx={{ textTransform: isCapitalize ? 'capitalize' : '' }}>{value}</Typography>
             </Box>
   }
+  const formatDate = (dateStr) => new Date(dateStr);
   return (
     <AuthenticatedLayout header={<h2 className="font-semibold text-xl">User Detail</h2>}>
       <Head title="User Detail" />
@@ -133,7 +136,7 @@ export default function UserDetail() {
               user.leaves.map((leave, index) => (
                       <>
                     <Box sx={{backgroundColor: '#f9fafb', padding:1, marginBottom:1, borderRadius:"5px" }}>
-                      <Grid container spacing={3}>
+                      <Grid container spacing={2}>
                               <Grid item size={3}>
                                 {showDetails('Type', leave.leave_type)}
                               </Grid>
@@ -145,8 +148,17 @@ export default function UserDetail() {
                               </Grid>
                                <Grid item size={3}>
                                 {showDetails('Action', <VisibilitySharpIcon onClick={() => toggleReason(index)} style={{ cursor: 'pointer' }}/>)}
-                                {/* leave.reason */}
-                              </Grid>
+                              </Grid> 
+                            {leave.status === 'pending' && new Date() < formatDate(leave.start_date) && (
+                              <Grid>
+                                {showDetails(
+                                  'Upcoming Leave',
+                                  <ArrowUpwardIcon
+                                    onClick={() => toggleReason(index)}
+                                    style={{ cursor: 'pointer', color: 'green' }}
+                                  />
+                                )}
+                              </Grid> )}
                       </Grid>
                     </Box>
                      {expandedLeaves[index] && <Box sx={{backgroundColor: '#f9fafb', padding:1.5, marginBottom:1, borderRadius:"5px" }}>

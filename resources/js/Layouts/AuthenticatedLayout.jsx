@@ -102,6 +102,12 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                         )}
                                     </div>
                                 </NavLink>
+                                             <NavLink
+                                                href={route('performances.index')}
+                                                active={route().current('performances.index')}
+                                            >
+                                                Performance
+                                            </NavLink>
 
                                 {/* ✅ Chat Bot toggle button */}
                                 {/* <button
@@ -253,7 +259,7 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                             </ResponsiveNavLink>
 
                                               {(user.user_role === 'hr' || user.user_role === 'admin') && (
-                                             <ResponsiveNavLink
+                                            <ResponsiveNavLink
                                                 href={route('manageusers')}
                                                 active={route().current('manageusers')}
                                             >
@@ -292,6 +298,12 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                             </span>
                                         )}
                                     </div>
+                                            </ResponsiveNavLink>
+                                           <ResponsiveNavLink
+                                                href={route('performances.index')}
+                                                active={route().current('performances.index')}
+                                            >
+                                                Performance
                                             </ResponsiveNavLink>
                                         </div>
 

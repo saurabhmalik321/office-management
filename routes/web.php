@@ -42,6 +42,11 @@ Route::get('/manageleaves', function () {
 Route::get('/managesalaries', function () {
     return Inertia::render('ManageSalaries');
 })->middleware(['auth', 'verified'])->name('managesalaries');
+Route::get('/performances', [UserController::class, 'getPerformance'])
+    ->middleware(['auth', 'verified'])
+    ->name('performances.index'); 
+
+Route::post('/performances', [UserController::class, 'storePerformance'])->name('performances.store');
 
 
 
@@ -59,6 +64,7 @@ Route::get('/list', [UserController::class, 'index'])
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
 Route::group(['prefix' => 'admin'], function () {
+    Route::get('/performance', [UserController::class, 'getPerformances']);
     Route::post('/users', [UserController::class, 'store'])->middleware(['auth']);
     Route::get('/users/{id}', [UserController::class, 'show']);
     Route::put('/users/{id}', [UserController::class, 'update']);
@@ -95,7 +101,7 @@ Route::middleware('auth')->group(function () {
     // Inquiry
     Route::get('/admin-hr-users', [UserController::class, 'getAdminHrUsers']);
     Route::post('/inquiries', [UserController::class, 'sendInquiry']);
-
+   
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
