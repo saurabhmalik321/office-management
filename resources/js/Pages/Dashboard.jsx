@@ -1,23 +1,7 @@
-// npm install axios chart.js react-chartjs-2
-
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { handleDownloadPdf } from '../Components/pdf';
-import LoadingSpinner from '../Components/LoadingSpinner';
-import { ExpandMore, ExpandLess } from '@mui/icons-material';
+import { Head } from '@inertiajs/react';
 import {
-    Avatar,
-    Chip,
-    CircularProgress,
-    Collapse,
-    IconButton,
-    Skeleton
-} from '@mui/material';
-
-import {
-    Chart as ChartJS,
     ArcElement,
     Tooltip,
     Legend,
@@ -29,7 +13,17 @@ import {
     LineElement,
     Filler
 } from 'chart.js';
-import { Doughnut, Bar, Line } from 'react-chartjs-2';
+import { Doughnut, Line } from 'react-chartjs-2';
+import {
+    Avatar,
+    Skeleton,
+    Button,
+    CircularProgress
+} from '@mui/material';
+import ChartJS from 'chart.js/auto';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { handleDownloadPdf } from '../Components/pdf';
+import { motion } from 'framer-motion';
 
 ChartJS.register(
     ArcElement,
@@ -46,20 +40,39 @@ ChartJS.register(
 
 export default function Dashboard({ auth, authUserRole }) {
     const [users, setUsers] = useState([]);
-    const [leavesRequested, setLeavesRequested] = useState(0);
+    const [leaveData, setLeaveData] = useState({
+        pending: 0,
+        accepted: 0,
+        requested: 0,
+        upcoming: []
+    });
     const [payroll, setPayroll] = useState([]);
-    const [activeEmployees, setActiveEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [count, setCount] = useState(0);
+    const [sectionLoading, setSectionLoading] = useState({ leaves: false, charts: false });
     const [salary, setSalaries] = useState([]);
-    const [expandedUserId, setExpandedUserId] = useState(null);
     const [performanceData, setPerformanceData] = useState([]);
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [availableYears, setAvailableYears] = useState([]);
+    const [count, setCount] = useState(0);
 
     const isAuthorized = authUserRole === 'admin' || authUserRole === 'hr';
 
-    const toggleUserHistory = (userId) => {
-        setExpandedUserId(prevId => (prevId === userId ? null : userId));
-    };
+    const months = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    useEffect(() => {
+        axios.get('/available-years')
+            .then(response => {
+                setAvailableYears(response.data);
+            })
+            .catch(error => {
+                console.error('Error fetching available years:', error);
+                setAvailableYears([new Date().getFullYear()]);
+            });
+    }, []);
 
     const pendingLeave = () => {
         axios
@@ -69,128 +82,251 @@ export default function Dashboard({ auth, authUserRole }) {
     };
 
     useEffect(() => {
-        axios.get('/salary-status')
+        fetchData();
+        pendingLeave();
+    }, []);
+
+    const fetchData = async () => {
+        try {
+            setSectionLoading(prev => ({ ...prev, leaves: true }));
+            const [userRes, leaveRes] = await Promise.all([
+                axios.get('/list', {
+                    params: {
+                        month: selectedMonth,
+                        year: selectedYear
+                    }
+                }),
+                axios.get('/leaves', {
+                    params: {
+                        month: selectedMonth,
+                        year: selectedYear
+                    }
+                }),
+            ]);
+
+            const userList = userRes.data;
+            const leaveList = leaveRes.data;
+
+            setUsers(userList);
+
+            const pending = leaveList.filter(l => l.status === 'pending').length;
+            const accepted = leaveList.filter(l => l.status === 'accepted' || l.status === 'approved').length;
+            const requested = leaveList.length;
+            const upcoming = leaveList
+                .filter(l =>
+                    (l.status === 'accepted' || l.status === 'approved') &&
+                    new Date(l.start_date) > new Date() &&
+                    (selectedMonth === 0 || new Date(l.start_date).getMonth() + 1 === selectedMonth) &&
+                    (selectedYear === 0 || new Date(l.start_date).getFullYear() === selectedYear)
+                )
+                .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+
+            setLeaveData({
+                pending,
+                accepted,
+                requested,
+                upcoming
+            });
+
+            const totalPayroll = userList.reduce((sum, user) => sum + Number(user.salary || 0), 0);
+
+            if (!isFinite(totalPayroll) || totalPayroll <= 0) {
+                setPayroll('N/A');
+            } else {
+                const formatted = totalPayroll.toLocaleString('en-IN', {
+                    style: 'currency',
+                    currency: 'INR',
+                    minimumFractionDigits: 0
+                });
+                setPayroll(formatted);
+            }
+        } catch (error) {
+            console.error('Dashboard fetch error:', error);
+        } finally {
+            setLoading(false);
+            setSectionLoading(prev => ({ ...prev, leaves: false }));
+        }
+    };
+
+    useEffect(() => {
+        if (!isAuthorized) {
+            setLoading(false);
+            return;
+        }
+        fetchData();
+    }, [authUserRole, selectedMonth, selectedYear]);
+
+    useEffect(() => {
+        axios.get('/salary-status', {
+            params: {
+                month: selectedMonth,
+                year: selectedYear
+            }
+        })
             .then((response) => setSalaries(response.data))
             .catch((error) => console.error('Error fetching salary status:', error))
             .finally(() => setLoading(false));
-    }, []);
+    }, [selectedMonth, selectedYear]);
 
     useEffect(() => {
-        // Mock performance data - this must come from an API
-        setPerformanceData([
-            { month: 'Jan', value: 65 },
-            { month: 'Feb', value: 59 },
-            { month: 'Mar', value: 80 },
-            { month: 'Apr', value: 81 },
-            { month: 'May', value: 56 },
-            { month: 'Jun', value: 55 },
-            { month: 'Jul', value: 40 },
-            { month: 'Ago', value: 65 },
-            { month: 'Sep', value: 59 },
-            { month: 'Oct', value: 80 },
-            { month: 'Nov', value: 81 },
-            { month: 'Dec', value: 56 }
-
-        ]);
-    }, []);
-
-    useEffect(() => {
-        if (!isAuthorized) return setLoading(false);
-
-        const fetchData = async () => {
-            try {
-                const [userRes, leaveRes] = await Promise.all([
-                    axios.get('/list'),
-                    axios.get('/leaves'),
+        setSectionLoading(prev => ({ ...prev, charts: true }));
+        axios.get('/performance-data', {
+            params: {
+                month: selectedMonth,
+                year: selectedYear
+            }
+        })
+            .then(response => {
+                setPerformanceData(response.data);
+            })
+            .catch(error => {
+                console.error('Error fetching performance data:', error);
+                setPerformanceData([
+                    { month: 'Jan', value: 65 },
+                    { month: 'Feb', value: 59 },
+                    { month: 'Mar', value: 80 },
+                    { month: 'Apr', value: 81 },
+                    { month: 'May', value: 56 },
+                    { month: 'Jun', value: 55 },
+                    { month: 'Jul', value: 40 },
+                    { month: 'Aug', value: 65 },
+                    { month: 'Sep', value: 59 },
+                    { month: 'Oct', value: 80 },
+                    { month: 'Nov', value: 81 },
+                    { month: 'Dec', value: 56 }
                 ]);
+            })
+            .finally(() => setSectionLoading(prev => ({ ...prev, charts: false })));
+    }, [selectedMonth, selectedYear]);
 
-                const userList = userRes.data;
-                const leaveList = leaveRes.data;
-
-                setUsers(userList);
-                setLeavesRequested(leaveList.length);
-
-                const totalPayroll = userList.reduce((sum, user) => sum + Number(user.salary || 0), 0);
-
-                if (!isFinite(totalPayroll) || totalPayroll <= 0) {
-                    setPayroll('Unable to calculate');
-                } else {
-                    const formatted = totalPayroll.toLocaleString('en-IN', {
-                        style: 'currency',
-                        currency: 'INR',
-                        minimumFractionDigits: 0
-                    });
-                    setPayroll(formatted);
-                }
-
-                setActiveEmployees(userList.filter((u) => u.status === 1).length);
-            } catch (error) {
-                console.error('Dashboard fetch error:', error);
-            } finally {
-                setLoading(false);
+    const MonthYearFilter = () => {
+        const handleMonthChange = (e) => {
+            const newMonth = parseInt(e.target.value);
+            setSectionLoading(prev => ({ ...prev, leaves: true, charts: true }));
+            setSelectedMonth(newMonth);
+            if (newMonth > 0 && selectedYear === 0) {
+                setSelectedYear(new Date().getFullYear());
             }
         };
 
-        fetchData();
-        pendingLeave();
-    }, [authUserRole]);
+        const handleYearChange = (e) => {
+            setSectionLoading(prev => ({ ...prev, leaves: true, charts: true }));
+            setSelectedYear(parseInt(e.target.value));
+        };
 
-    // Chart data with modern color schemes
-    const userStatusChart = {
-        labels: ['Active', 'Inactive'],
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100"
+            >
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Filter Data</h3>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <label htmlFor="month" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                            Month
+                        </label>
+                        <select
+                            id="month"
+                            value={selectedMonth}
+                            onChange={handleMonthChange}
+                            aria-label="Select month for filtering data"
+                            className="block w-full sm:w-40 rounded-lg border-gray-300 py-2.5 px-3 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        >
+                            <option value="0">All Months</option>
+                            {months.map((month, index) => (
+                                <option key={month} value={index + 1}>{month}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <label htmlFor="year" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                            Year
+                        </label>
+                        <select
+                            id="year"
+                            value={selectedYear}
+                            onChange={handleYearChange}
+                            aria-label="Select year for filtering data"
+                            className="block w-full sm:w-32 rounded-lg border-gray-300 py-2.5 px-3 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        >
+                            <option value="0">All Years</option>
+                            {availableYears.map((year) => (
+                                <option key={year} value={year}>{year}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                {sectionLoading.leaves || sectionLoading.charts ? (
+                    <div className="mt-4 text-sm text-gray-500 flex items-center gap-2">
+                        <CircularProgress size={16} sx={{ color: '#4F46E5' }} />
+                        Updating data...
+                    </div>
+                ) : null}
+            </motion.div>
+        );
+    };
+
+    const leaveStatusChart = useMemo(() => ({
+        labels: ['Pending', 'Accepted', 'Requested'],
         datasets: [
             {
-                label: 'Employees',
+                label: 'Leaves',
                 data: [
-                    activeEmployees,
-                    users.length - activeEmployees
+                    leaveData.pending,
+                    leaveData.accepted,
+                    leaveData.requested
                 ],
-                backgroundColor: ['#10b981', '#ef4444'],
-                borderColor: ['#ffffff', '#ffffff'],
+                backgroundColor: ['#f59e0b', '#14b8a6', '#4f46e5'],
+                borderColor: ['#ffffff', '#ffffff', '#ffffff'],
                 borderWidth: 2,
-                hoverOffset: 10,
+                hoverOffset: 15,
                 cutout: '70%',
             },
         ],
-    };
+    }), [leaveData]);
 
-    const payrollBarChart = {
-        labels: users.map(u => u.name.split(' ')[0]), // Show only first names
-        datasets: [
-            {
-                label: 'Salary',
-                data: users.map(u => Number(u.salary || 0)),
-                backgroundColor: '#3b82f6',
-                borderRadius: 6,
-                hoverBackgroundColor: '#2563eb',
-            },
-        ],
-    };
-
-    const performanceLineChart = {
+    const performanceLineChart = useMemo(() => ({
         labels: performanceData.map(item => item.month),
         datasets: [
             {
                 label: 'Performance',
                 data: performanceData.map(item => item.value),
                 fill: true,
-                backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(124, 58, 237, 0.2)',
+                borderColor: '#7c3aed',
                 tension: 0.4,
-                pointBackgroundColor: '#3b82f6',
+                pointBackgroundColor: '#7c3aed',
                 pointBorderColor: '#fff',
-                pointHoverRadius: 5,
-                pointHoverBackgroundColor: '#3b82f6',
+                pointHoverRadius: 6,
+                pointHoverBackgroundColor: '#7c3aed',
                 pointHoverBorderColor: '#fff',
                 pointHitRadius: 10,
                 pointBorderWidth: 2,
             }
         ]
+    }), [performanceData]);
+
+    const getCardTitle = (baseTitle) => {
+        if (selectedMonth === 0 && selectedYear === 0) {
+            return baseTitle;
+        }
+
+        let period = '';
+        if (selectedMonth > 0) period += months[selectedMonth - 1];
+        if (selectedYear > 0) {
+            period += period ? ` ${selectedYear}` : `${selectedYear}`;
+        } else if (selectedMonth > 0) {
+            period += ` ${new Date().getFullYear()}`;
+        }
+
+        return `${baseTitle} (${period})`;
     };
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>}
+            // header={<h2 className="text-3xl font-bold text-gray-900">Dashboard Overview</h2>}
             count={count}
         >
             <Head title="Dashboard" />
@@ -201,99 +337,275 @@ export default function Dashboard({ auth, authUserRole }) {
                         <div className="space-y-8">
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                                 {[...Array(4)].map((_, i) => (
-                                    <Skeleton key={i} variant="rounded" height={120} />
+                                    <Skeleton key={i} variant="rounded" height={140} />
                                 ))}
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <Skeleton variant="rounded" height={400} />
                                 <Skeleton variant="rounded" height={400} />
                             </div>
-                            <Skeleton variant="rounded" height={500} />
                         </div>
                     ) : isAuthorized ? (
                         <>
-                            {/* Metric Cards */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {isAuthorized && <MonthYearFilter />}
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.2 }}
+                                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+                            >
                                 <DashboardCard
-                                    label="Total Users"
+                                    label={getCardTitle("Total Employees")}
                                     value={users.length}
-                                    icon="👥"
                                     trend="up"
                                     trendValue="12%"
+                                    accentColor="indigo-500"
                                 />
                                 <DashboardCard
-                                    label="Leaves Requested"
-                                    value={leavesRequested}
-                                    icon="🍃"
+                                    label={getCardTitle("Leaves Requested")}
+                                    value={leaveData.requested}
                                     trend="down"
                                     trendValue="5%"
+                                    accentColor="teal-500"
                                 />
                                 <DashboardCard
-                                    label="Monthly Payroll"
+                                    label={getCardTitle("Monthly Payroll")}
                                     value={payroll}
-                                    icon="💰"
                                     trend="up"
                                     trendValue="18%"
+                                    accentColor="purple-500"
                                 />
                                 <DashboardCard
-                                    label="Active Employees"
-                                    value={activeEmployees}
-                                    icon="✅"
+                                    label={getCardTitle("Pending Leaves")}
+                                    value={leaveData.pending}
                                     trend="neutral"
+                                    accentColor="yellow-500"
                                 />
-                            </div>
+                            </motion.div>
 
-                            {/* Charts Section */}
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Employee Status</h3>
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.4 }}
+                                className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+                            >
+                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
+                                    <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                                        Leave Status - {months[selectedMonth - 1] || 'All'} {selectedYear || 'All'}
+                                    </h3>
+                                    {sectionLoading.charts ? (
+                                        <div className="flex justify-center items-center h-64">
+                                            <CircularProgress size={40} sx={{ color: '#4F46E5' }} />
+                                        </div>
+                                    ) : (
+                                        <div className="h-64">
+                                            <Doughnut data={leaveStatusChart} options={{
+                                                maintainAspectRatio: false,
+                                                plugins: {
+                                                    tooltip: {
+                                                        backgroundColor: '#1f2937',
+                                                        titleColor: '#f9fafb',
+                                                        bodyColor: '#f9fafb',
+                                                        padding: 12,
+                                                        cornerRadius: 8,
+                                                        usePointStyle: true,
+                                                    },
+                                                    legend: {
+                                                        position: 'bottom',
+                                                        labels: {
+                                                            padding: 20,
+                                                            usePointStyle: true,
+                                                            pointStyle: 'circle',
+                                                            font: {
+                                                                family: 'Inter, sans-serif',
+                                                                size: 14,
+                                                                weight: 'bold'
+                                                            },
+                                                            color: '#1f2937'
+                                                        }
+                                                    }
+                                                },
+                                                cutout: '70%',
+                                            }} />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-shadow lg:col-span-2">
+                                    <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                                        <h3 className="text-xl font-semibold text-gray-900">
+                                            Upcoming Leaves - {months[selectedMonth - 1] || 'All'} {selectedYear || 'All'}
+                                        </h3>
+                                        <div className="text-sm text-gray-600">
+                                            {leaveData.upcoming.length} approved leaves
+                                        </div>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        {sectionLoading.leaves ? (
+                                            <div className="flex justify-center items-center h-40">
+                                                <CircularProgress size={40} sx={{ color: '#4F46E5' }} />
+                                            </div>
+                                        ) : leaveData.upcoming.length === 0 ? (
+                                            <div className="text-center py-6 text-gray-600">
+                                                No upcoming approved leaves found for this period.
+                                            </div>
+                                        ) : (
+                                            <table className="min-w-full divide-y divide-gray-200">
+                                                <thead className="bg-gray-50 sticky top-0 z-10">
+                                                    <tr>
+                                                        <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                                                            Employee
+                                                        </th>
+                                                        <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                                                            Start Date
+                                                        </th>
+                                                        <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                                                            End Date
+                                                        </th>
+                                                        <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                                                            Type
+                                                        </th>
+                                                        <th scope="col" className="px-6 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                                                            Actions
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-200">
+                                                    {leaveData.upcoming.slice(0, 5).map((leave, index) => {
+                                                        const user = users.find(u => u.id === leave.user_id) || { name: 'Unknown', email: 'N/A' };
+                                                        return (
+                                                            <motion.tr
+                                                                key={leave.id}
+                                                                className="transition-colors hover:bg-gray-50"
+                                                                whileHover={{ backgroundColor: '#F9FAFB' }}
+                                                            >
+                                                                <td className="px-6 py-3 whitespace-nowrap">
+                                                                    <div className="flex items-center">
+                                                                        <Avatar className="h-8 w-8 rounded-full bg-teal-100 text-teal-600 capitalize">
+                                                                            {user.name.charAt(0)}
+                                                                        </Avatar>
+                                                                        <div className="ml-3">
+                                                                            <div className="text-sm font-medium text-gray-900 capitalize">{user.name}</div>
+                                                                            <div className="text-xs text-gray-600">{user.email}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-6 py-3 whitespace-nowrap">
+                                                                    <div className="text-sm text-gray-900">
+                                                                        {new Date(leave.start_date).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' })}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-6 py-3 whitespace-nowrap">
+                                                                    <div className="text-sm text-gray-900">
+                                                                        {new Date(leave.end_date).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' })}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-6 py-3 whitespace-nowrap">
+                                                                    <div className="text-sm text-gray-900 capitalize">{leave.leave_type || 'N/A'}</div>
+                                                                </td>
+                                                                <td className="px-6 py-3 whitespace-nowrap">
+                                                                    <Button
+                                                                        onClick={() => window.location.href = '/manageleaves'}
+                                                                        size="small"
+                                                                        variant="outlined"
+                                                                        aria-label={`View more details for ${user.name}'s leave`}
+                                                                        sx={{
+                                                                            textTransform: 'capitalize',
+                                                                            padding: '4px 8px',
+                                                                            borderColor: '#4F46E5',
+                                                                            color: '#4F46E5',
+                                                                            '&:hover': {
+                                                                                borderColor: '#4338CA',
+                                                                                backgroundColor: '#EEF2FF'
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        View More
+                                                                    </Button>
+                                                                </td>
+                                                            </motion.tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        )}
+                                    </div>
+                                    {leaveData.upcoming.length > 5 && (
+                                        <div className="px-6 py-3 text-center">
+                                            <Button
+                                                onClick={() => window.location.href = '/manageleaves'}
+                                                variant="contained"
+                                                sx={{
+                                                    textTransform: 'capitalize',
+                                                    padding: '6px 16px',
+                                                    backgroundColor: '#4F46E5',
+                                                    '&:hover': { backgroundColor: '#4338CA' }
+                                                }}
+                                                aria-label="View all approved leaves"
+                                            >
+                                                View All Approved Leaves
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.6 }}
+                                className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow"
+                            >
+                                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                                    Team Performance Trend - {months[selectedMonth - 1] || 'All'} {selectedYear || 'All'}
+                                </h3>
+                                {sectionLoading.charts ? (
+                                    <div className="flex justify-center items-center h-64">
+                                        <CircularProgress size={40} sx={{ color: '#4F46E5' }} />
+                                    </div>
+                                ) : (
                                     <div className="h-64">
-                                        <Doughnut data={userStatusChart} options={{
+                                        <Line data={performanceLineChart} options={{
                                             maintainAspectRatio: false,
+                                            responsive: true,
                                             plugins: {
+                                                legend: {
+                                                    position: 'bottom',
+                                                    labels: {
+                                                        padding: 20,
+                                                        usePointStyle: true,
+                                                        font: {
+                                                            family: 'Inter, sans-serif',
+                                                            size: 14,
+                                                            weight: 'bold'
+                                                        },
+                                                        color: '#1f2937'
+                                                    }
+                                                },
                                                 tooltip: {
                                                     backgroundColor: '#1f2937',
                                                     titleColor: '#f9fafb',
                                                     bodyColor: '#f9fafb',
                                                     padding: 12,
                                                     cornerRadius: 8,
-                                                    usePointStyle: true,
-                                                },
-                                                legend: {
-                                                    position: 'bottom',
-                                                    labels: {
-                                                        padding: 20,
-                                                        usePointStyle: true,
-                                                        pointStyle: 'circle',
-                                                        font: {
-                                                            family: 'Inter, sans-serif'
-                                                        }
-                                                    }
                                                 }
                                             },
-                                            cutout: '65%',
-                                        }} />
-                                    </div>
-                                </div>
-
-                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 lg:col-span-2">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Salary Distribution</h3>
-                                    <div className="h-64">
-                                        <Bar data={payrollBarChart} options={{
-                                            maintainAspectRatio: false,
-                                            responsive: true,
                                             scales: {
                                                 y: {
-                                                    beginAtZero: true,
+                                                    suggestedMin: 0,
+                                                    suggestedMax: 100,
                                                     grid: {
                                                         drawBorder: false,
+                                                        color: '#E5E7EB'
                                                     },
                                                     ticks: {
-                                                        callback: (value) => `₹${value.toLocaleString('en-IN')}`,
                                                         font: {
-                                                            family: 'Inter, sans-serif'
-                                                        }
-                                                    },
+                                                            family: 'Inter, sans-serif',
+                                                            size: 12
+                                                        },
+                                                        color: '#1f2937'
+                                                    }
                                                 },
                                                 x: {
                                                     grid: {
@@ -302,234 +614,68 @@ export default function Dashboard({ auth, authUserRole }) {
                                                     },
                                                     ticks: {
                                                         font: {
-                                                            family: 'Inter, sans-serif'
-                                                        }
+                                                            family: 'Inter, sans-serif',
+                                                            size: 12
+                                                        },
+                                                        color: '#1f2937'
                                                     }
-                                                }
-                                            },
-                                            plugins: {
-                                                tooltip: {
-                                                    backgroundColor: '#1f2937',
-                                                    titleColor: '#f9fafb',
-                                                    bodyColor: '#f9fafb',
-                                                    padding: 12,
-                                                    cornerRadius: 8,
-                                                    usePointStyle: true,
-                                                    callbacks: {
-                                                        label: (context) => {
-                                                            return `Salary: ₹${context.raw.toLocaleString('en-IN')}`;
-                                                        }
-                                                    }
-                                                },
-                                                legend: {
-                                                    display: false
                                                 }
                                             }
                                         }} />
                                     </div>
-                                </div>
-                            </div>
-
-                            {/* Performance Trend */}
-                            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-4">Team Performance Trend</h3>
-                                <div className="h-64">
-                                    <Line data={performanceLineChart} options={{
-                                        maintainAspectRatio: false,
-                                        responsive: true,
-                                        plugins: {
-                                            legend: {
-                                                position: 'bottom',
-                                                labels: {
-                                                    padding: 20,
-                                                    usePointStyle: true,
-                                                    font: {
-                                                        family: 'Inter, sans-serif'
-                                                    }
-                                                }
-                                            },
-                                            tooltip: {
-                                                backgroundColor: '#1f2937',
-                                                titleColor: '#f9fafb',
-                                                bodyColor: '#f9fafb',
-                                                padding: 12,
-                                                cornerRadius: 8,
-                                            }
-                                        },
-                                        scales: {
-                                            y: {
-                                                suggestedMin: 0,
-                                                suggestedMax: 100,
-                                                grid: {
-                                                    drawBorder: false,
-                                                },
-                                                ticks: {
-                                                    font: {
-                                                        family: 'Inter, sans-serif'
-                                                    }
-                                                }
-                                            },
-                                            x: {
-                                                grid: {
-                                                    display: false,
-                                                    drawBorder: false
-                                                },
-                                                ticks: {
-                                                    font: {
-                                                        family: 'Inter, sans-serif'
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }} />
-                                </div>
-                            </div>
-
-                            {/* User Table */}
-                            <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-                                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                                    <h3 className="text-lg font-semibold text-gray-900">Employee Directory</h3>
-                                    <div className="text-sm text-gray-500">
-                                        {users.length} employees
-                                    </div>
-                                </div>
-                                <div className="overflow-x-auto hide-scrollbar">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Employee
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Role
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Salary
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Status
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Actions
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {users.map((user) => (
-                                                <>
-                                                    <tr key={user.id} className="hover:bg-gray-50">
-                                                        <td className="px-6 py-4 whitespace-nowrap">
-                                                            <div className="flex items-center">
-                                                                <Avatar className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 capitalize">
-                                                                    {user.name.charAt(0)}
-                                                                </Avatar>
-                                                                <div className="ml-4">
-                                                                    <div className="text-sm font-medium text-gray-900 capitalize">{user.name}</div>
-                                                                    <div className="text-sm text-gray-500">{user.email}</div>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap">
-                                                            <div className="text-sm text-gray-900 capitalize">{user.user_role || 'No role assigned'}</div>
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap">
-                                                            <div className="text-sm text-gray-900">
-                                                                {user.salary
-                                                                    ? Number(user.salary).toLocaleString('en-IN', {
-                                                                        style: 'currency',
-                                                                        currency: 'INR',
-                                                                        minimumFractionDigits: 0
-                                                                    })
-                                                                    : 'N/A'}
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap">
-                                                            <span className={`inline-block px-4 py-2 text-xs font-semibold rounded-full ${user.status === 1 ? 'bg-[#c0feb4] text-green-950' : 'bg-red-100 text-red-800'}`}>
-                                                                {user.status === 1 ? 'Active' : 'Inactive'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap ">
-                                                            <IconButton
-                                                                onClick={() => toggleUserHistory(user.id)}
-                                                                size="small"
-                                                                color="primary"
-                                                            >
-                                                                {expandedUserId === user.id ? <ExpandLess /> : <ExpandMore />}
-                                                            </IconButton>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td colSpan={5} className="px-6 py-0">
-                                                            <Collapse in={expandedUserId === user.id} timeout="auto" unmountOnExit>
-                                                                <div className="bg-gray-50 p-4">
-                                                                    <div className="space-y-2">
-                                                                        {user.history ? (
-                                                                            <div className="p-3 rounded-lg bg-white border border-gray-200 shadow-xs">
-                                                                                <p className="text-sm font-medium text-gray-900">
-                                                                                    <span className="font-semibold">{user.history.user?.name}</span>: {user.history.description}
-                                                                                </p>
-                                                                                <p className="text-xs text-gray-500 mt-1">
-                                                                                    {new Date(user.history.created_at).toLocaleString()}
-                                                                                </p>
-                                                                            </div>
-                                                                        ) : (
-                                                                            <div className="text-center text-gray-500 text-sm italic py-2">No history found for this employee</div>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </Collapse>
-                                                        </td>
-                                                    </tr>
-                                                </>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                                )}
+                            </motion.div>
                         </>
                     ) : (
                         <div className="space-y-8">
-                            {/* Employee Welcome Section */}
-                            <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5 }}
+                                className="bg-white rounded-xl shadow-sm p-8 border border-gray-200 hover:shadow-md transition-shadow"
+                            >
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
                                     <div>
                                         <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {auth.user.name}</h2>
-                                        <p className="text-lg text-gray-600">Here's your personalized dashboard for {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}</p>
+                                        <p className="text-lg text-gray-600">Your personalized dashboard for {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}</p>
                                     </div>
                                     <div className="mt-4 md:mt-0">
-                                        <span className={`inline-block px-4 py-2 text-xs font-semibold rounded-full
-                                         ${auth.user.status === 1 ? 'bg-[#c0feb4] text-green-950' : 'bg-red-100 text-red-800'}`}>
-                                         {auth.user.status === 1 ? 'Active' : 'Inactive'}
+                                        <span className={`inline-block px-4 py-2 text-xs font-semibold rounded-full ${auth.user.status === 1 ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'}`}>
+                                            {auth.user.status === 1 ? 'Active' : 'Inactive'}
                                         </span>
                                     </div>
                                 </div>
-                            </div>
+                            </motion.div>
 
-                            {/* Employee Details Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.2 }}
+                                className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                            >
+                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
+                                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Personal Information</h3>
                                     <div className="space-y-4">
                                         <div>
-                                            <p className="text-sm text-gray-500">Full Name</p>
+                                            <p className="text-sm text-gray-600">Full Name</p>
                                             <p className="text-base font-medium text-gray-900">{auth.user.name}</p>
                                         </div>
                                         <div>
-                                            <p className="text-sm text-gray-500">Email Address</p>
+                                            <p className="text-sm text-gray-600">Email Address</p>
                                             <p className="text-base font-medium text-gray-900">{auth.user.email}</p>
                                         </div>
                                         <div>
-                                            <p className="text-sm text-gray-500">Role</p>
+                                            <p className="text-sm font-medium text-gray-600">Role</p>
                                             <p className="text-base font-medium text-gray-900 capitalize">{auth.user.user_role || 'Not specified'}</p>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Compensation</h3>
+                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
+                                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Compensation</h3>
                                     <div className="space-y-4">
                                         <div>
-                                            <p className="text-sm text-gray-500">Monthly Salary</p>
+                                            <p className="text-sm text-gray-600">Monthly Salary</p>
                                             <p className="text-2xl font-bold text-gray-900">
                                                 {auth.user.salary
                                                     ? Number(auth.user.salary).toLocaleString('en-IN', {
@@ -541,12 +687,12 @@ export default function Dashboard({ auth, authUserRole }) {
                                             </p>
                                         </div>
                                         <div>
-                                            <p className="text-sm text-gray-500">Payment Status</p>
+                                            <p className="text-sm text-gray-600">Payment Status</p>
                                             <div className="flex items-center">
                                                 {salary[0]?.status === 'paid' ? (
                                                     <>
-                                                        <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-                                                        <span className="text-sm font-medium text-green-700">Paid</span>
+                                                        <div className="h-2 w-2 rounded-full bg-teal-500 mr-2"></div>
+                                                        <span className="text-sm font-medium text-teal-700">Paid</span>
                                                     </>
                                                 ) : (
                                                     <>
@@ -559,91 +705,117 @@ export default function Dashboard({ auth, authUserRole }) {
                                     </div>
                                 </div>
 
-                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
+                                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h3>
                                     <div className="space-y-3">
                                         {salary[0]?.status === 'paid' ? (
-                                            <button
+                                            <motion.button
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
                                                 onClick={() => handleDownloadPdf({
                                                     user: auth.user.name,
                                                     amount: auth.user.salary || 0,
                                                     status: 'paid',
                                                     date: new Date(),
                                                 })}
-                                                className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-500 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+                                                className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-500 hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300"
+                                                aria-label="Download payslip"
                                             >
                                                 Download Payslip
-                                            </button>
+                                            </motion.button>
                                         ) : (
                                             <div className="p-3 rounded-lg bg-yellow-50 border border-yellow-100 text-center">
                                                 <p className="text-sm text-yellow-700">
-                                                  ⚠️ Your salary status is pending. We'll notify you once updated.
+                                                    ⚠️ Your salary status is pending. We'll notify you once updated.
                                                 </p>
                                             </div>
                                         )}
-                                        <button
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
                                             onClick={() => window.location.href = '/manageleaves'}
-                                            className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+                                            className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300"
+                                            aria-label="Request time off"
                                         >
                                             Request Time Off
-                                        </button>
-                                        <button
+                                        </motion.button>
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
                                             onClick={() => window.location.href = '/profile'}
-                                            className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+                                            className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300"
+                                            aria-label="Update employee profile"
                                         >
-                                            Update Profile
-                                        </button>
+                                            Update Employee Profile
+                                        </motion.button>
                                     </div>
                                 </div>
-                            </div>
+                            </motion.div>
 
-                            {/* Performance Section */}
-                            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Performance</h3>
-                                <div className="h-64">
-                                    <Line data={performanceLineChart} options={{
-                                        maintainAspectRatio: false,
-                                        responsive: true,
-                                        plugins: {
-                                            legend: {
-                                                display: false
-                                            },
-                                            tooltip: {
-                                                backgroundColor: '#1f2937',
-                                                titleColor: '#f9fafb',
-                                                bodyColor: '#f9fafb',
-                                                padding: 12,
-                                                cornerRadius: 8,
-                                            }
-                                        },
-                                        scales: {
-                                            y: {
-                                                suggestedMin: 0,
-                                                suggestedMax: 100,
-                                                grid: {
-                                                    drawBorder: false,
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.4 }}
+                                className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow"
+                            >
+                                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                                    Your Performance
+                                </h3>
+                                {sectionLoading.charts ? (
+                                    <div className="flex justify-center items-center h-64">
+                                        <CircularProgress size={40} sx={{ color: '#4F46E5' }} />
+                                    </div>
+                                ) : (
+                                    <div className="h-64">
+                                        <Line data={performanceLineChart} options={{
+                                            maintainAspectRatio: false,
+                                            responsive: true,
+                                            plugins: {
+                                                legend: {
+                                                    display: false
                                                 },
-                                                ticks: {
-                                                    font: {
-                                                        family: 'Inter, sans-serif'
-                                                    }
+                                                tooltip: {
+                                                    backgroundColor: '#1f2937',
+                                                    titleColor: '#f9fafb',
+                                                    bodyColor: '#f9fafb',
+                                                    padding: 12,
+                                                    cornerRadius: 8,
                                                 }
                                             },
-                                            x: {
-                                                grid: {
-                                                    display: false,
-                                                    drawBorder: false
+                                            scales: {
+                                                y: {
+                                                    suggestedMin: 0,
+                                                    suggestedMax: 100,
+                                                    grid: {
+                                                        drawBorder: false,
+                                                        color: '#E5E7EB'
+                                                    },
+                                                    ticks: {
+                                                        font: {
+                                                            family: 'Inter, sans-serif',
+                                                            size: 12
+                                                        },
+                                                        color: '#1f2937'
+                                                    }
                                                 },
-                                                ticks: {
-                                                    font: {
-                                                        family: 'Inter, sans-serif'
+                                                x: {
+                                                    grid: {
+                                                        display: false,
+                                                        drawBorder: false
+                                                    },
+                                                    ticks: {
+                                                        font: {
+                                                            family: 'Inter, sans-serif',
+                                                            size: 12
+                                                        },
+                                                        color: '#1f2937'
                                                     }
                                                 }
                                             }
-                                        }
-                                    }} />
-                                </div>
-                            </div>
+                                        }} />
+                                    </div>
+                                )}
+                            </motion.div>
                         </div>
                     )}
                 </div>
@@ -652,9 +824,9 @@ export default function Dashboard({ auth, authUserRole }) {
     );
 }
 
-function DashboardCard({ label, value, icon, trend, trendValue }) {
+function DashboardCard({ label, value, trend, trendValue, accentColor }) {
     const trendColors = {
-        up: 'text-green-600 bg-green-100',
+        up: 'text-teal-600 bg-teal-100',
         down: 'text-red-600 bg-red-100',
         neutral: 'text-gray-600 bg-gray-100'
     };
@@ -665,17 +837,15 @@ function DashboardCard({ label, value, icon, trend, trendValue }) {
         neutral: '→'
     };
 
-
-
     return (
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition">
+        <motion.div
+            whileHover={{ scale: 1.03, boxShadow: '0 10px 20px rgba(0, 0, 0, 0.1)' }}
+            className="bg-white rounded-xl shadow-sm p-6 border border-gray-200"
+        >
             <div className="flex justify-between items-start">
                 <div>
-                    <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">{label}</p>
-                    <p className="mt-2 text-3xl font-semibold text-gray-900">{value}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-indigo-100 text-indigo-600">
-                    <span className="text-xl">{icon}</span>
+                    <p className="text-sm font-medium text-gray-600 uppercase tracking-wider">{label}</p>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
                 </div>
             </div>
             {trend && (
@@ -683,6 +853,6 @@ function DashboardCard({ label, value, icon, trend, trendValue }) {
                     {trendIcons[trend]} {trendValue || 'No change'} from last month
                 </div>
             )}
-        </div>
+        </motion.div>
     );
 }
