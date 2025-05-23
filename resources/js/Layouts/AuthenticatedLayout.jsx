@@ -101,22 +101,15 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                             </span>
                                         )}
                                     </div>
-                                </NavLink>
+                                     </NavLink>
+                                      {(user?.user_role === 'hr' || user?.user_role === 'admin') &&
                                              <NavLink
                                                 href={route('performances.index')}
                                                 active={route().current('performances.index')}
                                             >
                                                 Performance
-                                            </NavLink>
+                                            </NavLink> }
 
-                                {/* ✅ Chat Bot toggle button */}
-                                {/* <button
-                                    type="button"
-                                    onClick={() => setShowChatBot(true)}
-                                    className="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 focus:outline-none"
-                                >
-                                    Chat Bot
-                                </button> */}
                             </div>
                         </div>
 
