@@ -22,6 +22,7 @@ import Notification from '@/Components/Notification';
 import EditUser from './EditUser';
 import { StatusChip } from '@/utils/StatusChip';
 import { Upcoming } from '@mui/icons-material';
+import { CalendarClock } from "lucide-react";
 
 export default function UserDetail() {
   const { props } = usePage();
@@ -94,30 +95,30 @@ export default function UserDetail() {
             <IconButton onClick={() => editUser(user.id)} size="small"><EditIcon fontSize="small" /></IconButton>
           </Box>
           <Grid container spacing={2}>
-              <Grid item size={4}>
+              <Grid item size={3}>
                 {showDetails('Name', user.name)}
               </Grid>
-              <Grid item size={4}>
+              <Grid item size={3}>
                 {showDetails('Email', user.email,false)}
               </Grid>
-              <Grid item size={4}>
+              <Grid item size={3}>
                 <Box mb={1}>
                   <Typography fontWeight="bold">Status</Typography>
                   <Typography sx={{ textTransform: 'capitalize' }}>{StatusChip(user.status)}</Typography>
                 </Box>
               </Grid>
-              <Grid item size={4}>
+              <Grid item size={3}>
                  {showDetails('Role', user.user_role)}
               </Grid>
-              <Grid item size={4}>
+              <Grid item size={3}>
                 {showDetails('Salary', new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(user?.salary?.amount ?? user?.direct_salary))}
                 
               </Grid>
-              <Grid item size={4}>
+              <Grid item size={3}>
                  {showDetails('Salary Status', StatusChip(user?.salary?.status) ?? 'N/A')}
               </Grid>
               {user?.salary?.status === 'paid' && (
-                <Grid item size={4}>
+                <Grid item size={3}>
                       {showDetails('Date', user?.salary?.date ? dateFormate(user.salary.date) : 'N/A')}
                 </Grid>
               )}
@@ -153,10 +154,12 @@ export default function UserDetail() {
                               <Grid>
                                 {showDetails(
                                   'Upcoming Leave',
-                                  <ArrowUpwardIcon
-                                    onClick={() => toggleReason(index)}
-                                    style={{ cursor: 'pointer', color: 'green' }}
-                                  />
+                                  // <ArrowUpwardIcon
+                                  //   onClick={() => toggleReason(index)}
+                                  //   style={{ cursor: 'pointer', color: 'green' }}
+                                  // />
+                                  <CalendarClock className="w-6 h-6 text-blue-600"    onClick={() => toggleReason(index)}
+                                    style={{ cursor: 'pointer', color: 'green' }}/>
                                 )}
                               </Grid> )}
                       </Grid>

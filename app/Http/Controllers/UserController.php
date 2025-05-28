@@ -15,8 +15,9 @@ use App\Models\Notification;
 use App\Models\UserHistory;
 use App\Models\Performance;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
-
+use Carbon\Carbon;
 
 class UserController extends Controller
 {
@@ -204,7 +205,11 @@ class UserController extends Controller
     {
         $user = Auth::user();
         
-        $performances = Performance::with('user')->latest()->get();
+        $performances = $performances = Performance::with('user')
+                            ->whereYear('evaluated_at', Carbon::now()->year)
+                            ->whereMonth('evaluated_at', Carbon::now()->month)
+                            ->latest()
+                            ->get();
         return Inertia::render('Performance', [
             'performances' => $performances,
         ]);
@@ -214,20 +219,29 @@ class UserController extends Controller
         return $performances = Performance::with('user')->latest()->get();
     }
 
-    public function storePerformance(Request $request)
-    {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'category' => 'required|string',
-            'score' => 'required|integer|min:1|max:10',
-            'remarks' => 'nullable|string',
-            'evaluated_at' => 'required|date',
-        ]);
+   public function storePerformance(Request $request): RedirectResponse
+    {    
+        $date = Carbon::parse($request->evaluated_at);
+        $curr_month = $date->month;
+        $curr_year = $date->year;
+        $performance = Performance::where('user_id', $request->user_id)
+                    ->whereYear('evaluated_at', $curr_year)
+                    ->whereMonth('evaluated_at', $curr_month)
+                    ->first();
+        if (!$performance) {
+            $performance = new Performance();
+            $performance->user_id = $request->user_id;
+            $performance->evaluated_at = $request->evaluated_at; 
+        }
 
-        Performance::create($request->all());
+        $performance->category = implode(',', $request->category);
+        $performance->score = $request->score;
+        $performance->remarks = $request->remarks;
+        $performance->save();
 
-        return redirect()->back()->with('message', 'Performance added successfully.');
+        return redirect()->back()->with('success', 'Performance added successfully.');
     }
+
 }
 
 

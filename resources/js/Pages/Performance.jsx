@@ -24,7 +24,7 @@ export default function Performance() {
   const [showDate, setShowDate] = useState(false);
   const [form, setForm] = useState({
     user_id: '',
-    category: '',
+    category: [],
     score: '',
     remarks: '',
     evaluated_at: '',
@@ -41,7 +41,12 @@ export default function Performance() {
   ];
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+      const { name, value } = e.target;
+
+  setForm((prev) => ({
+    ...prev,
+    [name]: name === 'category' ? (typeof value === 'string' ? value.split(',') : value) : value,
+  }));
   };
 
   const handleSubmit = (e) => {
@@ -50,7 +55,7 @@ export default function Performance() {
       onSuccess: () => {
         setForm({
           user_id: '',
-          category: '',
+          category: [],
           score: '',
           remarks: '',
           evaluated_at: '',
@@ -84,30 +89,67 @@ export default function Performance() {
     {
       field: 'user',
       headerName: 'User',
-      flex: 1,
+      flex: 0.7,
       renderCell: (params) => params.row.user || '',
     },
     {
       field: 'category',
       headerName: 'Category',
-      flex: 1,
-      renderCell: (params) => (
-        <Chip label={params.value} color="primary" variant="outlined" size="small" />
-      ),
+      flex: 2,
+      headerAlign: 'center', 
+      align: 'center', 
+      width :'250px',
+     renderCell: (params) => {
+      const categories = params.value ? params.value.split(',') : [];
+
+      return (
+        <div style={{
+        display: 'flex',
+        gap: '4px',
+        flexWrap: 'wrap',
+        justifyContent: 'center',  
+        alignItems: 'center',       
+        height: '100%',        
+        width: '100%',    
+        overflow:'scroll'      
+      }}>
+          {categories.map((cat, index) => (
+            <Chip
+              key={index}
+              label={cat.trim()}
+              color="primary"
+              variant="outlined"
+              size="small"
+            />
+          ))}
+        </div>
+      );
+    },
     },
     {
       field: 'score',
       headerName: 'Score',
       flex: 0.5,
       renderCell: ({ value }) => (
-        <Typography color={value >= 8 ? 'green' : value >= 5 ? 'orange' : 'red'}>
-          {value}
-        </Typography>
+        <Box display="flex" justifyContent="center" alignItems="center" height="100%" >
+          <Typography
+            color={value >= 8 ? 'green' : value >= 5 ? 'orange' : 'red'}
+          >
+            {value}
+          </Typography>
+        </Box>
       ),
     },
     { field: 'evaluated_at', headerName: 'Date', flex: 1 },
-    { field: 'remarks', headerName: 'Remarks', flex: 2 },
+    { field: 'remarks', headerName: 'Remarks', flex: 1 },
   ];
+
+  const handleChipDelete = (chipToDelete) => {
+    setForm((prev) => ({
+      ...prev,
+      category: prev.category.filter((cat) => cat !== chipToDelete),
+    }));
+  };
 
   const rows = performances.map((perf, index) => ({
     id: index,
@@ -134,15 +176,37 @@ export default function Performance() {
                 ))}
               </TextField>
 
-              <TextField select fullWidth label="Category" name="category" value={form.category} onChange={handleChange} error={!!errors.category} helperText={errors.category}>
-                <MenuItem value="" disabled>
-                  Select Category
-                </MenuItem>
+              <TextField
+                select
+                fullWidth
+                label="Category"
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                error={!!errors.category}
+                helperText={errors.category}
+                SelectProps={{
+                  multiple: true,
+                  renderValue: (selected) => (
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
+                      {selected.map((value) => (
+                        <Chip
+                          key={value}
+                          label={value}
+                          onDelete={() => handleChipDelete(value)}
+                          onMouseDown={(event) => event.stopPropagation()} 
+                        />
+                      ))}
+                    </Box>
+                  ),
+                }}
+              >
                 {categoryOptions.map((cat) => (
-                  <MenuItem key={cat} value={cat}>{cat}</MenuItem>
+                  <MenuItem key={cat} value={cat}>
+                    {cat}
+                  </MenuItem>
                 ))}
-              </TextField>
-
+             </TextField>
              <TextField
                 fullWidth
                 select
@@ -161,7 +225,6 @@ export default function Performance() {
                     '&:hover fieldset': { borderColor: '#bbb' },
                     '&.Mui-focused fieldset': { borderColor: '#ccc' },
                     },
-                    backgroundColor: 'background.paper'
                 }}
                 InputLabelProps={{
                     sx: {
@@ -250,7 +313,7 @@ export default function Performance() {
         <Card elevation={3} sx={{ borderRadius: 3, mt: 5 }}>
           <CardContent>
             <Typography variant="h6" fontWeight={600} gutterBottom>
-              Employee Performance List
+            {`Employee Performance List of ${new Date().toLocaleString('default', { month: 'long' })}`}
             </Typography>
             <Divider sx={{ mb: 2 }} />
             <DataGrid
@@ -270,6 +333,7 @@ export default function Performance() {
                   backgroundColor: theme.palette.action.hover,
                 },
               }}
+              
             />
           </CardContent>
         </Card>
