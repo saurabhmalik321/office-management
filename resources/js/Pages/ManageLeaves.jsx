@@ -98,14 +98,22 @@ export default function ManageLeaves({ auth_user_id }) {
       });
   };
 
-  const fetchLeaves = () => {
-    setLoading(true);
-    axios
-      .get('/leaves')
-      .then((response) => setLeaves(response.data))
-      .catch((error) => console.error('Error fetching leaves:', error))
-      .finally(() => setLoading(false));
-  };
+    const fetchLeaves = () => {
+      setLoading(true);
+      if(user.user_role == 'employee'){
+      axios
+        .get('/single-leave')
+        .then((response) => setLeaves(response.data))
+        .catch((error) => console.error('Error fetching leaves:', error))
+        .finally(() => setLoading(false));    
+      }else{
+      axios
+        .get('/leaves')
+        .then((response) => setLeaves(response.data))
+        .catch((error) => console.error('Error fetching leaves:', error))
+        .finally(() => setLoading(false));
+      }
+    };
     const pendingLeave = () => {
         axios
         .get('/admin/pending-leave')
@@ -262,9 +270,21 @@ export default function ManageLeaves({ auth_user_id }) {
                     <TableBody>
                       {leaves.map((leave) => (
                         <TableRow key={leave.id}>
-                          <TableCell>{leave.user.name}</TableCell>
-                          <TableCell>{new Date(leave.start_date).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</TableCell>
-                          <TableCell>{new Date(leave.end_date).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</TableCell>
+                          <TableCell>{user.user_role == 'employee' ? leave.name : leave.user.name}</TableCell>
+                          <TableCell>
+                            {new Date(leave.start_date).toLocaleDateString('en-GB', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                            })}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(leave.end_date).toLocaleDateString('en-GB', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                            })}
+                          </TableCell>
                           <TableCell>{leave.leave_type}</TableCell>
                           <TableCell>{leave.reason}</TableCell>
                           <TableCell>

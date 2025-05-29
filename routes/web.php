@@ -73,7 +73,7 @@ Route::group(['prefix' => 'admin'], function () {
     Route::post('/user/salary/{id}', [UserController::class, 'userSalary']);
     Route::get('/pending-leave', [UserController::class, 'pendingLeave']);
     Route::get('/employee-inquiry', [UserController::class, 'getInquiry']);
-     Route::get('/histories', [UserController::class, 'getHistory']);
+    Route::get('/histories', [UserController::class, 'getHistory']);
 
 });
 Route::get('/chat', function () {
@@ -98,9 +98,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/leaves', [UserController::class, 'indexLeaves']);
     Route::post('/leaves', [UserController::class, 'storeLeave']);
     Route::post('/leave-request/{id}', [UserController::class, 'updateLeaveStatus']);
+     Route::get('/single-leave', [UserController::class, 'getSingleUserLeave']);
     // Inquiry
     Route::get('/admin-hr-users', [UserController::class, 'getAdminHrUsers']);
     Route::post('/inquiries', [UserController::class, 'sendInquiry']);
+    // company policies
+    Route::get('/policies', [UserController::class, 'getPolicies'])->name('policies.index');
+    Route::post('/policies', [UserController::class, 'storePolicies'])->name('policies.store');
+    Route::get('/policies/download/{policy}', [UserController::class, 'download'])->name('policies.download');
+    Route::get('/policies/view/{id}', [UserController::class, 'viewDoc'])->name('policies.view');
    
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

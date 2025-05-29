@@ -23,6 +23,13 @@ class LeaveService
     {
         return Leave::with('user:id,name')->get();
     }
+    public function getSingleUserLeave()
+    {
+        return Leave::select('leaves.*', 'users.name')
+                ->join('users', 'users.id', '=', 'leaves.user_id')
+                ->where('leaves.user_id', Auth::id())
+                ->get();
+    }
     public function pendingLeave()
     {
         return Leave::where('status','pending')->get()->count();
