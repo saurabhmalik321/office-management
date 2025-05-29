@@ -16,7 +16,7 @@ use App\Models\Notification;
 use App\Models\UserHistory;
 use App\Models\Performance;
 use App\Models\HrPolicy;
-use App\Models\ContactUs;
+use App\Models\{ContactUs, Quote};
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
@@ -291,6 +291,17 @@ class UserController extends Controller
             'success' => true,
             'data' => $contact
         ]);
+    }
+     public function getQoute(Request $request){
+        $quote = new Quote();
+        $quote -> name = $request -> name;
+        $quote -> phone = $request -> phone;
+        $quote -> email = $request -> email;
+        $quote -> microsoft_team_id = $request -> teams_id;
+        $quote -> source = $request -> hear_about_us;
+         $quote -> message = $request -> message;
+        $quote -> save();
+        return response()->json(['message' => 'submit successfully', 'success' => true]);
     }
 
 }

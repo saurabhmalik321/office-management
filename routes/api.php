@@ -12,5 +12,6 @@ Route::prefix("/v1")->group(function() {
     Route::prefix("/weproinc")->group(function() {
         Route::post("/contact", [UserController::class, 'postContact']);
         Route::get("/contact/list", [UserController::class, 'getContacts']);
+        Route::post("/quote", [UserController::class, 'getQoute']);
     });
 });
