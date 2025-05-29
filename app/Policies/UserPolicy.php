@@ -72,4 +72,14 @@ class UserPolicy
     {
         return false;
     }
+
+    public function uploadPolicy(User $user)
+    {
+        return $user->hasRole('Admin') || $user->hasRole('HR');
+    }
+
+    public function downloadPolicy(User $user)
+    {
+        return true;
+    }
 }

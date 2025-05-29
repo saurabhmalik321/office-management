@@ -101,15 +101,20 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                             </span>
                                         )}
                                     </div>
-                                     </NavLink>
+                                    </NavLink>
                                       {(user?.user_role === 'hr' || user?.user_role === 'admin') &&
                                              <NavLink
                                                 href={route('performances.index')}
                                                 active={route().current('performances.index')}
                                             >
                                                 Performance
-                                            </NavLink> }
-
+                                    </NavLink> }
+                                    <NavLink
+                                     href={route('policies.index')}
+                                     active={route().current('policies.index')}
+                                    >
+                                    Company Policies
+                                    </NavLink>
                             </div>
                         </div>
 

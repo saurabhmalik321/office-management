@@ -11,12 +11,15 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Services\SalaryService;
 use App\Services\LeaveService;
+use App\Services\PolicyService;
 use App\Models\Notification;
 use App\Models\UserHistory;
 use App\Models\Performance;
+use App\Models\HrPolicy;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 class UserController extends Controller
@@ -24,12 +27,14 @@ class UserController extends Controller
     protected $userInterface;
     protected $salaryService;
     protected $leaveService;
+    protected $policyService;
 
-    public function __construct(UserInterface $userInterface, SalaryService $salaryService, LeaveService $leaveService)
+    public function __construct(UserInterface $userInterface, SalaryService $salaryService, LeaveService $leaveService,PolicyService $policyService)
     {
         $this->userInterface = $userInterface;
         $this->salaryService = $salaryService;
         $this->leaveService = $leaveService;
+        $this->policyService = $policyService;
     }
 
     // user
@@ -134,6 +139,11 @@ class UserController extends Controller
     {
         return response()->json($this->leaveService->updateStatus($request->all(), $id));
     }
+     public function getSingleUserLeave()
+    {
+        $leaves = $this->leaveService->getSingleUserLeave();
+        return response()->json($leaves);
+    }
     public function dashboard()
     {
           $user = Auth::user();
@@ -219,7 +229,7 @@ class UserController extends Controller
         return $performances = Performance::with('user')->latest()->get();
     }
 
-   public function storePerformance(Request $request): RedirectResponse
+    public function storePerformance(Request $request): RedirectResponse
     {    
         $date = Carbon::parse($request->evaluated_at);
         $curr_month = $date->month;
@@ -240,6 +250,28 @@ class UserController extends Controller
         $performance->save();
 
         return redirect()->back()->with('success', 'Performance added successfully.');
+    }
+    /// hr policies
+    public function getPolicies()
+    {
+        $policies = $this->policyService->getPolicies();
+        return Inertia::render('Policies/Index', ['policies' => $policies]);
+    }
+
+    public function storePolicies(Request $request)
+    {
+        $policies = $this->policyService->storePolicies($request->all());
+        return redirect()->route('policies.index')->with('success', 'Policy uploaded successfully.');
+    }
+
+    public function download(HrPolicy $policy)
+    {
+        return Storage::disk('public')->download($policy->file_path);
+    }
+    public function viewDoc($id)
+    {
+        $policy = $this->policyService->viewDoc($id);
+        return response()->file(storage_path('app/public/' . $policy->file_path));
     }
 
 }

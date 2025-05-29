@@ -164,7 +164,14 @@ export default function Performance() {
         </Box>
       ),
     },
-    { field: 'evaluated_at', headerName: 'Date', flex: 1 },
+    { field: 'evaluated_at', headerName: 'Date', flex: 1,
+       renderCell: (params) =>
+        new Date(params.row.evaluated_at).toLocaleDateString('en-GB', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+    })
+     },
     { field: 'remarks', headerName: 'Remarks', flex: 1.5 },
   ];
 
