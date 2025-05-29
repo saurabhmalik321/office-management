@@ -16,6 +16,7 @@ use App\Models\Notification;
 use App\Models\UserHistory;
 use App\Models\Performance;
 use App\Models\HrPolicy;
+use App\Models\ContactUs;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
@@ -272,6 +273,24 @@ class UserController extends Controller
     {
         $policy = $this->policyService->viewDoc($id);
         return response()->file(storage_path('app/public/' . $policy->file_path));
+    }
+    public function postContact(Request $request){
+        $contact = new ContactUS();
+        $contact -> name = $request -> name;
+        $contact -> phone = $request -> phone;
+        $contact -> email = $request -> email;
+        $contact -> subject = $request -> subject;
+        $contact -> message = $request -> message;
+        $contact -> save();
+        return response()->json(['message' => 'submit successfully', 'success' => true]);
+    }
+    public function getContacts(){
+        $contact = ContactUS::all();
+        return response()->json([
+            'message' => 'Contact list fetched successfully', 
+            'success' => true,
+            'data' => $contact
+        ]);
     }
 
 }
