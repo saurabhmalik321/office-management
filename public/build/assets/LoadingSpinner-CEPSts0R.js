@@ -1,0 +1,1 @@
+import{j as e}from"./app-BgYIljHB.js";function n(){return e.jsx("div",{className:"flex justify-center items-center",children:e.jsx("div",{className:"w-10 h-10 border-4 border-t-blue-600 border-gray-200 rounded-full animate-spin"})})}export{n as L};
