@@ -1,14 +1,13 @@
-// resources/js/Layouts/AuthenticatedLayout.jsx
 import { useEffect, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import Badge from '@mui/material/Badge';
+import { Avatar, Box, Badge } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import NotificationsList from '@/Pages/Users/Notification';
-import ChatBot from '../Pages/ChatBot';
+import ChatBot from '@/Pages/ChatBot';
 import axios from 'axios';
 
 export default function AuthenticatedLayout({ header, count, children }) {
@@ -27,9 +26,11 @@ export default function AuthenticatedLayout({ header, count, children }) {
         setHasUnread(false);
         setRead(false);
     };
-   useEffect(()=>{
-     inquiryData()
-   },[])
+
+    useEffect(() => {
+        inquiryData();
+    }, []);
+
     useEffect(() => {
         if (user?.id) {
             axios
@@ -43,22 +44,32 @@ export default function AuthenticatedLayout({ header, count, children }) {
                 });
         }
     }, [user?.id]);
-    const inquiryData=()=>{
-        axios.get('/admin/employee-inquiry')
-        .then((res)=>{
-           setInquiry(res.data);
-           setRead(res.data.length > 0);
-        })
-        .catch((error) => {
-            console.error('Failed to fetch inquiry details:', error);
-        })
-    }
+
+    const inquiryData = () => {
+        axios
+            .get('/admin/employee-inquiry')
+            .then((res) => {
+                setInquiry(res.data);
+                setRead(res.data.length > 0);
+            })
+            .catch((error) => {
+                console.error('Failed to fetch inquiry details:', error);
+            });
+    };
+
+    const getInitials = (name) => {
+        if (!name) return '';
+        const nameParts = name.trim().split(' ');
+        return nameParts.length > 1
+            ? `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase()
+            : nameParts[0][0].toUpperCase();
+    };
 
     return (
         <div className="min-h-screen bg-gray-100">
             <nav className="border-b border-gray-100 bg-white">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 justify-between  bg-lack-600">
+                    <div className="flex h-16 justify-between">
                         <div className="flex">
                             <div className="flex shrink-0 items-center">
                                 <Link href="/">
@@ -69,21 +80,18 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                 <NavLink href={route('dashboard')} active={route().current('dashboard')}>
                                     Dashboard
                                 </NavLink>
-
                                 {(user.user_role === 'hr' || user.user_role === 'admin') && (
                                     <NavLink href={route('manageusers')} active={route().current('manageusers')}>
                                         Users
                                     </NavLink>
                                 )}
-
                                 <NavLink href={route('managesalaries')} active={route().current('managesalaries')}>
                                     Salaries
                                 </NavLink>
-
                                 <NavLink href={route('manageleaves')} active={route().current('manageleaves')}>
                                     <div style={{ position: 'relative', display: 'inline-block' }}>
                                         <span>Leaves</span>
-                                        {(user?.user_role === 'hr' && count > 0) && (
+                                        {user?.user_role === 'hr' && count > 0 && (
                                             <span
                                                 style={{
                                                     position: 'absolute',
@@ -120,7 +128,7 @@ export default function AuthenticatedLayout({ header, count, children }) {
 
                         <div className="relative hidden sm:ms-6 sm:flex sm:items-center gap-4">
                             <div>
-                                {(user.user_role !== 'admin' && user.user_role !== 'hr') ? (
+                                {user.user_role !== 'admin' && user.user_role !== 'hr' ? (
                                     <>
                                         <Badge badgeContent={hasUnread ? notifications.length : 0} color="error">
                                             <button
@@ -131,7 +139,6 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                                 <NotificationsIcon />
                                             </button>
                                         </Badge>
-
                                         {showNotifications && (
                                             <div className="fixed inset-0 bg-black bg-opacity-30 z-40 flex justify-center items-center">
                                                 <div onClick={() => setShowNotifications(false)} className="absolute inset-0" />
@@ -153,7 +160,6 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                                 <NotificationsIcon />
                                             </button>
                                         </Badge>
-
                                         {showNotifications && (
                                             <div className="fixed inset-0 bg-black bg-opacity-30 z-40 flex justify-center items-center">
                                                 <div onClick={() => setShowNotifications(false)} className="absolute inset-0" />
@@ -175,6 +181,20 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                                 type="button"
                                                 className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
                                             >
+                                                <Avatar
+                                                    src={user.avatar}
+                                                    alt={user.name}
+                                                    sx={{
+                                                        width: 28,
+                                                        height: 28,
+                                                        bgcolor: '#CCFBF1',
+                                                        color: '#0D9488',
+                                                        fontSize: '14px',
+                                                        mr: 1,
+                                                    }}
+                                                >
+                                                    {!user.avatar && getInitials(user.name)}
+                                                </Avatar>
                                                 {user.name}
                                                 <svg
                                                     className="-me-0.5 ms-2 h-4 w-4"
@@ -193,144 +213,115 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                     </Dropdown.Trigger>
                                     <Dropdown.Content>
                                         <Dropdown.Link href={route('profile.edit')}>Profile</Dropdown.Link>
-                                        <Dropdown.Link href={route('logout')} method="post" as="button">Log Out</Dropdown.Link>
+                                        <Dropdown.Link href={route('logout')} method="post" as="button">
+                                            Log Out
+                                        </Dropdown.Link>
                                     </Dropdown.Content>
                                 </Dropdown>
                             </div>
                         </div>
 
-                    <div className="-me-2 flex items-center sm:hidden">
-                                                <button
-                                                    onClick={() =>
-                                                        setShowingNavigationDropdown(
-                                                            (previousState) => !previousState,
-                                                        )
-                                                    }
-                                                    className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
-                                                >
-                                                    <svg
-                                                        className="h-6 w-6"
-                                                        stroke="currentColor"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            className={
-                                                                !showingNavigationDropdown
-                                                                    ? 'inline-flex'
-                                                                    : 'hidden'
-                                                            }
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth="2"
-                                                            d="M4 6h16M4 12h16M4 18h16"
-                                                        />
-                                                        <path
-                                                            className={
-                                                                showingNavigationDropdown
-                                                                    ? 'inline-flex'
-                                                                    : 'hidden'
-                                                            }
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth="2"
-                                                            d="M6 18L18 6M6 6l12 12"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                        <div className="-me-2 flex items-center sm:hidden">
+                            <button
+                                onClick={() => setShowingNavigationDropdown((previousState) => !previousState)}
+                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
+                            >
+                                <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                                    <path
+                                        className={!showingNavigationDropdown ? 'inline-flex' : 'hidden'}
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M4 6h16M4 12h16M4 18h16"
+                                    />
+                                    <path
+                                        className={showingNavigationDropdown ? 'inline-flex' : 'hidden'}
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M6 18L18 6M6 6l12 12"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-                                    <div
-                                        className={
-                                            (showingNavigationDropdown ? 'block' : 'hidden') +
-                                            ' sm:hidden'
-                                        }
+                <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden'}>
+                    <div className="space-y-1 pb-3 pt-2">
+                        <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
+                            Dashboard
+                        </ResponsiveNavLink>
+                        {(user.user_role === 'hr' || user.user_role === 'admin') && (
+                            <ResponsiveNavLink href={route('manageusers')} active={route().current('manageusers')}>
+                                Users
+                            </ResponsiveNavLink>
+                        )}
+                        <ResponsiveNavLink href={route('managesalaries')} active={route().current('managesalaries')}>
+                            Salaries
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink href={route('manageleaves')} active={route().current('manageleaves')}>
+                            <div style={{ position: 'relative', display: 'inline-block' }}>
+                                <span>Leaves</span>
+                                {user?.user_role === 'hr' && count > 0 && (
+                                    <span
+                                        style={{
+                                            position: 'absolute',
+                                            top: '-8px',
+                                            right: '-12px',
+                                            backgroundColor: 'green',
+                                            color: 'white',
+                                            borderRadius: '50%',
+                                            padding: '2px 6px',
+                                            fontSize: '12px',
+                                            lineHeight: '1',
+                                        }}
                                     >
-                                        <div className="space-y-1 pb-3 pt-2">
-                                            <ResponsiveNavLink
-                                                href={route('dashboard')}
-                                                active={route().current('dashboard')}
-                                            >
-                                                Dashboard
-                                            </ResponsiveNavLink>
+                                        {count}
+                                    </span>
+                                )}
+                            </div>
+                        </ResponsiveNavLink>
+                        {(user?.user_role === 'hr' || user.user_role === 'admin') && (
+                            <ResponsiveNavLink
+                                href={route('performances.index')}
+                                active={route().current('performances.index')}
+                            >
+                                Performance
+                            </ResponsiveNavLink>
+                        )}
+                    </div>
 
-                                              {(user.user_role === 'hr' || user.user_role === 'admin') && (
-                                            <ResponsiveNavLink
-                                                href={route('manageusers')}
-                                                active={route().current('manageusers')}
-                                            >
-                                                Users
-                                            </ResponsiveNavLink>
-                                             )}
-
-                                             <ResponsiveNavLink
-                                                href={route('managesalaries')}
-                                                active={route().current('managesalaries')}
-                                            >
-                                                Salaries
-                                            </ResponsiveNavLink>
-
-                                             <ResponsiveNavLink
-                                                href={route('manageleaves')}
-                                                active={route().current('manageleaves')}
-                                            >
-                                                <div style={{ position: 'relative', display: 'inline-block' }}>
-                                                <span>Leaves</span>
-                                                {(user?.user_role === 'hr' && count > 0) && (
-                                                    <span
-                                                    style={{
-                                                        position: 'absolute',
-                                                        top: '-8px',
-                                                        right: '-12px',
-                                                        backgroundColor: 'green',
-                                                        color: 'white',
-                                                        borderRadius: '50%',
-                                                        padding: '2px 6px',
-                                                        fontSize: '12px',
-                                                        lineHeight: '1',
-                                                }}
-                                            >
-                                                {count}
-                                            </span>
-                                        )}
-                                    </div>
-                                            </ResponsiveNavLink>
-                                           <ResponsiveNavLink
-                                                href={route('performances.index')}
-                                                active={route().current('performances.index')}
-                                            >
-                                                Performance
-                                            </ResponsiveNavLink>
-                                        </div>
-
-                                        <div className="border-t border-gray-200 pb-1 pt-4">
-                                            {/* display current user name and email */}
-                                            {/* <div className="px-4">
-                                                <div className="text-base font-medium text-gray-800">
-                                                    {user.name}
-                                                </div>
-                                                <div className="text-sm font-medium text-gray-500">
-                                                    {user.email}
-                                                </div>
-                                            </div> */}
-
-                                            <div className="mt-3 space-y-1">
-                                                <ResponsiveNavLink href={route('profile.edit')}>
-                                                    Profile
-                                                </ResponsiveNavLink>
-                                                <ResponsiveNavLink
-                                                    method="post"
-                                                    href={route('logout')}
-                                                    as="button"
-                                                >
-                                                    Log Out
-                                                </ResponsiveNavLink>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </nav>
+                    <div className="border-t border-gray-200 pb-1 pt-4">
+                        <div className="px-4 flex items-center">
+                            <Avatar
+                                src={user.avatar}
+                                alt={user.name}
+                                sx={{
+                                    width: 36,
+                                    height: 36,
+                                    bgcolor: '#CCFBF1',
+                                    color: '#0D9488',
+                                    fontSize: '16px',
+                                    mr: 2,
+                                }}
+                            >
+                                {!user.avatar && getInitials(user.name)}
+                            </Avatar>
+                            <Box>
+                                <div className="text-base font-medium text-gray-800 capitalize">{user.name}</div>
+                                <div className="text-sm font-medium text-gray-500">{user.email}</div>
+                            </Box>
+                        </div>
+                        <div className="mt-3 space-y-1">
+                            <ResponsiveNavLink href={route('profile.edit')}>Profile</ResponsiveNavLink>
+                            <ResponsiveNavLink method="post" href={route('logout')} as="button">
+                                Log Out
+                            </ResponsiveNavLink>
+                        </div>
+                    </div>
+                </div>
+            </nav>
 
             {header && (
                 <header className="bg-white shadow">
@@ -339,6 +330,27 @@ export default function AuthenticatedLayout({ header, count, children }) {
             )}
 
             <main>{children}</main>
+
+            {showChatBot && <ChatBot onClose={() => setShowChatBot(false)} />}
+            <button
+                onClick={() => setShowChatBot(true)}
+                className="fixed bottom-4 right-4 bg-blue-500 text-white rounded-full p-3 shadow-lg hover:bg-blue-600 transition"
+            >
+                <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                    />
+                </svg>
+            </button>
         </div>
     );
 }
