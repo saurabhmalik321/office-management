@@ -109,6 +109,7 @@ const DateFilter = ({ filterType, setFilterType, selectedMonth, setSelectedMonth
         setAnchorEl(null);
     };
 
+
     const formatDateForInput = (date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -368,7 +369,7 @@ const UpcomingLeavesTable = ({ leaveData, users, sectionLoading }) => (
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <Button
-                                            onClick={() => window.location.href = '/manageleaves'}
+                                            onClick={() => window.location.href = '/manage-leaves'}
                                             size="small"
                                             variant="outlined"
                                             aria-label={`View more details for ${user.name}'s leave`}
@@ -395,7 +396,7 @@ const UpcomingLeavesTable = ({ leaveData, users, sectionLoading }) => (
         {leaveData.upcoming.length > 5 && (
             <Box sx={{ px: 6, py: '12px', textAlign: 'center' }}>
                 <Button
-                    onClick={() => window.location.href = '/manageleaves'}
+                    onClick={() => window.location.href = '/manage-leaves'}
                     variant="contained"
                     color="primary"
                     sx={{
@@ -430,6 +431,7 @@ const PerformanceChart = ({ performanceData, sectionLoading, title }) => {
         }));
         return { labels, datasets };
     }, [performanceData]);
+    console.log(performanceData,'performancedata');
 
     return (
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
@@ -586,7 +588,7 @@ const EmployeeDashboard = ({ auth, salary, performanceData, sectionLoading }) =>
                         </Box>
                     )}
                     <Button
-                        onClick={() => window.location.href = '/manageleaves'}
+                        onClick={() => window.location.href = '/manage-leaves'}
                         variant="outlined"
                         sx={{
                             py: 1.5,
@@ -796,6 +798,12 @@ export default function Dashboard({ auth, authUserRole }) {
             </AuthenticatedLayout>
         );
     }
+    useEffect(()=>{
+        axios.get('/performance/user')
+        .then((res)=>setPerformanceData(res.data))
+        .catch((error)=>console.log(error))
+    },[]);
+    
 
     return (
         <AuthenticatedLayout count={count}>

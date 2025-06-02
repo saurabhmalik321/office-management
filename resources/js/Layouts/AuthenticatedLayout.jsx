@@ -7,8 +7,8 @@ import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Avatar, Box, Badge } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import NotificationsList from '@/Pages/Users/Notification';
-import ChatBot from '@/Pages/ChatBot';
 import axios from 'axios';
+
 
 export default function AuthenticatedLayout({ header, count, children }) {
     const { auth } = usePage().props;
@@ -81,14 +81,16 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                     Dashboard
                                 </NavLink>
                                 {(user.user_role === 'hr' || user.user_role === 'admin') && (
-                                    <NavLink href={route('manageusers')} active={route().current('manageusers')}>
+                                    <NavLink href={route('manage-users')} active={route().current('manage-users')}>
                                         Users
                                     </NavLink>
                                 )}
-                                <NavLink href={route('managesalaries')} active={route().current('managesalaries')}>
+
+                                <NavLink href={route('manage-salaries')} active={route().current('manage-salaries')}>
                                     Salaries
                                 </NavLink>
-                                <NavLink href={route('manageleaves')} active={route().current('manageleaves')}>
+
+                                <NavLink href={route('manage-leaves')} active={route().current('manage-leaves')}>
                                     <div style={{ position: 'relative', display: 'inline-block' }}>
                                         <span>Leaves</span>
                                         {user?.user_role === 'hr' && count > 0 && (
@@ -123,6 +125,13 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                     >
                                     Company Policies
                                     </NavLink>
+                                    <NavLink
+                                        href={route('chat-box')}
+                                        active={route().current('chat-box')}
+                                    >
+                                        Message
+                                    </NavLink>
+
                             </div>
                         </div>
 

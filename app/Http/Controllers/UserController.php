@@ -13,6 +13,7 @@ use App\Services\SalaryService;
 use App\Services\LeaveService;
 use App\Services\PolicyService;
 use App\Models\Notification;
+use App\Models\Message;
 use App\Models\UserHistory;
 use App\Models\Performance;
 use App\Models\HrPolicy;
@@ -292,7 +293,7 @@ class UserController extends Controller
             'data' => $contact
         ]);
     }
-     public function getQoute(Request $request){
+    public function getQoute(Request $request){
         $quote = new Quote();
         $quote -> name = $request -> name;
         $quote -> phone = $request -> phone;
@@ -303,6 +304,48 @@ class UserController extends Controller
         $quote -> save();
         return response()->json(['message' => 'submit successfully', 'success' => true]);
     }
+
+    // auth employee performance
+    public function getUserPerformace(){
+        $performance = Performance::with('user')->where('user_id',Auth::id())->get();
+        return $performance;
+    }
+
+    // messaging/chat 
+    public function getMessages($userId)
+    {
+       $receiver = User::findOrFail($userId);
+        return Inertia::render('ChatBox', [
+            'receiverId' => $receiver->id,
+            'receiverName' => $receiver->name,
+        ]);
+    }
+
+    public function storeMessages(Request $request)
+    {
+        $message = Message::create([
+            'sender_id' => Auth::id(),
+            'receiver_id' => $request->receiver_id,
+            'message' => $request->message,
+        ]);
+        return response()->json($message->load(['sender', 'receiver']));
+    }
+    // getAllMessages
+    public function getAllMessages(Request $request)
+    {
+        $messages = Message::with(['sender', 'receiver'])->get();
+        return response()->json($messages);
+    }
+    public function messagesBox()
+    {
+        return Inertia::render('ChatBox');
+    }
+
+    // public function perticularMessages()
+    // {
+    //      $messages = Message::where()->get();
+    //     return response()->json($messages);
+    // }
 
 }
 
