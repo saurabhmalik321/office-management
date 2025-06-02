@@ -25,6 +25,8 @@ import DownloadingIcon from '@mui/icons-material/Downloading';
 import { DataGrid } from '@mui/x-data-grid';
 import EditSalary from './Users/EditSalary';
 import { useMediaQuery, useTheme } from '@mui/material';
+import dayjs from 'dayjs'; 
+import {MenuItem} from '@mui/material';
 
 
 
@@ -47,13 +49,23 @@ export default function ManageSalaries() {
     message: '',
     severity: 'success',
   });
-
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notificationData, setNotificationData] = useState({
     title: '',
     message: '',
   });
   const [currentSalaryId, setCurrentSalaryId] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [openAddModal, setOpenAddModal] = useState(false);
+  const [salaryForm, setSalaryForm] = useState({
+    user_id: '',
+    amount: '',
+    date: '',
+    status: 'Pending',
+  });
+
 
   const pendingLeave = () => {
       axios
@@ -76,6 +88,32 @@ export default function ManageSalaries() {
     }
   };
 
+   const months = [
+    { value: '1', label: 'January' },
+    { value: '2', label: 'February' },
+    { value: '3', label: 'March' },
+    { value: '4', label: 'April' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'June' },
+    { value: '7', label: 'July' },
+    { value: '8', label: 'August' },
+    { value: '9', label: 'September' },
+    { value: '10', label: 'October' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'December' },
+  ];
+
+  const years = Array.from({ length: 5 }, (_, i) => {
+    const year = new Date().getFullYear() - i;
+    return { value: year.toString(), label: year.toString() };
+  });
+
+   useEffect(() => {
+      const today = new Date();
+      setSelectedMonth(today.getMonth() + 1); 
+      setSelectedYear(today.getFullYear());
+    }, []);
+
   useEffect(() => {
     axios
       .get('/salaries')
@@ -93,6 +131,18 @@ export default function ManageSalaries() {
     setOpenEditModal(true);
 
   };
+
+  const fetchUsers = () => {
+    axios.get('/employee')
+      .then((response) => setUsers(response.data))
+      .catch((error) => {
+        console.error('Error fetching users:', error);
+      });
+  };
+
+  useEffect(() => {
+      fetchUsers();
+    }, []);
 
   const handleOpenNotification = (salaryId) => {
     setCurrentSalaryId(salaryId);
@@ -374,6 +424,40 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
     : []),
 ];
 
+   useEffect(() => {
+    const getDefaultMonth=async()=>{
+      const today = new Date();
+      const month = today.getMonth()+1;
+      const year = today.getFullYear();
+      const response=await axios.get('/salaries/filter', {
+        params: {
+          month: month,
+          year:year,
+        },
+      });
+      setSalaries(response.data);
+    }
+    getDefaultMonth();
+    }, []);
+    const handleFilter = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('/salaries/filter', {
+          params: {
+            month: selectedMonth,
+            year: selectedYear,
+          },
+        });
+        setSalaries(response.data);
+      } catch (error) {
+        console.error('Error filtering salaries:', error);
+        setError('Something went wrong while filtering salaries.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+
 
   return (
     <AuthenticatedLayout
@@ -389,15 +473,64 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
         <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
             <div className="p-6 text-gray-900">
-              <Typography variant="h6" gutterBottom>
-                Employees salaries paid and pending
-              </Typography>
 
               {loading && <LoadingSpinner/> }
               {error && <p className="text-red-600">{error}</p>}
 
               {!loading && !error && (
-                <Box sx={{ width: '100%',  overflowX: 'auto'}}>
+                <Box sx={{ width: '100%'}}>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                    {(isHR || isAdmin) && <Button
+                      variant="contained"
+                      color="success"
+                      sx={{ textTransform: 'capitalize' }}
+                      onClick={() => setOpenAddModal(true)}
+                    >
+                      Add Salary
+                    </Button>
+                    }
+                    <Box display="flex" gap={2} alignItems="center">
+                      <TextField
+                        select
+                        label="Month"
+                        value={selectedMonth}
+                        onChange={(e) => setSelectedMonth(e.target.value)}
+                        size="small"
+                        sx={{ width: 150 }}
+                      >
+                        {months.map((month) => (
+                          <MenuItem key={month.value} value={month.value}>
+                            {month.label}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+
+                      <TextField
+                        select
+                        label="Year"
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(e.target.value)}
+                        size="small"
+                        sx={{ width: 120 }}
+                      >
+                        {years.map((year) => (
+                          <MenuItem key={year.value} value={year.value}>
+                            {year.label}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        sx={{ textTransform: 'capitalize' }}
+                        onClick={handleFilter}
+                      >
+                        Search
+                      </Button>
+                    </Box>
+                  </Box>
+
                   <DataGrid
                     rows={salaries}
                     columns={columns}
@@ -522,19 +655,19 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
                 borderRadius: 2,
                 '&.MuiOutlinedInput-root': {
                     '& fieldset': {
-                    borderColor: '#ccc', // Border color when not focused
+                    borderColor: '#ccc', 
                     },
                     '&:hover fieldset': {
-                    borderColor: '#bbb', // Border color on hover
+                    borderColor: '#bbb', 
                     },
                     '&.Mui-focused fieldset': {
-                    borderColor: '#ccc', // Border color when focused
+                    borderColor: '#ccc',
                     },
                 },
                 '& textarea': {
-                    outline: 'none', // Removes the default focus outline from textarea
-                    border: 'none',  // Remove any inner border that appears
-                    boxShadow: 'none', // Remove any box shadow that may appear on focus
+                    outline: 'none', 
+                    border: 'none', 
+                    boxShadow: 'none', 
                 },
                 },
             }}
@@ -548,6 +681,92 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
           </Box>
         </Box>
       </Modal>
+      <Modal open={openAddModal} onClose={() => setOpenAddModal(false)}>
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          bgcolor: 'background.paper',
+          borderRadius: 2,
+          boxShadow: 24,
+          p: 4,
+          width: 400,
+        }}
+      >
+        <Typography variant="h6" gutterBottom textAlign="center">
+          Add Salary
+        </Typography>
+
+        <TextField
+          select
+          fullWidth
+          label="Employee"
+          value={salaryForm.user_id}
+          onChange={(e) => setSalaryForm({ ...salaryForm, user_id: e.target.value })}
+          sx={{ mb: 2 }}
+        >
+          {users.map((user) => (
+            <MenuItem key={user.id} value={user.id}>
+              {user.name}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        <TextField
+          fullWidth
+          label="Amount"
+          type="number"
+          value={salaryForm.amount}
+          onChange={(e) => setSalaryForm({ ...salaryForm, amount: e.target.value })}
+          sx={{ mb: 2 }}
+        />
+
+        <TextField
+          fullWidth
+          type="date"
+          label="Date"
+          InputLabelProps={{ shrink: true }}
+          value={salaryForm.date}
+          onChange={(e) => setSalaryForm({ ...salaryForm, date: e.target.value })}
+          sx={{ mb: 2 }}
+        />
+
+        <TextField
+          select
+          fullWidth
+          label="Status"
+          value={salaryForm.status}
+          onChange={(e) => setSalaryForm({ ...salaryForm, status: e.target.value })}
+          sx={{ mb: 2 }}
+        >
+          <MenuItem value="Pending">Pending</MenuItem>
+          <MenuItem value="Paid">Paid</MenuItem>
+        </TextField>
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Button onClick={() => setOpenAddModal(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={async () => {
+              try {
+                await axios.post('/salaries/add', salaryForm);
+                setOpenAddModal(false);
+                setSalaryForm({ user_id: '', amount: '', date: '', status: 'Pending' });
+                handleFilter(); 
+              } catch (error) {
+                console.error('Add salary error:', error);
+                alert('Failed to add salary');
+              }
+            }}
+          >
+            Submit
+          </Button>
+        </Box>
+      </Box>
+    </Modal>
+
     </AuthenticatedLayout>
   );
 }

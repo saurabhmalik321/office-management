@@ -341,11 +341,42 @@ class UserController extends Controller
         return Inertia::render('ChatBox');
     }
 
-    // public function perticularMessages()
-    // {
-    //      $messages = Message::where()->get();
-    //     return response()->json($messages);
-    // }
+    public function filter(Request $request)
+    {
+        if(Auth::user()->user_role == 'admin' || Auth::user()->user_role == 'hr'){
+            $query = Salary::join('users', 'salaries.user_id', '=', 'users.id')
+                ->select('salaries.*', 'users.name as name');
+            if ($request->has('month') && $request->has('year')) {
+                $query->whereMonth('salaries.date', $request->month)
+                    ->whereYear('salaries.date', $request->year);
+            }
+            $salaries = $query->get();
+        }else{
+             $query = Salary::join('users', 'salaries.user_id', '=', 'users.id')
+                ->select('salaries.*', 'users.name as name')->where('salaries.user_id', Auth::id());
+            if ($request->has('month') && $request->has('year')) {
+                $query->whereMonth('salaries.date', $request->month)
+                    ->whereYear('salaries.date', $request->year);
+            }
+            $salaries = $query->get();
+        }
+
+        return response()->json($salaries);
+    }
+
+
+    public function storeNewSalaries(Request $request)
+    {    
+        $salaries = new Salary();
+        $salaries -> user_id = $request->user_id;
+        $salaries -> amount = $request ->amount;
+        $salaries -> date = $request ->date;
+        $salaries -> status = $request ->status;
+        $salaries->save();
+
+        return redirect()->back()->with('success', 'Performance added successfully.');
+    }
+
 
 }
 

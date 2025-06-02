@@ -125,12 +125,12 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                     >
                                     Company Policies
                                     </NavLink>
-                                    <NavLink
+                                    {/* <NavLink
                                         href={route('chat-box')}
                                         active={route().current('chat-box')}
                                     >
                                         Message
-                                    </NavLink>
+                                    </NavLink> */}
 
                             </div>
                         </div>
@@ -262,14 +262,14 @@ export default function AuthenticatedLayout({ header, count, children }) {
                             Dashboard
                         </ResponsiveNavLink>
                         {(user.user_role === 'hr' || user.user_role === 'admin') && (
-                            <ResponsiveNavLink href={route('manageusers')} active={route().current('manageusers')}>
+                            <ResponsiveNavLink href={route('manage-users')} active={route().current('manage-users')}>
                                 Users
                             </ResponsiveNavLink>
                         )}
-                        <ResponsiveNavLink href={route('managesalaries')} active={route().current('managesalaries')}>
+                        <ResponsiveNavLink href={route('manage-salaries')} active={route().current('manage-salaries')}>
                             Salaries
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink href={route('manageleaves')} active={route().current('manageleaves')}>
+                        <ResponsiveNavLink href={route('manage-leaves')} active={route().current('manage-leaves')}>
                             <div style={{ position: 'relative', display: 'inline-block' }}>
                                 <span>Leaves</span>
                                 {user?.user_role === 'hr' && count > 0 && (
@@ -340,7 +340,7 @@ export default function AuthenticatedLayout({ header, count, children }) {
 
             <main>{children}</main>
 
-            {showChatBot && <ChatBot onClose={() => setShowChatBot(false)} />}
+            {/* {showChatBot && <ChatBot onClose={() => setShowChatBot(false)} />}
             <button
                 onClick={() => setShowChatBot(true)}
                 className="fixed bottom-4 right-4 bg-blue-500 text-white rounded-full p-3 shadow-lg hover:bg-blue-600 transition"
@@ -359,7 +359,7 @@ export default function AuthenticatedLayout({ header, count, children }) {
                         d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
                     />
                 </svg>
-            </button>
+            </button> */}
         </div>
     );
 }

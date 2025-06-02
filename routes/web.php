@@ -118,11 +118,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/policies/view/{id}', [UserController::class, 'viewDoc'])->name('policies.view');
     // user performace
     Route::get('/performance/user', [UserController::class, 'getUserPerformace']);
-
     //message/chat 
     Route::post('/messages', [UserController::class, 'storeMessages'])->name('message.store');
-    Route::get('/messages', [UserController::class, 'getAllMessages'])
-            ->name('messages');
+    Route::get('/messages', [UserController::class, 'getAllMessages'])->name('messages');
+    Route::get('/salaries/filter', [UserController::class, 'filter']);
+    Route::post('/salaries/add', [UserController::class, 'storeNewSalaries']);
    
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
