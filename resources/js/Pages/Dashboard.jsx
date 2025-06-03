@@ -65,15 +65,17 @@ const months = [
 const DateFilter = ({ filterType, setFilterType, selectedMonth, setSelectedMonth, selectedDate, setSelectedDate, selectedYear, setSelectedYear, sectionLoading }) => {
     const [anchorEl, setAnchorEl] = useState(null);
 
-    // Define available years (last 5 years from 2025)
-    const availableYears = Array.from({ length: 5 }, (_, i) => 2025 - i);
+    // Define available years (last 5 years from current year)
+    const currentYear = new Date().getFullYear();
+    const availableYears = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
     const handleButtonClick = (event, newFilterType) => {
         if (newFilterType) {
             setFilterType(newFilterType);
             setAnchorEl(event.currentTarget);
             if (newFilterType === 'month') {
-                setSelectedMonth(5); // Default to May
+                const currentMonth = new Date().getMonth() + 1; // Get current month (1-12)
+                setSelectedMonth(currentMonth);
             }
         }
     };
@@ -99,16 +101,16 @@ const DateFilter = ({ filterType, setFilterType, selectedMonth, setSelectedMonth
     const handleYearChange = (event) => {
         const newYear = Number(event.target.value);
         setSelectedYear(newYear);
-        // Reset month and date when year changes
-        setSelectedMonth(5);
-        setSelectedDate(new Date(newYear, 4, 1));
+        // Reset month to current month and date when year changes
+        const currentMonth = new Date().getMonth() + 1;
+        setSelectedMonth(currentMonth);
+        setSelectedDate(new Date(newYear, currentMonth - 1, 1));
         setAnchorEl(null);
     };
 
     const handleCalendarClose = () => {
         setAnchorEl(null);
     };
-
 
     const formatDateForInput = (date) => {
         const year = date.getFullYear();
@@ -303,113 +305,174 @@ const LeaveStatusChart = ({ leaveData, sectionLoading }) => (
 );
 
 // UpcomingLeavesTable component
-const UpcomingLeavesTable = ({ leaveData, users, sectionLoading }) => (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-shadow lg:col-span-2">
-        <Box sx={{ px: 6, py: 4, borderBottom: 1, borderColor: '#E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827' }}>
-                Upcoming Leaves
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#6B7280' }}>
-                {leaveData.upcoming.length} approved leaves
-            </Typography>
-        </Box>
-        <div className="overflow-x-auto">
-            {sectionLoading.leaves ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 160 }}>
-                    <CircularProgress size={40} sx={{ color: '#4F46E5' }} />
-                </Box>
-            ) : leaveData.upcoming.length === 0 ? (
-                <Typography sx={{ textAlign: 'center', py: 6, color: '#6B7280' }}>
-                    No upcoming approved leaves found for this period.
+const UpcomingLeavesTable = ({ leaveData, users, sectionLoading, filterType, selectedDate, selectedMonth, selectedYear }) => {
+    const [leaveFilter, setLeaveFilter] = useState('approved'); // Default to 'approved'
+
+    const handleFilterChange = (event) => {
+        setLeaveFilter(event.target.value);
+    };
+
+    // Filter leaves based on status and date filter
+    const filteredLeaves = useMemo(() => {
+        const now = new Date();
+        return leaveData.upcoming.filter((leave) => {
+            const leaveDate = new Date(leave.start_date);
+            if (isNaN(leaveDate.getTime()) || leaveDate <= now) return false; // Ensure future leaves only
+
+            // Status filter
+            let statusMatch = false;
+            if (leaveFilter === 'approved') {
+                statusMatch = leave.status === 'accepted' || leave.status === 'approved';
+            } else if (leaveFilter === 'requested') {
+                statusMatch = leave.status === 'pending';
+            }
+
+            // Date filter
+            let dateMatch = false;
+            if (filterType === 'year') {
+                dateMatch = leaveDate.getFullYear() === selectedYear;
+            } else if (filterType === 'month') {
+                dateMatch = leaveDate.getFullYear() === selectedYear && leaveDate.getMonth() + 1 === selectedMonth;
+            } else if (filterType === 'week') {
+                const weekStart = new Date(selectedDate);
+                weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+                dateMatch = leaveDate >= weekStart && leaveDate <= weekEnd && leaveDate.getFullYear() === selectedYear;
+            } else if (filterType === 'day') {
+                dateMatch = leaveDate.toDateString() === selectedDate.toDateString() && leaveDate.getFullYear() === selectedYear;
+            }
+
+            return statusMatch && dateMatch;
+        }).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+    }, [leaveData.upcoming, leaveFilter, filterType, selectedDate, selectedMonth, selectedYear]);
+
+    return (
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-shadow lg:col-span-2">
+            <Box sx={{ px: 6, py: 4, borderBottom: 1, borderColor: '#E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827' }}>
+                    Upcoming Leaves
                 </Typography>
-            ) : (
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50 sticky top-0 z-10">
-                        <tr>
-                            {['Employee', 'Start Date', 'End Date', 'Type', 'Actions'].map((header) => (
-                                <th
-                                    key={header}
-                                    scope="col"
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider sm:text-sm">
-                                    {header}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                        {leaveData.upcoming.slice(0, 5).map((leave) => {
-                            const user = users.find((u) => u.id === leave.user_id) || { name: 'Unknown', email: 'N/A' };
-                            return (
-                                <tr key={leave.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center">
-                                            <Avatar className="h-8 w-8 rounded-full bg-teal-100 text-teal-600 capitalize">
-                                                {user.name.charAt(0)}
-                                            </Avatar>
-                                            <div className="ml-3">
-                                                <div className="text-sm font-medium text-gray-900 capitalize">{user.name}</div>
-                                                <div className="text-xs text-gray-600">{user.email}</div>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Select
+                        value={leaveFilter}
+                        onChange={handleFilterChange}
+                        sx={{
+                            height: '36px',
+                            fontSize: '14px',
+                            borderRadius: '6px',
+                            backgroundColor: '#F9FAFB',
+                            '.MuiSelect-select': { py: 1, color: '#111827' },
+                            '&:hover': { backgroundColor: '#EEF2FF' }
+                        }}
+                    >
+                        <MenuItem value="approved">Approved</MenuItem>
+                        <MenuItem value="requested">Requested</MenuItem>
+                    </Select>
+                    <Typography variant="body2" sx={{ color: '#6B7280' }}>
+                        {filteredLeaves.length} {leaveFilter} leaves
+                    </Typography>
+                </Box>
+            </Box>
+            <div className="overflow-x-auto">
+                {sectionLoading.leaves ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 160 }}>
+                        <CircularProgress size={40} sx={{ color: '#4F46E5' }} />
+                    </Box>
+                ) : filteredLeaves.length === 0 ? (
+                    <Typography sx={{ textAlign: 'center', py: 6, color: '#6B7280' }}>
+                        No {leaveFilter} leaves found for this period.
+                    </Typography>
+                ) : (
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50 sticky top-0 z-10">
+                            <tr>
+                                {['Employee', 'Start Date', 'End Date', 'Type', 'Actions'].map((header) => (
+                                    <th
+                                        key={header}
+                                        scope="col"
+                                        className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider sm:text-sm"
+                                    >
+                                        {header}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                            {filteredLeaves.slice(0, 5).map((leave) => {
+                                const user = users.find((u) => u.id === leave.user_id) || { name: 'Unknown', email: 'N/A' };
+                                return (
+                                    <tr key={leave.id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center">
+                                                <Avatar className="h-8 w-8 rounded-full bg-teal-100 text-teal-600 capitalize">
+                                                    {user.name.charAt(0)}
+                                                </Avatar>
+                                                <div className="ml-3">
+                                                    <div className="text-sm font-medium text-gray-900 capitalize">{user.name}</div>
+                                                    <div className="text-xs text-gray-600">{user.email}</div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <Typography variant="body2" sx={{ color: '#111827' }}>
-                                            {new Date(leave.start_date).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' })}
-                                        </Typography>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <Typography variant="body2" sx={{ color: '#111827' }}>
-                                            {new Date(leave.end_date).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' })}
-                                        </Typography>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <Typography variant="body2" sx={{ color: '#111827', textTransform: 'capitalize' }}>
-                                            {leave.leave_type || 'N/A'}
-                                        </Typography>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <Button
-                                            onClick={() => window.location.href = '/manage-leaves'}
-                                            size="small"
-                                            variant="outlined"
-                                            aria-label={`View more details for ${user.name}'s leave`}
-                                            sx={{
-                                                textTransform: 'capitalize',
-                                                px: 1.5,
-                                                py: 0.5,
-                                                borderColor: '#4F46E5',
-                                                color: '#4F46E5',
-                                                borderRadius: '6px',
-                                                '&:hover': { borderColor: '#4338CA', backgroundColor: '#EEF2FF' }
-                                            }}
-                                        >
-                                            View More
-                                        </Button>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <Typography variant="body2" sx={{ color: '#111827' }}>
+                                                {new Date(leave.start_date).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' })}
+                                            </Typography>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <Typography variant="body2" sx={{ color: '#111827' }}>
+                                                {new Date(leave.end_date).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' })}
+                                            </Typography>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <Typography variant="body2" sx={{ color: '#111827', textTransform: 'capitalize' }}>
+                                                {leave.leave_type || 'N/A'}
+                                            </Typography>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <Button
+                                                onClick={() => window.location.href = '/manage-leaves'}
+                                                size="small"
+                                                variant="outlined"
+                                                aria-label={`View more details for ${user.name}'s leave`}
+                                                sx={{
+                                                    textTransform: 'capitalize',
+                                                    px: 1.5,
+                                                    py: 0.5,
+                                                    borderColor: '#4F46E5',
+                                                    color: '#4F46E5',
+                                                    borderRadius: '6px',
+                                                    '&:hover': { borderColor: '#4338CA', backgroundColor: '#EEF2FF' }
+                                                }}
+                                            >
+                                                View More
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+            {filteredLeaves.length > 5 && (
+                <Box sx={{ px: 6, py: '12px', textAlign: 'center' }}>
+                    <Button
+                        onClick={() => window.location.href = '/manage-leaves'}
+                        variant="contained"
+                        color="primary"
+                        sx={{
+                            textTransform: 'capitalize',
+                            '&:hover': { bgcolor: '#4338CA' }
+                        }}
+                    >
+                        View all {leaveFilter} Leaves
+                    </Button>
+                </Box>
             )}
         </div>
-        {leaveData.upcoming.length > 5 && (
-            <Box sx={{ px: 6, py: '12px', textAlign: 'center' }}>
-                <Button
-                    onClick={() => window.location.href = '/manage-leaves'}
-                    variant="contained"
-                    color="primary"
-                    sx={{
-                        textTransform: 'capitalize',
-                        '&:hover': { bgcolor: '#4338CA' }
-                    }}
-                >
-                    View all Approved Leaves
-                </Button>
-            </Box>
-        )}
-    </div>
-);
+    );
+};
 
 // PerformanceChart component
 const PerformanceChart = ({ performanceData, sectionLoading, title }) => {
@@ -431,7 +494,7 @@ const PerformanceChart = ({ performanceData, sectionLoading, title }) => {
         }));
         return { labels, datasets };
     }, [performanceData]);
-    console.log(performanceData,'performancedata');
+    console.log(performanceData, 'performancedata');
 
     return (
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
@@ -629,9 +692,12 @@ export default function Dashboard({ auth, authUserRole }) {
     const [salary, setSalaries] = useState([]);
     const [performanceData, setPerformanceData] = useState([]);
     const [filterType, setFilterType] = useState('month');
-    const [selectedDate, setSelectedDate] = useState(new Date(2025, 4, 1)); // May 1, 2025
-    const [selectedMonth, setSelectedMonth] = useState(5); // May
-    const [selectedYear, setSelectedYear] = useState(2025); // Default year
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // Get current month (1-12)
+    const currentYear = currentDate.getFullYear();
+    const [selectedDate, setSelectedDate] = useState(new Date(currentYear, currentMonth - 1, 1)); // Default to 1st of current month
+    const [selectedMonth, setSelectedMonth] = useState(currentMonth); // Default to current month
+    const [selectedYear, setSelectedYear] = useState(currentYear); // Default to current year
     const [count, setCount] = useState(0);
     const [error, setError] = useState(null);
 
@@ -684,9 +750,7 @@ export default function Dashboard({ auth, authUserRole }) {
                 .filter((l) => {
                     const leaveDate = new Date(l.start_date);
                     const now = new Date();
-                    if (isNaN(leaveDate.getTime()) || leaveDate <= now || (l.status !== 'accepted' && l.status !== 'approved')) {
-                        return false;
-                    }
+                    if (isNaN(leaveDate.getTime()) || leaveDate <= now) return false;
                     if (filterType === 'year') {
                         return leaveDate.getFullYear() === selectedYear;
                     } else if (filterType === 'month') {
@@ -733,12 +797,14 @@ export default function Dashboard({ auth, authUserRole }) {
         axios
             .get('/salary-status', { params: { month: filterType === 'month' ? selectedMonth : 0, year: selectedYear } })
             .then((response) => setSalaries(response.data))
-            .catch((error) => console.error('Error fetching salary status:', error))
+            .catch((response) => {
+                console.error('Error fetching salary status:', error);
+            })
             .finally(() => setLoading(false));
-    }, [filterType, selectedDate, selectedMonth, selectedYear]);
+    }, [filterType, selectedMonth, selectedYear]);
 
     const fetchPerformance = useCallback(() => {
-        const cacheKey = `performance_${filterType}_${selectedMonth}_${selectedYear}`;
+        const cacheKey = `performance_${filterType}-${selectedMonth}_${selectedYear}`;
         if (cache.has(cacheKey)) {
             setPerformanceData(cache.get(cacheKey));
             setSectionLoading((prev) => ({ ...prev, charts: false }));
@@ -758,6 +824,7 @@ export default function Dashboard({ auth, authUserRole }) {
                 setPerformanceData([]);
             })
             .finally(() => setSectionLoading((prev) => ({ ...prev, charts: false })));
+
     }, [filterType, selectedMonth, selectedYear]);
 
     const debouncedFetchPerformance = useCallback(debounce(fetchPerformance, 300), [fetchPerformance]);
@@ -798,18 +865,18 @@ export default function Dashboard({ auth, authUserRole }) {
             </AuthenticatedLayout>
         );
     }
-    useEffect(()=>{
+
+    useEffect(() => {
         axios.get('/performance/user')
-        .then((res)=>setPerformanceData(res.data))
-        .catch((error)=>console.log(error))
-    },[]);
-    
+            .then((res) => setPerformanceData(res.data))
+            .catch((error) => console.log(error))
+    }, []);
 
     return (
         <AuthenticatedLayout count={count}>
             <Head title="Dashboard" />
             <div className="py-12 bg-gray-50 min-h-screen">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+                <div className="max-w-7xl mx-auto px-4 sm-px-6 lg:px-8 space-y-8">
                     {loading ? (
                         <div className="space-y-8">
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -851,7 +918,7 @@ export default function Dashboard({ auth, authUserRole }) {
                                     filterType={filterType}
                                 />
                                 <DashboardCard
-                                    label={getCardTitle("Monthly Payroll")}
+                                    label={getCardTitle("Monthly Payrolls")}
                                     value={payroll}
                                     trend="up"
                                     trendValue="18%"
@@ -866,7 +933,15 @@ export default function Dashboard({ auth, authUserRole }) {
                             </div>
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <LeaveStatusChart leaveData={leaveData} sectionLoading={sectionLoading} />
-                                <UpcomingLeavesTable leaveData={leaveData} users={users} sectionLoading={sectionLoading} />
+                                <UpcomingLeavesTable
+                                    leaveData={leaveData}
+                                    users={users}
+                                    sectionLoading={sectionLoading}
+                                    filterType={filterType}
+                                    selectedDate={selectedDate}
+                                    selectedMonth={selectedMonth}
+                                    selectedYear={selectedYear}
+                                />
                             </div>
                             <PerformanceChart
                                 performanceData={performanceData}
