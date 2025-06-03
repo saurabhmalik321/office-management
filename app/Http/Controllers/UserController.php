@@ -23,6 +23,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -376,7 +377,64 @@ class UserController extends Controller
 
         return redirect()->back()->with('success', 'Performance added successfully.');
     }
+     // Salary Calculator
+    public function calculatePreview(Request $request)
+    {
+        $data = $request->validate([
+            'basic_salary' => 'required|numeric|min:0',
+            'bonus' => 'nullable|numeric|min:0',
+            'tax_percent' => 'required|numeric|min:0|max:100',
+            'pf_percent' => 'required|numeric|min:0|max:100',
+            'unpaid_leave_days' => 'nullable|integer|min:0',
+        ]);
 
+        $WORKING_DAYS = 22;
+        $bonus = $data['bonus'] ?? 0;
+        $leave_days = $data['unpaid_leave_days'] ?? 0;
+
+        $per_day = $data['basic_salary'] / $WORKING_DAYS;
+        $tax = ($data['basic_salary'] + $bonus) * ($data['tax_percent'] / 100);
+        $pf = $data['basic_salary'] * ($data['pf_percent'] / 100);
+        $leave_deduction = $per_day * $leave_days;
+
+        $net_salary = $data['basic_salary'] + $bonus - $tax - $pf - $leave_deduction;
+
+        return response()->json([
+            'net_salary' => round($net_salary, 2),
+            'breakdown' => [
+                'tax' => round($tax, 2),
+                'pf' => round($pf, 2),
+                'leaveDeduction' => round($leave_deduction, 2),
+            ]
+        ]);
+    }
+
+    public function getPreviousMonthLeaveDaysForEmployee()
+    {
+        $user = Auth::user();
+        if (!$user || $user->user_role !== 'employee') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $start = Carbon::now()->subMonth()->startOfMonth()->toDateString();
+        $end = Carbon::now()->subMonth()->endOfMonth()->toDateString();
+
+        $totalDays = DB::table('leaves')
+            ->where('status', 'approved')
+            ->where('user_id', Auth::id())
+            ->where(function ($query) use ($start, $end) {
+                $query->whereBetween('start_date', [$start, $end])
+                    ->orWhereBetween('end_date', [$start, $end])
+                    ->orWhere(function ($q) use ($start, $end) {
+                        $q->where('start_date', '<', $start)
+                        ->where('end_date', '>', $end);
+                    });
+            })
+            ->select(DB::raw("SUM(DATEDIFF(LEAST(end_date, '$end'), GREATEST(start_date, '$start')) + 1) as total"))
+            ->value('total');
+
+        return response()->json((int) $totalDays);
+    }
 
 }
 

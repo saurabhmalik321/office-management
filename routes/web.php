@@ -123,6 +123,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/messages', [UserController::class, 'getAllMessages'])->name('messages');
     Route::get('/salaries/filter', [UserController::class, 'filter']);
     Route::post('/salaries/add', [UserController::class, 'storeNewSalaries']);
+    Route::post('/salary/calculate-preview', [UserController::class, 'calculatePreview']);
+    Route::get('/leave-count', [UserController::class, 'getPreviousMonthLeaveDaysForEmployee']);
    
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

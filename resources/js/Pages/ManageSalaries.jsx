@@ -14,6 +14,11 @@ import {
   Modal,
   TextField,
   Chip,
+  MenuItem,
+  Divider,
+  Card,
+  CardContent,
+  InputAdornment
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -25,8 +30,25 @@ import DownloadingIcon from '@mui/icons-material/Downloading';
 import { DataGrid } from '@mui/x-data-grid';
 import EditSalary from './Users/EditSalary';
 import { useMediaQuery, useTheme } from '@mui/material';
-import dayjs from 'dayjs'; 
-import {MenuItem} from '@mui/material';
+import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import PersonIcon from '@mui/icons-material/Person';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import CloseIcon from '@mui/icons-material/Close';
+
+
+const style = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 450,
+  maxWidth: '90%',
+  bgcolor: 'background.paper',
+  borderRadius: 4,
+  boxShadow: 24,
+  p: 3,
+};
 
 
 
@@ -66,7 +88,19 @@ export default function ManageSalaries() {
     status: 'Pending',
   });
 
+  const [openCalculator, setOpenCalculator] = useState(false);
+  const [salaryForms, setSalaryForms] = useState({
+    basic_salary: '',
+    bonus: '',
+    tax_percent: '',
+    pf_percent: '',
+    unpaid_leave_days: '',
+    calculated_salary: null,
+    breakdown: null,
+  });
+  const [leaveCount,setLeaveCount] = useState(0);
 
+   console.log(leaveCount,'leavedata');
   const pendingLeave = () => {
       axios
       .get('/admin/pending-leave')
@@ -186,6 +220,16 @@ export default function ManageSalaries() {
       .finally(() => setLoading(false));
     },[])
   }
+  useEffect(()=>{
+     if(user.user_role == 'employee'){
+    axios.get('/leave-count')
+    .then((res)=>setLeaveCount(res.data))
+    .catch((error) => {
+        console.error('Error fetching leave count:', error);
+        setError('Something went wrong while fetching leave.');
+      })
+    }
+  },[]);
 const handleDownloadPdf = (row) => {
   const pdfContainer = document.createElement('div');
   pdfContainer.style.position = 'absolute';
@@ -212,9 +256,10 @@ const handleDownloadPdf = (row) => {
   }).format(row.amount);
 
   // Add inner HTML
-const pfCut = 1000;
-const taxCut = 2000;
-const netSalary = row.amount - taxCut - pfCut;
+const pfCut = Math.round((2 / 100) * row.amount);
+const taxCut = Math.round((6 / 100) * row.amount);
+const leaveCut = leaveCount * Math.floor(row.amount / 22);
+const netSalary = row.amount - taxCut - pfCut - leaveCut;
 
 pdfContainer.innerHTML = `
   <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; max-width: 700px; margin: auto; border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
@@ -224,7 +269,7 @@ pdfContainer.innerHTML = `
       <img src="/image.png" alt="Company Logo" style="width: 120px;" />
       <h2 style="margin: 10px 0 0; color: #222;">Wepro Solutions Pvt. Ltd.</h2>
       <p style="margin: 2px 0; font-size: 12px; color: #555;">Sector 74 , Industrial Area, Mohali City(Punjab), India</p>
-      <p style="margin: 2px 0 0; font-size: 12px; color: #555;">Email: hr@weproinc.com | Phone: +91 98765 43210</p>
+      <p style="margin: 2px 0 0; font-size: 12px; color: #555;">Email: hr@weproinc.com | Phone: +91 9780446281</p>
     </div>
 
     <!-- Title -->
@@ -250,6 +295,10 @@ pdfContainer.innerHTML = `
         <tr style="background-color: #f0f4f7;">
           <td style="padding: 10px; border: 1px solid #ccc; font-weight: 400;">Tax Deduction (TDS)</td>
           <td style="padding: 10px; border: 1px solid #ccc; text-align: right;">₹${taxCut.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+        </tr>
+        <tr style="background-color: #f0f4f7;">
+          <td style="padding: 10px; border: 1px solid #ccc; font-weight: 400;">Leave Deduction</td>
+          <td style="padding: 10px; border: 1px solid #ccc; text-align: right;">₹${leaveCut.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
         </tr>
         <tr>
           <td style="padding: 10px; border: 1px solid #ccc; font-weight: 400;">Provident Fund (PF)</td>
@@ -489,6 +538,9 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
                       Add Salary
                     </Button>
                     }
+                    <Button variant="outlined" sx={{textTransform:'capitalize', ...(isHR || isAdmin && { marginRight: '32rem' })}} onClick={() => setOpenCalculator(true)}>
+                      Salary Calculator
+                    </Button>
                     <Box display="flex" gap={2} alignItems="center">
                       <TextField
                         select
@@ -560,7 +612,6 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
         </div>
       </div>
 
-      {/* Edit Modal */}
       <EditSalary
         open={openEditModal}
         onClose={() => setOpenEditModal(false)}
@@ -616,7 +667,28 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
                 title: e.target.value,
               })
             }
-            sx={{ mb: 2 }}
+            sx={{
+            mb: 2,
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: '#ccc',
+              },
+              '&:hover fieldset': {
+                borderColor: '#ccc',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#ccc',
+              },
+            },
+            '& input': {
+              outline: 'none !important',
+              boxShadow: 'none !important',
+            },
+            '& input:focus': {
+              outline: 'none !important',
+              boxShadow: 'none !important',
+            },
+          }}
             InputProps={{
                 sx: {
                 borderRadius: 2,
@@ -649,7 +721,28 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
                 message: e.target.value,
                 })
             }
-            sx={{ mb: 2 }}
+            sx={{
+            mb: 2,
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: '#ccc',
+              },
+              '&:hover fieldset': {
+                borderColor: '#ccc',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#ccc',
+              },
+            },
+            '& input': {
+              outline: 'none !important',
+              boxShadow: 'none !important',
+            },
+            '& input:focus': {
+              outline: 'none !important',
+              boxShadow: 'none !important',
+            },
+          }}
             InputProps={{
                 sx: {
                 borderRadius: 2,
@@ -682,30 +775,47 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
         </Box>
       </Modal>
       <Modal open={openAddModal} onClose={() => setOpenAddModal(false)}>
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          bgcolor: 'background.paper',
-          borderRadius: 2,
-          boxShadow: 24,
-          p: 4,
-          width: 400,
-        }}
-      >
-        <Typography variant="h6" gutterBottom textAlign="center">
+        <Card sx={style}>
+        <CardContent>
+        <Typography variant="h5" gutterBottom align="center">
           Add Salary
         </Typography>
-
+        <Divider sx={{ mb: 3 }} />
         <TextField
           select
           fullWidth
           label="Employee"
           value={salaryForm.user_id}
           onChange={(e) => setSalaryForm({ ...salaryForm, user_id: e.target.value })}
-          sx={{ mb: 2 }}
+          sx={{
+            mb: 2,
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: '#ccc',
+              },
+              '&:hover fieldset': {
+                borderColor: '#ccc',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#ccc',
+              },
+            },
+            '& input': {
+              outline: 'none !important',
+              boxShadow: 'none !important',
+            },
+            '& input:focus': {
+              outline: 'none !important',
+              boxShadow: 'none !important',
+            },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <PersonIcon />
+              </InputAdornment>
+            ),
+          }}
         >
           {users.map((user) => (
             <MenuItem key={user.id} value={user.id}>
@@ -720,7 +830,35 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
           type="number"
           value={salaryForm.amount}
           onChange={(e) => setSalaryForm({ ...salaryForm, amount: e.target.value })}
-          sx={{ mb: 2 }}
+          sx={{
+            mb: 2,
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: '#ccc',
+              },
+              '&:hover fieldset': {
+                borderColor: '#ccc',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#ccc',
+              },
+            },
+            '& input': {
+              outline: 'none !important',
+              boxShadow: 'none !important',
+            },
+            '& input:focus': {
+              outline: 'none !important',
+              boxShadow: 'none !important',
+            },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <CurrencyRupeeIcon />
+              </InputAdornment>
+            ),
+          }}
         />
 
         <TextField
@@ -730,23 +868,59 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
           InputLabelProps={{ shrink: true }}
           value={salaryForm.date}
           onChange={(e) => setSalaryForm({ ...salaryForm, date: e.target.value })}
-          sx={{ mb: 2 }}
+          sx={{
+            mb: 2,
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: '#ccc',
+              },
+              '&:hover fieldset': {
+                borderColor: '#ccc',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#ccc',
+              },
+            },
+            '& input': {
+              outline: 'none !important',
+              boxShadow: 'none !important',
+            },
+            '& input:focus': {
+              outline: 'none !important',
+              boxShadow: 'none !important',
+            },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <CalendarMonthIcon />
+              </InputAdornment>
+            ),
+          }}
         />
-
         <TextField
           select
           fullWidth
           label="Status"
           value={salaryForm.status}
           onChange={(e) => setSalaryForm({ ...salaryForm, status: e.target.value })}
-          sx={{ mb: 2 }}
+          sx={{ mb: 3 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <AssignmentTurnedInIcon />
+              </InputAdornment>
+            ),
+          }}
         >
           <MenuItem value="Pending">Pending</MenuItem>
           <MenuItem value="Paid">Paid</MenuItem>
         </TextField>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button onClick={() => setOpenAddModal(false)}>Cancel</Button>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+          <Button variant="outlined" color="secondary" onClick={() => setOpenAddModal(false)}>
+            Cancel
+          </Button>
           <Button
             variant="contained"
             onClick={async () => {
@@ -754,7 +928,7 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
                 await axios.post('/salaries/add', salaryForm);
                 setOpenAddModal(false);
                 setSalaryForm({ user_id: '', amount: '', date: '', status: 'Pending' });
-                handleFilter(); 
+                handleFilter();
               } catch (error) {
                 console.error('Add salary error:', error);
                 alert('Failed to add salary');
@@ -764,9 +938,219 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
             Submit
           </Button>
         </Box>
-      </Box>
-    </Modal>
+      </CardContent>
+    </Card>
+  </Modal>
+  <Modal open={openCalculator} onClose={() => setOpenCalculator(false)}>
+    <Box
+      sx={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 450,
+        bgcolor: 'background.paper',
+        borderRadius: 3,
+        boxShadow: 24,
+        p: 4,
+      }}
+    >
+      <IconButton
+      onClick={() => setOpenCalculator(false)}
+      sx={{
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        color: (theme) => theme.palette.grey[600],
+      }}
+    >
+      <CloseIcon />
+    </IconButton>
+      <Typography variant="h6" textAlign="center" gutterBottom> 
+        Salary Calculator
+      </Typography>
 
-    </AuthenticatedLayout>
+      <TextField
+        label="Basic Salary"
+        fullWidth
+        type="number"
+        value={salaryForms.basic_salary}
+        onChange={(e) => setSalaryForms({ ...salaryForms, basic_salary: e.target.value })}
+        sx={{
+              mb: 2,
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#ccc',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#ccc',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#ccc',
+                },
+              },
+              '& input': {
+                outline: 'none !important',
+                boxShadow: 'none !important',
+              },
+              '& input:focus': {
+                outline: 'none !important',
+                boxShadow: 'none !important',
+              },
+            }}
+      />
+
+      <TextField
+        label="Bonus"
+        fullWidth
+        type="number"
+        value={salaryForms.bonus}
+        onChange={(e) => setSalaryForms({ ...salaryForms, bonus: e.target.value })}
+        sx={{
+              mb: 2,
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#ccc',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#ccc',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#ccc',
+                },
+              },
+              '& input': {
+                outline: 'none !important',
+                boxShadow: 'none !important',
+              },
+              '& input:focus': {
+                outline: 'none !important',
+                boxShadow: 'none !important',
+              },
+            }}
+      />
+
+      <TextField
+        label="Tax %"
+        fullWidth
+        type="number"
+        value={salaryForms.tax_percent}
+        onChange={(e) => setSalaryForms({ ...salaryForms, tax_percent: e.target.value })}
+        sx={{
+              mb: 2,
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#ccc',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#ccc',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#ccc',
+                },
+              },
+              '& input': {
+                outline: 'none !important',
+                boxShadow: 'none !important',
+              },
+              '& input:focus': {
+                outline: 'none !important',
+                boxShadow: 'none !important',
+              },
+            }}
+      />
+
+      <TextField
+        label="PF %"
+        fullWidth
+        type="number"
+        value={salaryForms.pf_percent}
+        onChange={(e) => setSalaryForms({ ...salaryForms, pf_percent: e.target.value })}
+        sx={{
+              mb: 2,
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#ccc',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#ccc',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#ccc',
+                },
+              },
+              '& input': {
+                outline: 'none !important',
+                boxShadow: 'none !important',
+              },
+              '& input:focus': {
+                outline: 'none !important',
+                boxShadow: 'none !important',
+              },
+            }}
+      />
+
+      <TextField
+        label="Unpaid Leave Days"
+        fullWidth
+        type="number"
+        value={salaryForms.unpaid_leave_days}
+        onChange={(e) => setSalaryForms({ ...salaryForms, unpaid_leave_days: e.target.value })}
+        sx={{
+              mb: 2,
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: '#ccc',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#ccc',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#ccc',
+                },
+              },
+              '& input': {
+                outline: 'none !important',
+                boxShadow: 'none !important',
+              },
+              '& input:focus': {
+                outline: 'none !important',
+                boxShadow: 'none !important',
+              },
+            }}
+      />
+
+      <Button
+        fullWidth
+        variant="contained"
+        sx={{ mt: 2, textTransform:'capitalize' }}
+        onClick={async () => {
+          try {
+            const response = await axios.post('/salary/calculate-preview', salaryForms);
+            const { net_salary, breakdown } = response.data;
+            setSalaryForms((prev) => ({
+              ...prev,
+              calculated_salary: net_salary,
+              breakdown,
+            }));
+          } catch (error) {
+            alert('Calculation failed');
+          }
+        }}
+      >
+        Calculate
+      </Button>
+
+      {salaryForms.calculated_salary && (
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="subtitle1" gutterBottom>Net Salary: ₹{salaryForms.calculated_salary}</Typography>
+          <Typography variant="body2">Tax: ₹{salaryForms.breakdown.tax}</Typography>
+          <Typography variant="body2">PF: ₹{salaryForms.breakdown.pf}</Typography>
+          <Typography variant="body2">Leave Deduction: ₹{salaryForms.breakdown.leaveDeduction}</Typography>
+        </Box>
+      )}
+    </Box>
+</Modal>
+</AuthenticatedLayout>
   );
 }
