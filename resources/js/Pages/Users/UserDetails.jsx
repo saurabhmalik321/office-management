@@ -58,7 +58,7 @@ export default function UserDetail() {
   const [openAddModal, setOpenAddModal] = useState(false);
   const [salaryForm, setSalaryForm] = useState({
     user_id: user.id,
-    amount: '',
+    amount: user?.direct_salary,
     bonus: '',
     date: '',
     unpaid_leave_days: '',
@@ -70,7 +70,7 @@ export default function UserDetail() {
       return;
     }
 
-    router.post(
+    router.put(
       '/reset-password',
       {
         user_id: user.id,
@@ -83,12 +83,16 @@ export default function UserDetail() {
           setNewPassword('');
           setConfirmPassword('');
           setPasswordError('');
+          redirectTo();
         },
         onError: (errors) => {
           setPasswordError(errors.message || 'Failed to reset password.');
         },
       }
     );
+  };
+  const redirectTo = () => {
+    router.visit('/manage-users');
   };
 
   const toggleReason = (index) => {
@@ -154,8 +158,8 @@ export default function UserDetail() {
             {/* <IconButton onClick={() => editUser(user.id)} size="small">
               <EditIcon fontSize="small" />
             </IconButton> */}
-             <Button variant="contained" color="primary" onClick={() => setOpenAddModal(true)}>
-              Add Salary
+             <Button variant="contained" color="primary" sx={{textTransform:'capitalize'}} onClick={() => setOpenAddModal(true)}>
+              Update Salary
             </Button>
           </Box>
           <Grid container spacing={2}>
@@ -194,7 +198,7 @@ export default function UserDetail() {
 
           <Box mt={3}>
             {!showPasswordFields ? (
-              <Button variant="contained" onClick={() => setShowPasswordFields(true)}>
+              <Button variant="contained" sx={{textTransform:'capitalize'}} onClick={() => setShowPasswordFields(true)}>
                 Reset Password
               </Button>
             ) : (
@@ -205,6 +209,28 @@ export default function UserDetail() {
                   fullWidth
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
+                   sx={{
+                        mb: 2,
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': {
+                            borderColor: '#ccc',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#ccc',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#ccc',
+                          },
+                        },
+                        '& input': {
+                          outline: 'none !important',
+                          boxShadow: 'none !important',
+                        },
+                        '& input:focus': {
+                          outline: 'none !important',
+                          boxShadow: 'none !important',
+                        },
+                      }}
                 />
                 <TextField
                   label="Confirm Password"
@@ -212,6 +238,28 @@ export default function UserDetail() {
                   fullWidth
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                   sx={{
+                        mb: 2,
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': {
+                            borderColor: '#ccc',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#ccc',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#ccc',
+                          },
+                        },
+                        '& input': {
+                          outline: 'none !important',
+                          boxShadow: 'none !important',
+                        },
+                        '& input:focus': {
+                          outline: 'none !important',
+                          boxShadow: 'none !important',
+                        },
+                      }}
                 />
                 {passwordError && (
                   <Typography color="error" variant="body2">
@@ -322,7 +370,7 @@ export default function UserDetail() {
             }}
           >
             <Typography id="modal-title" variant="h6" component="h2" mb={2}>
-              Add Salary
+              Update Salary
             </Typography>
               <IconButton
                   onClick={() => setOpenAddModal(false)}
@@ -338,19 +386,19 @@ export default function UserDetail() {
             <Card>
               <CardContent>
                 <TextField
-                  margin="normal"
-                  fullWidth
-                  type="number"
-                  label="Salary Amount"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <CurrencyRupeeIcon />
-                      </InputAdornment>
-                    ),
-                  }}
-                  value={salaryForm.amount}
-                  onChange={(e) => setSalaryForm({ ...salaryForm, amount: e.target.value })}
+                    margin="normal"
+                    fullWidth
+                    type="number"
+                    label="Salary Amount"
+                    InputProps={{
+                      readOnly: true, 
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <CurrencyRupeeIcon />
+                        </InputAdornment>
+                      ),
+                    }}
+                    value={salaryForm.amount}
                     sx={{
                       mb: 2,
                       '& .MuiOutlinedInput-root': {
@@ -373,7 +421,8 @@ export default function UserDetail() {
                         boxShadow: 'none !important',
                       },
                     }}
-                />
+                  />
+
                 <TextField
                   margin="normal"
                   fullWidth
@@ -488,7 +537,7 @@ export default function UserDetail() {
                   sx={{ mt: 2 }}
                   onClick={() => {
                     axios
-                      .post('/salaries/add', salaryForm)
+                      .put('/salaries/add', salaryForm)
                       .then(() => {
                         setOpenAddModal(false);
                         setSalaryForm({ ...salaryForm, amount: '', bonus: '', date: '',unpaid_leave_days:'' });

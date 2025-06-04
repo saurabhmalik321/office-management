@@ -85,7 +85,7 @@ class UserRepository implements UserInterface
     }
     public function allEmployee()
     {
-        return User::where('user_role', 'employee')->get();
+        return User::with('salary_calculator')->where('user_role', 'employee')->get();
     }
      public function getNotification($id){
         return $notifications = Notification::with(['hr:id,name,user_role'])

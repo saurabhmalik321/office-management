@@ -25,6 +25,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+
 
 class UserController extends Controller
 {
@@ -76,12 +78,15 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
-            'user_role' => 'required|string',
+            // 'name' => 'required|string|max:255',
+            // 'email' => 'required|email|unique:users,email,' . $id,
+            // 'user_role' => 'required|string',
         ]);
         $user = User::findOrFail($id);
-        $user->update($request->only('name', 'email', 'user_role'));
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->user_role = $request->user_role;
+        $user->save();
         // return Inertia::location(route('manageusers'));
     }
 
@@ -367,7 +372,7 @@ class UserController extends Controller
     }
 
 
-    public function storeNewSalaries(Request $request)
+    public function updateNewSalaries(Request $request)
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
@@ -375,14 +380,15 @@ class UserController extends Controller
             'date' => 'required|date',
         ]);
 
-        $salaries = Salary::updateOrCreate(
-            ['user_id' => $request->user_id],
-            ['amount' => $request->amount, 'date' => $request->date]
-        );
-
-        $this->calculatePreview($request); // Pass full request
-
-        return redirect()->back()->with('success', 'Salary Added Successfully.');
+        $user = User::where('id',$request->user_id)->first();
+        $user -> salary = $request->amount;
+        $user -> save();
+        $salary = Salary::where('user_id',$request->user_id)->first();
+        $salary -> amount = $request->amount;
+        $salary->date = $request->date;
+        $salary->save();
+        $this->calculatePreview($request); 
+        return $salary;
     }
 
      // Salary Calculator
@@ -393,6 +399,7 @@ class UserController extends Controller
             'amount' => 'required|numeric|min:0',
             'bonus' => 'nullable|numeric|min:0',
             'unpaid_leave_days' => 'nullable|integer|min:0',
+            'date' => 'required|date',
         ]);
         $data['pf_percent'] = 2;
         $WORKING_DAYS = 22;
@@ -410,6 +417,7 @@ class UserController extends Controller
         $salary_cal->bonus = $bonus;
         $salary_cal->pf_percent = $data['pf_percent'];
         $salary_cal->leave_deduction = $leave_deduction;
+        $salary_cal->date = $data['date'];
         $salary_cal->save();
 
         return response()->json([
@@ -453,12 +461,19 @@ class UserController extends Controller
 
         $user = User::findOrFail($request->user_id);
         $user->password = Hash::make($request->new_password);
-        dd($user);
         $user->save();
 
         return back()->with('success', 'Password updated successfully.');
     }
 
+    public function viewSalary(Request $request)
+    {
+       $salary_data = SalaryCalculator::with('user')
+                                    ->where('user_id', $request->id)
+                                    ->where('date', $request->date)
+                                    ->get();
+        return $salary_data;
+    }
 
 }
 

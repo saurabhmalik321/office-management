@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\User;
 class SalaryCalculator extends Model
 {
      protected $fillable = [
@@ -22,4 +22,8 @@ class SalaryCalculator extends Model
         'pf_percent' => 'float',
         'leave_deduction' => 'integer',
     ];
+    public function user()
+    {
+        return $this->belongsTo(User::class,'user_id');
+    }
 }

@@ -122,10 +122,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/messages', [UserController::class, 'storeMessages'])->name('message.store');
     Route::get('/messages', [UserController::class, 'getAllMessages'])->name('messages');
     Route::get('/salaries/filter', [UserController::class, 'filter']);
-    Route::post('/salaries/add', [UserController::class, 'storeNewSalaries']);
+    Route::put('/salaries/add', [UserController::class, 'updateNewSalaries']);
     Route::post('/salary/calculate-preview', [UserController::class, 'calculatePreview']);
     Route::get('/leave-count', [UserController::class, 'getPreviousMonthLeaveDaysForEmployee']);
     Route::put('/reset-password', [UserController::class, 'resetPassword']);
+    Route::post('/salary-view', [UserController::class, 'viewSalary']);
    
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

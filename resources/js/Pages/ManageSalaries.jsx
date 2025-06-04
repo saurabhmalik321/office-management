@@ -18,7 +18,8 @@ import {
   Divider,
   Card,
   CardContent,
-  InputAdornment
+  InputAdornment,
+  Grid
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -35,7 +36,6 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import PersonIcon from '@mui/icons-material/Person';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import CloseIcon from '@mui/icons-material/Close';
-
 
 const style = {
   position: 'absolute',
@@ -88,6 +88,7 @@ export default function ManageSalaries() {
     date: '',
     status: 'Pending',
   });
+  const [salaryData,setSalaryData] = useState([]);
 
   const [openCalculator, setOpenCalculator] = useState(false);
   const [salaryForms, setSalaryForms] = useState({
@@ -100,6 +101,7 @@ export default function ManageSalaries() {
     breakdown: null,
   });
   const [leaveCount,setLeaveCount] = useState(0);
+  const [openSalaryModal, setOpenSalaryModal] = useState(false);
 
   const pendingLeave = () => {
       axios
@@ -352,8 +354,15 @@ pdfContainer.innerHTML = `
   });
 };
 
-
-
+const viewSalary=(id,date)=>{
+  const salary={id:id,date:date};
+    axios.post('/salary-view',salary)
+     .then((res)=>{setSalaryData(res.data)
+       setOpenSalaryModal(true);
+     })
+     .catch((err)=>console.log(err));
+}
+console.log(salaryData,"salarydata");
 const theme = useTheme();
 const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 const isTablet = useMediaQuery(theme.breakpoints.down('md'));
@@ -457,58 +466,64 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
         //  {console.log(params.row.status,"status")}
       ),
   },
-  {
-    field: 'actions',
-    headerName: 'Actions',
-    flex: 1,
-    minWidth: 120,
-    headerAlign: 'center',
-    align: 'center',
-    sortable: false,
-    renderCell: (params) => (
-      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-        { ((user.user_role == 'employee' && params.row.status == 'paid') || user.user_role == 'admin') ? <IconButton size="small" onClick={() => handleDownloadPdf(params.row)}>
-          <DownloadingIcon />
-        </IconButton> :''
-        }
-        {!isRestricted && (
-          <IconButton
-            size="small"
-            onClick={() => handleEdit(params.row.id)}
-            color="primary"
-          >
-            <EditIcon />
-          </IconButton>
-        )}
-      </Box>
-    ),
-  },
   ...(!isRestricted
     ? [
-        {
-          field: 'Salary Status',
-          headerName: 'Salary Status',
-          flex: 1,
-          minWidth: 160,
-          hide: isMobile || isTablet, // Hides on tablet & mobile
-          headerAlign: 'center',
-          align: 'center',
-          sortable: false,
-          renderCell: (params) => (
-            <Button
-              onClick={() => handleOpenNotification(params.row.id)}
-              size="small"
-              variant="outlined"
-              color="secondary"
-              sx={{ textTransform: 'capitalize', marginBottom:2.5}}
-            >
+      {
+        field: 'Salary Status',
+        headerName: 'Salary Status',
+        flex: 1,
+        minWidth: 160,
+        hide: isMobile || isTablet, // Hides on tablet & mobile
+        headerAlign: 'center',
+        align: 'center',
+        sortable: false,
+        renderCell: (params) => (
+          <Button
+          onClick={() => handleOpenNotification(params.row.id)}
+          size="small"
+          variant="outlined"
+          color="secondary"
+          sx={{ textTransform: 'capitalize', marginBottom:2.5}}
+          >
               Mark Paid
             </Button>
           ),
         },
       ]
-    : []),
-];
+      : []),
+      {
+        field: 'actions',
+        headerName: 'Actions',
+        flex: 1,
+        minWidth: 120,
+        headerAlign: 'center',
+        align: 'center',
+        sortable: false,
+       renderCell: (params) => {
+        const date = new Date(params.row.date).toISOString().split('T')[0];
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+            {((user.user_role === 'employee' && params.row.status === 'paid') || user.user_role === 'admin') && (
+              <IconButton size="small" onClick={() => handleDownloadPdf(params.row)}>
+                <DownloadingIcon />
+              </IconButton>
+            )}
+
+            <IconButton size="small" aria-label="view">
+              <VisibilityIcon color="primary" onClick={() => viewSalary(params.row.user_id, date)} />
+            </IconButton>
+
+            {!isRestricted && (
+              <IconButton size="small" onClick={() => handleEdit(params.row.id)} color="primary">
+                <EditIcon />
+              </IconButton>
+            )}
+          </Box>
+        );
+      }
+
+      },
+    ];
 
 
 
@@ -1188,6 +1203,87 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
       )}
     </Box>
 </Modal>
+<Modal open={openSalaryModal} onClose={() => setOpenSalaryModal(false)}>
+  <Box
+    sx={{
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: 500,
+      bgcolor: 'background.paper',
+      borderRadius: 3,
+      boxShadow: 24,
+      p: 4,
+    }}
+  >
+    {/* Close Button */}
+    <IconButton
+      onClick={() => setOpenSalaryModal(false)}
+      sx={{
+        position: 'absolute',
+        top: 8,
+        right: 8,
+      }}
+    >
+      <CloseIcon />
+    </IconButton>
+    {salaryData?.length > 0 ? (
+      <>
+        <Typography
+          variant="h5"
+          sx={{ textAlign: 'center', mb: 3, fontWeight: 'bold', color: 'primary.main' }}
+        >
+          User Salary Detail
+        </Typography>
+
+        <Grid container spacing={1}>
+          <Grid item xs={6}>
+            <Typography variant="body1" sx={{ pl: 1 }}><strong>Name: </strong>{salaryData[0]?.user?.name}</Typography>
+          </Grid>
+          <Grid item xs={6}>
+            <Typography variant="body1" sx={{ pl: 1 }}><strong>Email: </strong>{salaryData[0]?.user?.email}</Typography>
+          </Grid>
+          <Grid item xs={6}>
+            <Typography variant="body1" sx={{ pl: 1 }}><strong>Base Salary: </strong>₹{salaryData[0]?.user?.salary}</Typography>
+          </Grid>
+        </Grid>
+
+        <Divider sx={{ my: 2 }} />
+
+        <Grid container spacing={1}>
+          <Grid item xs={6}>
+            <Typography variant="body1" sx={{ pl: 1 }}><strong>Date: </strong>{salaryData[0].date}</Typography>
+          </Grid>
+          <Grid item xs={6}>
+            <Typography variant="body1" sx={{ pl: 1 }}><strong>Bonus: </strong>₹{salaryData[0].bonus}</Typography>
+          </Grid>
+          <Grid item xs={6}>
+            <Typography variant="body1" sx={{ pl: 1 }}><strong>PF Percent: </strong>{salaryData[0].pf_percent}%</Typography>
+          </Grid>
+          <Grid item xs={6}>
+            <Typography variant="body1" sx={{ pl: 1 }}><strong>Leave Deduction: </strong>₹{salaryData[0].leave_deduction}</Typography>
+          </Grid>
+          <Grid item xs={6}>
+            <Typography
+              variant="body1"
+              color="success.main"
+              fontWeight="bold"
+              sx={{ pl: 1 }}
+            >
+             <strong>Net Salary: </strong> ₹{salaryData[0].net_salary}
+            </Typography>
+          </Grid>
+        </Grid>
+      </>
+    ) : (
+      <Typography textAlign="center">Loading or no salary data found.</Typography>
+    )}
+  </Box>
+</Modal>
+
+
+
 </AuthenticatedLayout>
   );
 }
