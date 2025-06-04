@@ -81,25 +81,25 @@ class SalaryService
         if (!$userId) {
             return response()->json(['error' => 'User ID is required.'], 422);
         }
-        
+
         $data = [
             'user_id' => $userId,
             'amount' => $salary,
-            'pf_percent' => 2,
+            'pf_percent' => 1000,
             'bonus' => isset($request['bonus']) ? (float) $request['bonus'] : 0,
             'unpaid_leave_days' => isset($request['unpaid_leave_days']) ? (int) $request['unpaid_leave_days'] : 0,
             'date' => $date,
         ];
         $WORKING_DAYS = 22;
         $per_day = $data['amount'] / $WORKING_DAYS;
-        $pf = $data['amount'] * ($data['pf_percent'] / 100);
+        $pf =$data['pf_percent'];
         $leave_deduction = $per_day * $data['unpaid_leave_days'];
         $net_salary = $data['amount'] + $data['bonus'] - $pf - $leave_deduction;
         $salary_cal = new SalaryCalculator();
         $salary_cal->user_id = $data['user_id'];
         $salary_cal->net_salary = $net_salary;
         $salary_cal->bonus = $data['bonus'];
-        $salary_cal->pf_percent = $data['pf_percent'];
+        $salary_cal->providant_fund = $data['pf_percent'];
         $salary_cal->leave_deduction = $leave_deduction;
         $salary_cal->date = $data['date'];
         $salary_cal->save();

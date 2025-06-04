@@ -1259,7 +1259,7 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
             <Typography variant="body1" sx={{ pl: 1 }}><strong>Bonus: </strong>₹{salaryData[0].bonus}</Typography>
           </Grid>
           <Grid item xs={6}>
-            <Typography variant="body1" sx={{ pl: 1 }}><strong>PF Percent: </strong>{salaryData[0].pf_percent}%</Typography>
+            <Typography variant="body1" sx={{ pl: 1 }}><strong>Provident Fund: </strong>₹{salaryData[0].providant_fund}</Typography>
           </Grid>
           <Grid item xs={6}>
             <Typography variant="body1" sx={{ pl: 1 }}><strong>Leave Deduction: </strong>₹{salaryData[0].leave_deduction}</Typography>
