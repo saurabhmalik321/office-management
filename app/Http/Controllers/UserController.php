@@ -53,14 +53,14 @@ class UserController extends Controller
      public function store(Request $request)
     {
         $this->authorize('create', User::class);
-
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'user_role' => 'required|string|in:admin,hr,employee',
         ]);
-
-        return response()->json($this->userInterface->create($request->all()));
+        $data = $this->userInterface->create($request->all());
+        $this->calculatePreview($data->toArray());
+        return response()->json($data);
     }
 
     public function show($id)
@@ -123,6 +123,7 @@ class UserController extends Controller
     {
          $data = (object) $request->all();
          $salary = $this->salaryService->updateSalary($data, $id);
+         
         return response()->json($salary, 200);
     }
 
@@ -387,43 +388,48 @@ class UserController extends Controller
         $salary -> amount = $request->amount;
         $salary->date = $request->date;
         $salary->save();
-        $this->calculatePreview($request); 
+        $this->calculatePreview($request->all()); 
         return $salary;
     }
 
      // Salary Calculator
-    public function calculatePreview(Request $request)
+    public function calculatePreview(array $request)
     {
-        $data = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'amount' => 'required|numeric|min:0',
-            'bonus' => 'nullable|numeric|min:0',
-            'unpaid_leave_days' => 'nullable|integer|min:0',
-            'date' => 'required|date',
-        ]);
-        $data['pf_percent'] = 2;
-        $WORKING_DAYS = 22;
-        $bonus = $data['bonus'] ?? 0;
-        $leave_days = $data['unpaid_leave_days'] ?? 0;
-
-        $per_day = $data['amount'] / $WORKING_DAYS;
-        $pf = $data['amount'] * ($data['pf_percent'] / 100);
-        $leave_deduction = $per_day * $leave_days;
-        $net_salary = $data['amount'] + $bonus - $pf - $leave_deduction;
-
-        $salary_cal = new SalaryCalculator();
-        $salary_cal->user_id = $data['user_id'];
-        $salary_cal->net_salary = $net_salary;
-        $salary_cal->bonus = $bonus;
-        $salary_cal->pf_percent = $data['pf_percent'];
-        $salary_cal->leave_deduction = $leave_deduction;
-        $salary_cal->date = $data['date'];
-        $salary_cal->save();
-
-        return response()->json([
-            'salary_preview' => $salary_cal
-        ]);
+            $userId = $request['user_id'] ?? $request['id'] ?? null;
+            $salary = $request['salary'] ?? $request['amount'] ?? null;
+            $date = $request['joining_date'] ?? $request['date'] ?? null;
+            if (!$userId) {
+                return response()->json(['error' => 'User ID is required.'], 422);
+            }
+            
+            $data = [
+                'user_id' => $userId,
+                'amount' => $salary,
+                'pf_percent' => 2,
+                'bonus' => isset($request['bonus']) ? (float) $request['bonus'] : 0,
+                'unpaid_leave_days' => isset($request['unpaid_leave_days']) ? (int) $request['unpaid_leave_days'] : 0,
+                'date' => $date,
+            ];
+            $WORKING_DAYS = 22;
+            $per_day = $data['amount'] / $WORKING_DAYS;
+            $pf = $data['amount'] * ($data['pf_percent'] / 100);
+            $leave_deduction = $per_day * $data['unpaid_leave_days'];
+            $net_salary = $data['amount'] + $data['bonus'] - $pf - $leave_deduction;
+            $salary_cal = new SalaryCalculator();
+            $salary_cal->user_id = $data['user_id'];
+            $salary_cal->net_salary = $net_salary;
+            $salary_cal->bonus = $data['bonus'];
+            $salary_cal->pf_percent = $data['pf_percent'];
+            $salary_cal->leave_deduction = $leave_deduction;
+            $salary_cal->date = $data['date'];
+            $salary_cal->save();
+            return response()->json([
+                'salary_preview' => $salary_cal
+            ]);
+     
     }
+
+
 
     public function getPreviousMonthLeaveDaysForEmployee()
     {

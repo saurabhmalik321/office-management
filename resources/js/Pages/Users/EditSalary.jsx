@@ -23,6 +23,7 @@ export default function EditSalaryModal({ open, onClose, salary, onSalaryUpdated
     amount: '',
     date: '',
     status: '',
+    salary_id:'',
   });
 
   const [errors, setErrors] = useState({});
@@ -37,6 +38,7 @@ export default function EditSalaryModal({ open, onClose, salary, onSalaryUpdated
         amount: salary.amount || '',
         date: formattedDate,
         status: salary.status || '',
+        salary_id:salary.id,
       });
     }
   }, [salary]);

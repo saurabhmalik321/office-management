@@ -31,12 +31,17 @@ class UserRepository implements UserInterface
         $user->user_role = $data['user_role'];
         $user->password = bcrypt($data['password']); 
         $user->salary = $data['salary'];
+        $user->joining_date = $data['joining_date'];
+        $user->current_address = $data['current_address'];
+        $user->permanent_address = $data['permanent_address'];
+        $user->phone = $data['phone'];
+        $user->alternate_phone = $data['alternate_phone'];
         $user->save();
 
         $salary = new Salary();
         $salary->user_id = $user->id;
         $salary->amount = $user->salary;
-        $salary->date = $user->created_at; 
+        $salary->date = $data['joining_date']; 
         $salary->status = 'pending';
         $salary->save(); 
         return $user;

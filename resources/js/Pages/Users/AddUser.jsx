@@ -7,7 +7,12 @@ export default function AddUser({ onUserAdded }) {
         email: '',
         user_role: '',
         password: '',
-        salary:''
+        salary:'',
+        joining_date:'',
+        current_address:'',
+        permanent_address:'',
+        phone:'',
+        alternate_phone:''
     });
 
     const [errors, setErrors] = useState({});
@@ -42,6 +47,21 @@ export default function AddUser({ onUserAdded }) {
     if (!form.user_role) {
         newErrors.user_role = ['Role is required'];
     }
+      if (!form.joining_date) {
+        newErrors.joining_date = ['Joining date is required'];
+    }
+      if (!form.current_address) {
+        newErrors.current_address = ['Current address is required'];
+    }
+      if (!form.permanent_address) {
+        newErrors.permanent_address = ['Permanent address is required'];
+    }
+      if (!form.phone) {
+        newErrors.phone = ['Phone is required'];
+    }
+      if (!form.alternate_phone) {
+        newErrors.alternate_phone = ['Alternate phone is required'];
+    }
 
     // Stop if client-side validation failed
     if (Object.keys(newErrors).length > 0) {
@@ -54,7 +74,12 @@ export default function AddUser({ onUserAdded }) {
     axios.post('/admin/users', form)
         .then(response => {
             onUserAdded(response.data);
-            setForm({ name: '', email: '', user_role: '', password: '',salary:'' });
+            setForm({ name: '', email: '', user_role: '', password: '',salary:'', joining_date:'',
+                    current_address:'',
+                    permanent_address:'',
+                    phone:'',
+                    alternate_phone:''
+     });
         })
         .catch(error => {
             if (error.response?.status === 422 && error.response.data.errors) {
@@ -116,7 +141,61 @@ export default function AddUser({ onUserAdded }) {
                 />
                 {errors.salary && <div className="text-red-500 text-sm">{errors.salary[0]}</div>}
             </div>
-
+             <div className="mb-2">
+                <label className="block font-medium">Joining Date</label>
+                <input
+                    type="date"
+                    name="joining_date"
+                    value={form.joining_date}
+                    onChange={handleChange}
+                    className="w-full border px-3 py-2"
+                />
+                {errors.joining_date && <div className="text-red-500 text-sm">{errors.joining_date[0]}</div>}
+            </div>
+             <div className="mb-2">
+                <label className="block font-medium">Current Address</label>
+                <input
+                    type="text"
+                    name="current_address"
+                    value={form.current_address}
+                    onChange={handleChange}
+                    className="w-full border px-3 py-2"
+                />
+                {errors.current_address && <div className="text-red-500 text-sm">{errors.current_address[0]}</div>}
+            </div>
+             <div className="mb-2">
+                <label className="block font-medium">Permanent Address</label>
+                <input
+                    type="text"
+                    name="permanent_address"
+                    value={form.permanent_address}
+                    onChange={handleChange}
+                    className="w-full border px-3 py-2"
+                />
+                {errors.current_address && <div className="text-red-500 text-sm">{errors.permanent_address[0]}</div>}
+            </div>
+             <div className="mb-2">
+                <label className="block font-medium">Phone</label>
+                <input
+                    type="number"
+                    name="phone"
+                    value={form.phone}
+                    onChange={handleChange}
+                    className="w-full border px-3 py-2"
+                />
+                {errors.phone && <div className="text-red-500 text-sm">{errors.phone[0]}</div>}
+            </div>
+             <div className="mb-2">
+                <label className="block font-medium">Alternate Phone</label>
+                <input
+                    type="number"
+                    name="alternate_phone"
+                    value={form.alternate_phone}
+                    onChange={handleChange}
+                    className="w-full border px-3 py-2"
+                />
+                {errors.alternate_phone && <div className="text-red-500 text-sm">{errors.alternate_phone[0]}</div>}
+            </div>
             <div className="mb-4">
                 <label className="block font-medium">Role</label>
                 <select

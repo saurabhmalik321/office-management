@@ -1277,7 +1277,7 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
         </Grid>
       </>
     ) : (
-      <Typography textAlign="center">Loading or no salary data found.</Typography>
+      <Typography textAlign="center">No salary data found.</Typography>
     )}
   </Box>
 </Modal>
