@@ -82,7 +82,7 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                 </NavLink>
                                 {(user.user_role === 'hr' || user.user_role === 'admin') && (
                                     <NavLink href={route('manage-users')} active={route().current('manage-users')}>
-                                        Users
+                                        Employees
                                     </NavLink>
                                 )}
 
@@ -263,7 +263,7 @@ export default function AuthenticatedLayout({ header, count, children }) {
                         </ResponsiveNavLink>
                         {(user.user_role === 'hr' || user.user_role === 'admin') && (
                             <ResponsiveNavLink href={route('manage-users')} active={route().current('manage-users')}>
-                                Users
+                                Employees
                             </ResponsiveNavLink>
                         )}
                         <ResponsiveNavLink href={route('manage-salaries')} active={route().current('manage-salaries')}>

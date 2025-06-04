@@ -123,7 +123,7 @@ const [filterMonth, setFilterMonth] = useState(() => {
   const columns = [
     {
       field: 'user',
-      headerName: 'User',
+      headerName: 'Employees',
       flex: 0.7,
       renderCell: (params) => params.row.user || '',
     },

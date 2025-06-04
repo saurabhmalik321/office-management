@@ -7,6 +7,7 @@ export default function EditUserModal({ user, onClose, onUpdated }) {
         name: user?.name || '',
         email: user?.email || '',
         user_role: user?.user_role || '',
+        salary: user?.salary || '',
     });
 
     const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -55,9 +56,9 @@ export default function EditUserModal({ user, onClose, onUpdated }) {
                         onClick={onClose}
                         className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl font-bold"
                     >
-                        &times;
+                        ×
                     </button>
-                    <h2 className="text-lg font-bold mb-4">Edit User</h2>
+                    <h2 className="text-lg font-bold mb-4">Edit Employee</h2>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Name</label>
@@ -79,6 +80,18 @@ export default function EditUserModal({ user, onClose, onUpdated }) {
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                             />
                             {errors.email && <div className="text-red-600 text-sm">{errors.email}</div>}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Salary Amount</label>
+                            <input
+                                type="number"
+                                value={data.salary}
+                                onChange={(e) => setData('salary', e.target.value)}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                                placeholder="Enter salary amount"
+                            />
+                            {errors.salary && <div className="text-red-600 text-sm">{errors.salary}</div>}
                         </div>
 
                         <div>

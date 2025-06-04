@@ -77,17 +77,15 @@ class UserController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate([
-            // 'name' => 'required|string|max:255',
-            // 'email' => 'required|email|unique:users,email,' . $id,
-            // 'user_role' => 'required|string',
-        ]);
-        $user = User::findOrFail($id);
+        $user = User::where('id',$id)->first();
         $user->name = $request->name;
         $user->email = $request->email;
         $user->user_role = $request->user_role;
+        $user->salary = $request->salary;
+        $salary = Salary::where('user_id',$id)->first();
+        $salary->amount = $request->salary;
+        $salary->save();
         $user->save();
-        // return Inertia::location(route('manageusers'));
     }
 
     public function destroy($id)
@@ -106,7 +104,7 @@ class UserController extends Controller
         $salaries = $this->salaryService->getSingleUserSalaries();
         return response()->json($salaries);
     }
-    
+
     public function getSalaryStatus()
     {
           $salaries = $this->salaryService->getSalaryStatus();
@@ -123,7 +121,7 @@ class UserController extends Controller
     {
          $data = (object) $request->all();
          $salary = $this->salaryService->updateSalary($data, $id);
-         
+
         return response()->json($salary, 200);
     }
 
@@ -219,12 +217,12 @@ class UserController extends Controller
      public function getHistory()
     {
      $history = UserHistory::all();
-     return $history;  
+     return $history;
     }
     public function getPerformance()
     {
         $user = Auth::user();
-        
+
         $performances = $performances = Performance::with('user')
                             ->whereYear('evaluated_at', Carbon::now()->year)
                             ->whereMonth('evaluated_at', Carbon::now()->month)
@@ -240,7 +238,7 @@ class UserController extends Controller
     }
 
     public function storePerformance(Request $request): RedirectResponse
-    {    
+    {
         $date = Carbon::parse($request->evaluated_at);
         $curr_month = $date->month;
         $curr_year = $date->year;
@@ -251,7 +249,7 @@ class UserController extends Controller
         if (!$performance) {
             $performance = new Performance();
             $performance->user_id = $request->user_id;
-            $performance->evaluated_at = $request->evaluated_at; 
+            $performance->evaluated_at = $request->evaluated_at;
         }
 
         $performance->category = implode(',', $request->category);
@@ -296,7 +294,7 @@ class UserController extends Controller
     public function getContacts(){
         $contact = ContactUS::all();
         return response()->json([
-            'message' => 'Contact list fetched successfully', 
+            'message' => 'Contact list fetched successfully',
             'success' => true,
             'data' => $contact
         ]);
@@ -319,7 +317,7 @@ class UserController extends Controller
         return $performance;
     }
 
-    // messaging/chat 
+    // messaging/chat
     public function getMessages($userId)
     {
        $receiver = User::findOrFail($userId);
@@ -388,7 +386,7 @@ class UserController extends Controller
         $salary -> amount = $request->amount;
         $salary->date = $request->date;
         $salary->save();
-        $this->calculatePreview($request->all()); 
+        $this->calculatePreview($request->all());
         return $salary;
     }
 
@@ -401,7 +399,7 @@ class UserController extends Controller
             if (!$userId) {
                 return response()->json(['error' => 'User ID is required.'], 422);
             }
-            
+
             $data = [
                 'user_id' => $userId,
                 'amount' => $salary,
@@ -426,7 +424,7 @@ class UserController extends Controller
             return response()->json([
                 'salary_preview' => $salary_cal
             ]);
-     
+
     }
 
 

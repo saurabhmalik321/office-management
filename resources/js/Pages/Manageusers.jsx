@@ -160,10 +160,10 @@ export default function ManageUsers() {
 
   return (
     <AuthenticatedLayout
-      header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Manage All Users</h2>}
+      header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Manage All Employees</h2>}
       count={count}
     >
-      <Head title="Manage Users" />
+      <Head title="Manage Employees" />
 
       <div className="py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -222,7 +222,7 @@ export default function ManageUsers() {
                 onClick={() => setShowAddUserModal(true)}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full sm:w-auto"
               >
-                Add User
+                Add Employee
               </button>
             </div>
           </div>
@@ -310,7 +310,7 @@ export default function ManageUsers() {
           {/* User Data Table */}
           <div className="overflow-x-auto bg-white shadow-sm sm:rounded-lg">
             <div className="p-4 text-gray-900 min-w-[500px]">
-              <h3 className="mb-4 text-lg font-medium">Here is a list of current users:</h3>
+              <h3 className="mb-4 text-lg font-medium">List of current employees:</h3>
               <Box sx={{ width: '100%' }}>
                 <DataGrid
                   rows={filteredUsers}
