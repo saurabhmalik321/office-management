@@ -16,6 +16,7 @@ use App\Models\Notification;
 use App\Models\Message;
 use App\Models\UserHistory;
 use App\Models\Performance;
+use App\Models\SalaryCalculator;
 use App\Models\HrPolicy;
 use App\Models\{ContactUs, Quote};
 use Illuminate\Support\Facades\Http;
@@ -367,45 +368,52 @@ class UserController extends Controller
 
 
     public function storeNewSalaries(Request $request)
-    {    
-        $salaries = new Salary();
-        $salaries -> user_id = $request->user_id;
-        $salaries -> amount = $request ->amount;
-        $salaries -> date = $request ->date;
-        $salaries -> status = $request ->status;
-        $salaries->save();
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'amount' => 'required|numeric',
+            'date' => 'required|date',
+        ]);
 
-        return redirect()->back()->with('success', 'Performance added successfully.');
+        $salaries = Salary::updateOrCreate(
+            ['user_id' => $request->user_id],
+            ['amount' => $request->amount, 'date' => $request->date]
+        );
+
+        $this->calculatePreview($request); // Pass full request
+
+        return redirect()->back()->with('success', 'Salary Added Successfully.');
     }
+
      // Salary Calculator
     public function calculatePreview(Request $request)
     {
         $data = $request->validate([
-            'basic_salary' => 'required|numeric|min:0',
+            'user_id' => 'required|exists:users,id',
+            'amount' => 'required|numeric|min:0',
             'bonus' => 'nullable|numeric|min:0',
-            'tax_percent' => 'required|numeric|min:0|max:100',
-            'pf_percent' => 'required|numeric|min:0|max:100',
             'unpaid_leave_days' => 'nullable|integer|min:0',
         ]);
-
+        $data['pf_percent'] = 2;
         $WORKING_DAYS = 22;
         $bonus = $data['bonus'] ?? 0;
         $leave_days = $data['unpaid_leave_days'] ?? 0;
 
-        $per_day = $data['basic_salary'] / $WORKING_DAYS;
-        $tax = ($data['basic_salary'] + $bonus) * ($data['tax_percent'] / 100);
-        $pf = $data['basic_salary'] * ($data['pf_percent'] / 100);
+        $per_day = $data['amount'] / $WORKING_DAYS;
+        $pf = $data['amount'] * ($data['pf_percent'] / 100);
         $leave_deduction = $per_day * $leave_days;
+        $net_salary = $data['amount'] + $bonus - $pf - $leave_deduction;
 
-        $net_salary = $data['basic_salary'] + $bonus - $tax - $pf - $leave_deduction;
+        $salary_cal = new SalaryCalculator();
+        $salary_cal->user_id = $data['user_id'];
+        $salary_cal->net_salary = $net_salary;
+        $salary_cal->bonus = $bonus;
+        $salary_cal->pf_percent = $data['pf_percent'];
+        $salary_cal->leave_deduction = $leave_deduction;
+        $salary_cal->save();
 
         return response()->json([
-            'net_salary' => round($net_salary, 2),
-            'breakdown' => [
-                'tax' => round($tax, 2),
-                'pf' => round($pf, 2),
-                'leaveDeduction' => round($leave_deduction, 2),
-            ]
+            'salary_preview' => $salary_cal
         ]);
     }
 
@@ -435,6 +443,22 @@ class UserController extends Controller
 
         return response()->json((int) $totalDays);
     }
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'new_password' => 'required|min:6',
+            'confirm_password' => 'required|same:new_password',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+        $user->password = Hash::make($request->new_password);
+        dd($user);
+        $user->save();
+
+        return back()->with('success', 'Password updated successfully.');
+    }
+
 
 }
 

@@ -125,6 +125,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/salaries/add', [UserController::class, 'storeNewSalaries']);
     Route::post('/salary/calculate-preview', [UserController::class, 'calculatePreview']);
     Route::get('/leave-count', [UserController::class, 'getPreviousMonthLeaveDaysForEmployee']);
+    Route::put('/reset-password', [UserController::class, 'resetPassword']);
    
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

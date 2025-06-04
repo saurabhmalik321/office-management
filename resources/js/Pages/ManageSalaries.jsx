@@ -77,6 +77,7 @@ export default function ManageSalaries() {
   const [notificationData, setNotificationData] = useState({
     title: '',
     message: '',
+    date: '',
   });
   const [currentSalaryId, setCurrentSalaryId] = useState(null);
   const [users, setUsers] = useState([]);
@@ -100,7 +101,6 @@ export default function ManageSalaries() {
   });
   const [leaveCount,setLeaveCount] = useState(0);
 
-   console.log(leaveCount,'leavedata');
   const pendingLeave = () => {
       axios
       .get('/admin/pending-leave')
@@ -185,7 +185,7 @@ export default function ManageSalaries() {
 
   const handleCloseNotification = () => {
     setNotificationOpen(false);
-    setNotificationData({ title: '', message: '' });
+    setNotificationData({ title: '', message: '',date:'' });
   };
 
   const handleSendNotification = async () => {
@@ -199,6 +199,7 @@ export default function ManageSalaries() {
 
       const response = await axios.get('/salaries');
       setSalaries(response.data);
+      getDefaultMonth();
       handleCloseNotification();
     } catch (error) {
       console.error(error);
@@ -357,6 +358,41 @@ const theme = useTheme();
 const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
+    const handleFilter = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('/salaries/filter', {
+          params: {
+            month: selectedMonth,
+            year: selectedYear,
+          },
+        });
+        setSalaries(response.data);
+      } catch (error) {
+        console.error('Error filtering salaries:', error);
+        setError('Something went wrong while filtering salaries.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+
+    const getDefaultMonth=async()=>{
+      const today = new Date();
+      const month = today.getMonth()+1;
+      const year = today.getFullYear();
+      const response=await axios.get('/salaries/filter', {
+        params: {
+          month: month,
+          year:year,
+        },
+      });
+      setSalaries(response.data);
+    }
+    useEffect(() => {
+    getDefaultMonth();
+    }, []);
+
 
   const columns = [
   {
@@ -418,7 +454,8 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
           marginBottom:2.5,
         }}
       />
-    ),
+        //  {console.log(params.row.status,"status")}
+      ),
   },
   {
     field: 'actions',
@@ -473,39 +510,6 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
     : []),
 ];
 
-   useEffect(() => {
-    const getDefaultMonth=async()=>{
-      const today = new Date();
-      const month = today.getMonth()+1;
-      const year = today.getFullYear();
-      const response=await axios.get('/salaries/filter', {
-        params: {
-          month: month,
-          year:year,
-        },
-      });
-      setSalaries(response.data);
-    }
-    getDefaultMonth();
-    }, []);
-    const handleFilter = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get('/salaries/filter', {
-          params: {
-            month: selectedMonth,
-            year: selectedYear,
-          },
-        });
-        setSalaries(response.data);
-      } catch (error) {
-        console.error('Error filtering salaries:', error);
-        setError('Something went wrong while filtering salaries.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
 
 
   return (
@@ -529,18 +533,9 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
               {!loading && !error && (
                 <Box sx={{ width: '100%'}}>
                   <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-                    {(isHR || isAdmin) && <Button
-                      variant="contained"
-                      color="success"
-                      sx={{ textTransform: 'capitalize' }}
-                      onClick={() => setOpenAddModal(true)}
-                    >
-                      Add Salary
-                    </Button>
-                    }
-                    <Button variant="outlined" sx={{textTransform:'capitalize', ...(isHR || isAdmin && { marginRight: '32rem' })}} onClick={() => setOpenCalculator(true)}>
+                    {/* <Button variant="outlined" sx={{textTransform:'capitalize', ...(isHR || isAdmin && { marginRight: '32rem' })}} onClick={() => setOpenCalculator(true)}>
                       Salary Calculator
-                    </Button>
+                    </Button> */}
                     <Box display="flex" gap={2} alignItems="center">
                       <TextField
                         select
@@ -765,6 +760,48 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
                 },
             }}
             />
+             <TextField
+              fullWidth
+              type="date"
+              label="Date"
+              InputLabelProps={{ shrink: true }}
+              value={notificationData.date}
+              onChange={(e) =>
+                setNotificationData({
+                ...notificationData,
+                date: e.target.value,
+                })
+              }
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: '#ccc',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#ccc',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#ccc',
+                  },
+                },
+                '& input': {
+                  outline: 'none !important',
+                  boxShadow: 'none !important',
+                },
+                '& input:focus': {
+                  outline: 'none !important',
+                  boxShadow: 'none !important',
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <CalendarMonthIcon />
+                  </InputAdornment>
+                ),
+              }}
+           />
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Button onClick={handleCloseNotification}>Cancel</Button>

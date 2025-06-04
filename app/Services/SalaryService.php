@@ -57,7 +57,7 @@ class SalaryService
     {
         $salary = Salary::where('id',$id)->first(); 
         $salary->status = 'paid';
-        $salary->date = now();
+        $salary->date = $data['date'];
         $salary->save();
         $notify = new Notification();
         $notify->hr_id = Auth::id();

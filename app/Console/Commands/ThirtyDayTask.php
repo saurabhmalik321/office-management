@@ -26,10 +26,11 @@ class ThirtyDayTask extends Command
     public function handle()
     {
         $salaries = Salary::where('status','paid')->get();
-        foreach ($salaries as $salary) {
-            $salary->status = 'pending';
-            $salary->save();
-        }
+       foreach ($salaries as $salary) {
+                $salary->status = 'pending';
+                $salary->date = Carbon::now()->toDateString(); 
+                $salary->save();
+            }
      \Log::info('Updated individual salaries to pending.');
     }
 }
