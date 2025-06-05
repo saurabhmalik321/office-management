@@ -102,7 +102,7 @@ export default function ManageSalaries() {
   });
   const [leaveCount,setLeaveCount] = useState(0);
   const [openSalaryModal, setOpenSalaryModal] = useState(false);
-
+  const [curr_bonus,setCurrBonus] = useState(0);
   const pendingLeave = () => {
       axios
       .get('/admin/pending-leave')
@@ -233,6 +233,13 @@ export default function ManageSalaries() {
       })
     }
   },[]);
+
+  const getBonus=async(user_id)=>{
+    await  axios.get(`/bonus/${user_id}`)
+    .then((res)=>{setCurrBonus(res.data)
+    })
+    .catch((err)=>console.log(err));
+  }
 const handleDownloadPdf = (row) => {
   const pdfContainer = document.createElement('div');
   pdfContainer.style.position = 'absolute';
@@ -244,6 +251,8 @@ const handleDownloadPdf = (row) => {
     month: '2-digit',
     year: 'numeric',
   });
+
+  getBonus(row?.user_id);
 
   const monthName = new Date(row.date).toLocaleString('en-IN', {
     month: 'long',
@@ -259,10 +268,10 @@ const handleDownloadPdf = (row) => {
   }).format(row.amount);
 
   // Add inner HTML
-const pfCut = Math.round((2 / 100) * row.amount);
-const taxCut = Math.round((6 / 100) * row.amount);
+const pfCut = 1000;
+const bonus = curr_bonus;
 const leaveCut = leaveCount * Math.floor(row.amount / 22);
-const netSalary = row.amount - taxCut - pfCut - leaveCut;
+const netSalary = row.amount - pfCut - leaveCut + bonus;
 
 pdfContainer.innerHTML = `
   <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; max-width: 700px; margin: auto; border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
@@ -295,9 +304,9 @@ pdfContainer.innerHTML = `
           <td style="padding: 10px; border: 1px solid #ccc; font-weight: 400;">Gross Salary</td>
           <td style="padding: 10px; border: 1px solid #ccc; text-align: right;">${formattedAmount}</td>
         </tr>
-        <tr style="background-color: #f0f4f7;">
-          <td style="padding: 10px; border: 1px solid #ccc; font-weight: 400;">Tax Deduction (TDS)</td>
-          <td style="padding: 10px; border: 1px solid #ccc; text-align: right;">₹${taxCut.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+         <tr style="background-color: #f0f4f7;">
+          <td style="padding: 10px; border: 1px solid #ccc; font-weight: 400;">Bonus</td>
+          <td style="padding: 10px; border: 1px solid #ccc; text-align: right;">₹${bonus.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
         </tr>
         <tr style="background-color: #f0f4f7;">
           <td style="padding: 10px; border: 1px solid #ccc; font-weight: 400;">Leave Deduction</td>
@@ -362,7 +371,6 @@ const viewSalary=(id,date)=>{
      })
      .catch((err)=>console.log(err));
 }
-console.log(salaryData,"salarydata");
 const theme = useTheme();
 const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 const isTablet = useMediaQuery(theme.breakpoints.down('md'));

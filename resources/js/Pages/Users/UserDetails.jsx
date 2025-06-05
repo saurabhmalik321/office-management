@@ -391,7 +391,6 @@ export default function UserDetail() {
                     type="number"
                     label="Salary Amount"
                     InputProps={{
-                      readOnly: true, 
                       startAdornment: (
                         <InputAdornment position="start">
                           <CurrencyRupeeIcon />
@@ -399,6 +398,7 @@ export default function UserDetail() {
                       ),
                     }}
                     value={salaryForm.amount}
+                    onChange={(e) => setSalaryForm({ ...salaryForm, amount: e.target.value })}
                     sx={{
                       mb: 2,
                       '& .MuiOutlinedInput-root': {

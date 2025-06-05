@@ -483,6 +483,11 @@ class UserController extends Controller
                                     ->get();
         return $salary_data;
     }
+    public function getBonus($id)
+    {
+       $bonus = SalaryCalculator::where('user_id', $id)->first();
+       return $bonus->bonus;
+    }
 
 }
 
