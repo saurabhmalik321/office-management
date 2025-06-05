@@ -94,130 +94,150 @@ export default function AddUser({ onUserAdded }) {
 
 
     return (
-        <form onSubmit={handleSubmit} className="mb-6">
-            <div className="mb-2">
-                <label className="block font-medium">Name</label>
-                <input
-                    type="text"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    className="w-full border px-3 py-2"
-                />
-                {errors.name && <div className="text-red-500 text-sm">{errors.name[0]}</div>}
-            </div>
+       <div className="max-h-screen overflow-y-auto px-4 py-6">
+  <form onSubmit={handleSubmit} className="mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Name */}
+      <div>
+        <label className="block font-medium">Name</label>
+        <input
+          type="text"
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          className="w-full border px-3 py-2"
+        />
+        {errors.name && <div className="text-red-500 text-sm">{errors.name[0]}</div>}
+      </div>
 
-            <div className="mb-2">
-                <label className="block font-medium">Email</label>
-                <input
-                    type="email"
-                    name="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    className="w-full border px-3 py-2"
-                />
-                {errors.email && <div className="text-red-500 text-sm">{errors.email[0]}</div>}
-            </div>
+      {/* Email */}
+      <div>
+        <label className="block font-medium">Email</label>
+        <input
+          type="email"
+          name="email"
+          value={form.email}
+          onChange={handleChange}
+          className="w-full border px-3 py-2"
+        />
+        {errors.email && <div className="text-red-500 text-sm">{errors.email[0]}</div>}
+      </div>
 
-            <div className="mb-2">
-                <label className="block font-medium">Password</label>
-                <input
-                    type="password"
-                    name="password"
-                    value={form.password}
-                    onChange={handleChange}
-                    className="w-full border px-3 py-2"
-                />
-                {errors.password && <div className="text-red-500 text-sm">{errors.password[0]}</div>}
-            </div>
-            <div className="mb-2">
-                <label className="block font-medium">Salary</label>
-                <input
-                    type="number"
-                    name="salary"
-                    value={form.salary}
-                    onChange={handleChange}
-                    className="w-full border px-3 py-2"
-                />
-                {errors.salary && <div className="text-red-500 text-sm">{errors.salary[0]}</div>}
-            </div>
-             <div className="mb-2">
-                <label className="block font-medium">Joining Date</label>
-                <input
-                    type="date"
-                    name="joining_date"
-                    value={form.joining_date}
-                    onChange={handleChange}
-                    className="w-full border px-3 py-2"
-                />
-                {errors.joining_date && <div className="text-red-500 text-sm">{errors.joining_date[0]}</div>}
-            </div>
-             <div className="mb-2">
-                <label className="block font-medium">Current Address</label>
-                <input
-                    type="text"
-                    name="current_address"
-                    value={form.current_address}
-                    onChange={handleChange}
-                    className="w-full border px-3 py-2"
-                />
-                {errors.current_address && <div className="text-red-500 text-sm">{errors.current_address[0]}</div>}
-            </div>
-             <div className="mb-2">
-                <label className="block font-medium">Permanent Address</label>
-                <input
-                    type="text"
-                    name="permanent_address"
-                    value={form.permanent_address}
-                    onChange={handleChange}
-                    className="w-full border px-3 py-2"
-                />
-                {errors.current_address && <div className="text-red-500 text-sm">{errors.permanent_address[0]}</div>}
-            </div>
-             <div className="mb-2">
-                <label className="block font-medium">Phone</label>
-                <input
-                    type="number"
-                    name="phone"
-                    value={form.phone}
-                    onChange={handleChange}
-                    className="w-full border px-3 py-2"
-                />
-                {errors.phone && <div className="text-red-500 text-sm">{errors.phone[0]}</div>}
-            </div>
-             <div className="mb-2">
-                <label className="block font-medium">Alternate Phone</label>
-                <input
-                    type="number"
-                    name="alternate_phone"
-                    value={form.alternate_phone}
-                    onChange={handleChange}
-                    className="w-full border px-3 py-2"
-                />
-                {errors.alternate_phone && <div className="text-red-500 text-sm">{errors.alternate_phone[0]}</div>}
-            </div>
-            <div className="mb-4">
-                <label className="block font-medium">Role</label>
-                <select
-                    name="user_role"
-                    value={form.user_role}
-                    onChange={handleChange}
-                    className="w-full border px-3 py-2"
-                >
-                    <option value="">Select Role</option>
-                    <option value="admin">Admin</option>
-                    <option value="hr">HR</option>
-                    <option value="employee">Employee</option>
-                </select>
-                {errors.user_role && <div className="text-red-500 text-sm">{errors.user_role[0]}</div>}
-            </div>
+      {/* Password */}
+      <div>
+        <label className="block font-medium">Password</label>
+        <input
+          type="password"
+          name="password"
+          value={form.password}
+          onChange={handleChange}
+          className="w-full border px-3 py-2"
+        />
+        {errors.password && <div className="text-red-500 text-sm">{errors.password[0]}</div>}
+      </div>
 
-            <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-                Add User
-            </button>
-        </form>
+      {/* Salary */}
+      <div>
+        <label className="block font-medium">Salary</label>
+        <input
+          type="number"
+          name="salary"
+          value={form.salary}
+          onChange={handleChange}
+          className="w-full border px-3 py-2"
+        />
+        {errors.salary && <div className="text-red-500 text-sm">{errors.salary[0]}</div>}
+      </div>
+
+      {/* Joining Date */}
+      <div>
+        <label className="block font-medium">Joining Date</label>
+        <input
+          type="date"
+          name="joining_date"
+          value={form.joining_date}
+          onChange={handleChange}
+          className="w-full border px-3 py-2"
+        />
+        {errors.joining_date && <div className="text-red-500 text-sm">{errors.joining_date[0]}</div>}
+      </div>
+
+      {/* Phone */}
+      <div>
+        <label className="block font-medium">Phone</label>
+        <input
+          type="number"
+          name="phone"
+          value={form.phone}
+          onChange={handleChange}
+          className="w-full border px-3 py-2"
+        />
+        {errors.phone && <div className="text-red-500 text-sm">{errors.phone[0]}</div>}
+      </div>
+
+      {/* Alternate Phone */}
+      <div>
+        <label className="block font-medium">Alternate Phone</label>
+        <input
+          type="number"
+          name="alternate_phone"
+          value={form.alternate_phone}
+          onChange={handleChange}
+          className="w-full border px-3 py-2"
+        />
+        {errors.alternate_phone && <div className="text-red-500 text-sm">{errors.alternate_phone[0]}</div>}
+      </div>
+
+      {/* Role */}
+      <div>
+        <label className="block font-medium">Role</label>
+        <select
+          name="user_role"
+          value={form.user_role}
+          onChange={handleChange}
+          className="w-full border px-3 py-2"
+        >
+          <option value="">Select Role</option>
+          <option value="admin">Admin</option>
+          <option value="hr">HR</option>
+          <option value="employee">Employee</option>
+        </select>
+        {errors.user_role && <div className="text-red-500 text-sm">{errors.user_role[0]}</div>}
+      </div>
+    </div>
+
+    {/* Addresses (spanning full width) */}
+    <div className="mt-4">
+      <label className="block font-medium">Current Address</label>
+      <input
+        type="text"
+        name="current_address"
+        value={form.current_address}
+        onChange={handleChange}
+        className="w-full border px-3 py-2"
+      />
+      {errors.current_address && <div className="text-red-500 text-sm">{errors.current_address[0]}</div>}
+    </div>
+
+    <div className="mt-4">
+      <label className="block font-medium">Permanent Address</label>
+      <input
+        type="text"
+        name="permanent_address"
+        value={form.permanent_address}
+        onChange={handleChange}
+        className="w-full border px-3 py-2"
+      />
+      {errors.permanent_address && <div className="text-red-500 text-sm">{errors.permanent_address[0]}</div>}
+    </div>
+
+    <button
+      type="submit"
+      className="mt-6 bg-blue-600 text-white px-4 py-2 w-full rounded hover:bg-blue-700"
+    >
+      Add Employee
+    </button>
+  </form>
+</div>
     );
 }

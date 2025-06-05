@@ -198,12 +198,12 @@ export default function EditSalaryModal({ open, onClose, salary, onSalaryUpdated
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={onClose} color="secondary">
-            Cancel
-          </Button>
-          <Button onClick={handleSave} variant="contained" color="primary">
-            Save
-          </Button>
+            <Button onClick={onClose} color="secondary" variant="outlined">
+                Cancel
+            </Button>
+            <Button onClick={handleSave} variant="contained" color="primary">
+                Save
+            </Button>
         </DialogActions>
       </Dialog>
 

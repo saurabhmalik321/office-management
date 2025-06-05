@@ -76,7 +76,7 @@ export default function ManageLeaves({ auth_user_id }) {
   const handleInquiryChange = (e) => {
   setInquiryForm({ ...inquiryForm, [e.target.name]: e.target.value });
   };
- 
+
   const handleInquirySubmit = () => {
     axios
       .post('/inquiries',inquiryForm)
@@ -105,7 +105,7 @@ export default function ManageLeaves({ auth_user_id }) {
         .get('/single-leave')
         .then((response) => setLeaves(response.data))
         .catch((error) => console.error('Error fetching leaves:', error))
-        .finally(() => setLoading(false));    
+        .finally(() => setLoading(false));
       }else{
       axios
         .get('/leaves')
@@ -225,7 +225,7 @@ export default function ManageLeaves({ auth_user_id }) {
           <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
             <div className="p-6 text-gray-900">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold mb-4">Your Leave Requests</h3>
+                <h3 className="text-lg font-semibold mb-4">Leave Requests</h3>
                 {(user.user_role !== 'hr' && user.user_role !== 'admin') && (
                  <div className='flex justify-between gap-2'> <Button
                     variant="contained"
@@ -412,19 +412,19 @@ export default function ManageLeaves({ auth_user_id }) {
                 borderRadius: 2,
                 '&.MuiOutlinedInput-root': {
                     '& fieldset': {
-                    borderColor: '#ccc', 
+                    borderColor: '#ccc',
                     },
                     '&:hover fieldset': {
-                    borderColor: '#bbb', 
+                    borderColor: '#bbb',
                     },
                     '&.Mui-focused fieldset': {
-                    borderColor: '#ccc', 
+                    borderColor: '#ccc',
                     },
                 },
                 '& textarea': {
-                    outline: 'none', 
-                    border: 'none', 
-                    boxShadow: 'none', 
+                    outline: 'none',
+                    border: 'none',
+                    boxShadow: 'none',
                 },
                 },
             }}
@@ -485,18 +485,18 @@ export default function ManageLeaves({ auth_user_id }) {
                 borderRadius: 2,
                 '&.MuiOutlinedInput-root': {
                     '& fieldset': {
-                    borderColor: '#ccc', 
+                    borderColor: '#ccc',
                     },
                     '&:hover fieldset': {
-                    borderColor: '#bbb', 
+                    borderColor: '#bbb',
                     },
                     '&.Mui-focused fieldset': {
-                    borderColor: '#ccc', 
+                    borderColor: '#ccc',
                     },
                 },
                 '& textarea': {
-                    outline: 'none', 
-                    border: 'none',  
+                    outline: 'none',
+                    border: 'none',
                     boxShadow: 'none',
                 },
                 },
@@ -568,18 +568,18 @@ export default function ManageLeaves({ auth_user_id }) {
                 borderRadius: 2,
                 '&.MuiOutlinedInput-root': {
                     '& fieldset': {
-                    borderColor: '#ccc', 
+                    borderColor: '#ccc',
                     },
                     '&:hover fieldset': {
-                    borderColor: '#bbb', 
+                    borderColor: '#bbb',
                     },
                     '&.Mui-focused fieldset': {
-                    borderColor: '#ccc', 
+                    borderColor: '#ccc',
                     },
                 },
                 '& textarea': {
-                    outline: 'none', 
-                    border: 'none',  
+                    outline: 'none',
+                    border: 'none',
                     boxShadow: 'none',
                 },
                 },
@@ -587,7 +587,7 @@ export default function ManageLeaves({ auth_user_id }) {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setStatusDialogOpen(false)} color="secondary">Cancel</Button>
+          <Button onClick={() => setStatusDialogOpen(false)} variant="outlined" color="secondary">Cancel</Button>
           <Button onClick={handleLeaveResponseSubmit} variant="contained" color="primary">Send</Button>
         </DialogActions>
       </Dialog>
