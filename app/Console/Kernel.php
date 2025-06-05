@@ -7,6 +7,6 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
          $schedule->command(MonthlyTask::class)
-                 ->monthlyOn(11, '00:00');        
+                 ->daily();        
     }
 }

@@ -125,12 +125,12 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                     >
                                     Company Policies
                                     </NavLink>
-                                    {/* <NavLink
-                                        href={route('chat-box')}
-                                        active={route().current('chat-box')}
+                                    <NavLink
+                                        href={route('settings')}
+                                        active={route().current('settings')}
                                     >
-                                        Message
-                                    </NavLink> */}
+                                        Settings
+                                    </NavLink>
 
                             </div>
                         </div>

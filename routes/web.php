@@ -54,9 +54,9 @@ Route::get('/messages/{userId}',  [UserController::class, 'getPerformance']) ->m
 //     return Inertia::render('ChatBox');
 // })->middleware(['auth', 'verified'])->name('messages');
 // routes/web.php
-Route::get('/chat-box', function () {
-    return Inertia::render('ChatBox');
-})->name('chat-box');
+Route::get('/settings', function () {
+    return Inertia::render('Settings');
+})->name('settings');
 
 
 Route::middleware(['auth', 'check.user.role:admin,hr'])->group(function () {
