@@ -6,6 +6,7 @@ use App\Interface\UserInterface;
 use App\Models\User;
 use App\Models\Salary;
 use App\Models\Leave;
+use App\Models\Inquiry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -14,6 +15,7 @@ use App\Services\LeaveService;
 use App\Services\PolicyService;
 use App\Models\Notification;
 use App\Models\Message;
+use App\Models\Settings;
 use App\Models\UserHistory;
 use App\Models\Performance;
 use App\Models\SalaryCalculator;
@@ -91,7 +93,7 @@ class UserController extends Controller
             'date' => $salary->date,
             'amount' => $request->salary
             ];
-        $this->calculatePreview($data); 
+        $this->calculatePreview($data);
     }
 
     public function destroy($id)
@@ -174,6 +176,43 @@ class UserController extends Controller
         'notifications' => $notifications,
     ]);
     }
+
+
+    public function deleteNotification($id)
+    {
+    $notification = Notification::find($id);
+
+    if (!$notification) {
+        return response()->json(['message' => 'Notification not found.'], 404);
+    }
+
+    // if ($notification->hr_id !== auth()->id()) {
+    //     return response()->json(['message' => 'Unauthorized.'], 403);
+    // }
+
+    $notification->delete();
+
+    return response()->json(['message' => 'Notification deleted successfully.']);
+    }
+
+
+    public function deleteInquiry($id)
+    {
+    $inquiry = Inquiry::find($id);
+
+    if (!$inquiry) {
+        return response()->json(['message' => 'Inquiry not found.'], 404);
+    }
+
+    // if ($notification->hr_id !== auth()->id()) {
+    //     return response()->json(['message' => 'Unauthorized.'], 403);
+    // }
+
+    $inquiry->delete();
+
+    return response()->json(['message' => 'Inquiry deleted successfully.']);
+    }
+
     public function pendingLeave()
     {
         $leaves = $this->leaveService->pendingLeave();
@@ -487,6 +526,19 @@ class UserController extends Controller
     {
        $bonus = SalaryCalculator::where('user_id', $id)->first();
        return $bonus->bonus;
+    }
+
+     public function getDate()
+    {
+       $date = Settings::all();
+       return $date;
+    }
+     public function putDate(Request $request)
+    {
+       $date = new Settings();
+       $date->date=$request->date;
+       $date->save();
+       return $date;
     }
 
 }

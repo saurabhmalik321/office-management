@@ -1,4 +1,4 @@
-           import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
   Box,
@@ -18,21 +18,20 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Fetch the date initially
-    // axios.get('/date/get')
-    //   .then(res => setDate(res.data.date))
-    //   .catch(err => console.error('Error fetching date:', err));
+    axios.get('/date/get')
+      .then(res => setDate(res.data.date))
+      .catch(err => console.error('Error fetching date:', err));
   }, []);
 
   const handleSave = () => {
-    // setLoading(true);
-    // axios.post('/update/date', { date: newDate })
-    //   .then(res => {
-    //     setDate(newDate);
-    //     setEditMode(false);
-    //   })
-    //   .catch(err => console.error('Error updating date:', err))
-    //   .finally(() => setLoading(false));
+    setLoading(true);
+    axios.post('/update/date', { date: newDate })
+      .then(res => {
+        setDate(newDate);
+        setEditMode(false);
+      })
+      .catch(err => console.error('Error updating date:', err))
+      .finally(() => setLoading(false));
   };
 
   const handleCancel = () => {
@@ -57,34 +56,77 @@ export default function Settings() {
             </IconButton>
             </Stack>
         ) : (
-            <Stack spacing={2}>
+            <Stack spacing={3}>
             <TextField
+                label="Date"
+                name="date"
                 type="date"
-                label="Select Date"
                 value={newDate}
                 onChange={(e) => setNewDate(e.target.value)}
-                InputLabelProps={{ shrink: true }}
                 fullWidth
+                InputLabelProps={{ shrink: true }}
+                sx={{
+                mt: 1,
+                borderRadius: 2,
+                '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                    transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
+                    '& fieldset': {
+                    borderColor: '#ccc',
+                    },
+                    '&:hover fieldset': {
+                    borderColor: '#999',
+                    boxShadow: '0 0 8px rgba(0,0,0,0.15)',
+                    },
+                    '&.Mui-focused fieldset': {
+                    borderColor: '#666',
+                    boxShadow: '0 0 8px rgba(0,0,0,0.25)',
+                    },
+                },
+                '& input': {
+                    boxShadow: 'none !important',
+                },
+                }}
             />
-            <Stack direction="row" spacing={2}>
-                <Button
-                variant="contained"
-                color="primary"
-                onClick={handleSave}
-                disabled={loading}
-                >
-                Save
-                </Button>
+
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
                 <Button
                 variant="outlined"
                 color="secondary"
                 onClick={handleCancel}
                 disabled={loading}
+                sx={{
+                    textTransform: 'none',
+                    px: 3,
+                    '&:hover': {
+                    backgroundColor: 'rgba(220,0,78,0.08)',
+                    borderColor: '#d4004e',
+                    },
+                }}
                 >
                 Cancel
                 </Button>
+                <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSave}
+                disabled={loading}
+                sx={{
+                    textTransform: 'none',
+                    px: 3,
+                    boxShadow: '0 3px 6px rgba(0,0,0,0.16)',
+                    '&:hover': {
+                    boxShadow: '0 6px 12px rgba(0,0,0,0.24)',
+                    backgroundColor: '#0059c1',
+                    },
+                }}
+                >
+                Save
+                </Button>
             </Stack>
             </Stack>
+
         )}
         </Box>
         </AuthenticatedLayout>

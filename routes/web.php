@@ -44,7 +44,7 @@ Route::get('/manage-salaries', function () {
 })->middleware(['auth', 'verified'])->name('manage-salaries');
 Route::get('/performances', [UserController::class, 'getPerformance'])
     ->middleware(['auth', 'verified'])
-    ->name('performances.index'); 
+    ->name('performances.index');
 
 Route::post('/performances', [UserController::class, 'storePerformance'])->name('performances.store');
 
@@ -85,14 +85,17 @@ Route::group(['prefix' => 'admin'], function () {
     Route::get('/histories', [UserController::class, 'getHistory']);
 
 });
+
 Route::get('/chat', function () {
     return Inertia::render('ChatBot');
 })->name('chat');
 Route::post('/chat', [UserController::class, 'handleMessage']);
+
 Route::middleware(['auth'])->group(function () {
     Route::post('/notifications', [UserController::class, 'sendNotification']);
     Route::get('/employee', [UserController::class, 'onlyEmployee']);
     Route::get('/notification/{id}', [UserController::class, 'getNotification']);
+    Route::delete('/notifications/{id}', [UserController::class, 'deleteNotification']);
 });
 
 Route::middleware('auth')->group(function () {
@@ -111,6 +114,9 @@ Route::middleware('auth')->group(function () {
     // Inquiry
     Route::get('/admin-hr-users', [UserController::class, 'getAdminHrUsers']);
     Route::post('/inquiries', [UserController::class, 'sendInquiry']);
+    Route::delete('/inquiries/{id}', [UserController::class, 'deleteInquiry']);
+
+
     // company policies
     Route::get('/policies', [UserController::class, 'getPolicies'])->name('policies.index');
     Route::post('/policies', [UserController::class, 'storePolicies'])->name('policies.store');
@@ -118,7 +124,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/policies/view/{id}', [UserController::class, 'viewDoc'])->name('policies.view');
     // user performace
     Route::get('/performance/user', [UserController::class, 'getUserPerformace']);
-    //message/chat 
+    //message/chat
     Route::post('/messages', [UserController::class, 'storeMessages'])->name('message.store');
     Route::get('/messages', [UserController::class, 'getAllMessages'])->name('messages');
     Route::get('/salaries/filter', [UserController::class, 'filter']);
@@ -128,7 +134,10 @@ Route::middleware('auth')->group(function () {
     Route::put('/reset-password', [UserController::class, 'resetPassword']);
     Route::post('/salary-view', [UserController::class, 'viewSalary']);
     Route::get('/bonus/{id}', [UserController::class, 'getBonus']);
-   
+
+    Route::post('/update/date', [UserController::class, 'putDate']);
+    Route::get('/date/get', [UserController::class, 'getDate']);
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
