@@ -146,7 +146,7 @@ export default function ManageSalaries() {
 
    useEffect(() => {
       const today = new Date();
-      setSelectedMonth(today.getMonth() + 1); 
+      setSelectedMonth(today.getMonth() + 1);
       setSelectedYear(today.getFullYear());
     }, []);
 
@@ -766,19 +766,19 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
                 borderRadius: 2,
                 '&.MuiOutlinedInput-root': {
                     '& fieldset': {
-                    borderColor: '#ccc', 
+                    borderColor: '#ccc',
                     },
                     '&:hover fieldset': {
-                    borderColor: '#bbb', 
+                    borderColor: '#bbb',
                     },
                     '&.Mui-focused fieldset': {
                     borderColor: '#ccc',
                     },
                 },
                 '& textarea': {
-                    outline: 'none', 
-                    border: 'none', 
-                    boxShadow: 'none', 
+                    outline: 'none',
+                    border: 'none',
+                    boxShadow: 'none',
                 },
                 },
             }}
@@ -1026,7 +1026,7 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
     >
       <CloseIcon />
     </IconButton>
-      <Typography variant="h6" textAlign="center" gutterBottom> 
+      <Typography variant="h6" textAlign="center" gutterBottom>
         Salary Calculator
       </Typography>
 
@@ -1242,7 +1242,7 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
           variant="h5"
           sx={{ textAlign: 'center', mb: 3, fontWeight: 'bold', color: 'primary.main' }}
         >
-          User Salary Detail
+          Salary Details
         </Typography>
 
         <Grid container spacing={1}>
@@ -1253,7 +1253,7 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
             <Typography variant="body1" sx={{ pl: 1 }}><strong>Email: </strong>{salaryData[0]?.user?.email}</Typography>
           </Grid>
           <Grid item xs={6}>
-            <Typography variant="body1" sx={{ pl: 1 }}><strong>Base Salary: </strong>₹{salaryData[0]?.user?.salary}</Typography>
+            <Typography variant="body1" sx={{ pl: 1 }}><strong>Gross Salary: </strong>₹{salaryData[0]?.user?.salary}</Typography>
           </Grid>
         </Grid>
 

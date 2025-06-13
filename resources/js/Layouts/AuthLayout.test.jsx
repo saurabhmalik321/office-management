@@ -498,7 +498,7 @@ export default function AuthenticatedLayout({ header, count, children }) {
                                 >
                                     Log Out
                                 </ResponsiveNavLink>
-                            </div>                                              
+                            </div>
                         </div>
                     </div>
                 </nav>
