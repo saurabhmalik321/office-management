@@ -6,11 +6,15 @@ import {
   Container,
   Box,
   IconButton,
+  Menu,
+  MenuItem,
   Alert,
 } from '@mui/material';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DownloadIcon from '@mui/icons-material/Download';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditSquareIcon from '@mui/icons-material/EditSquare';
 import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
@@ -19,7 +23,7 @@ export default function Policies() {
   const { policies, flash, auth, errors } = usePage().props;
   const user = auth.user;
 
-  const { data, setData, post, reset, processing } = useForm({
+  const { data, setData, post, reset, processing, put } = useForm({
     title: '',
     description: '',
     uploaded_date: '',
@@ -30,6 +34,9 @@ export default function Policies() {
   const [confirmingPolicyDeletion, setConfirmingPolicyDeletion] = useState(false);
   const [deletingPolicyId, setDeletingPolicyId] = useState(null);
   const [deleteProcessing, setDeleteProcessing] = useState(false);
+  const [editingPolicy, setEditingPolicy] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [menuAnchorEls, setMenuAnchorEls] = useState({});
 
   useEffect(() => {
     if (flash?.success) {
@@ -49,6 +56,7 @@ export default function Policies() {
   const confirmPolicyDelete = (id) => {
     setDeletingPolicyId(id);
     setConfirmingPolicyDeletion(true);
+    handleMenuClose(id);
   };
 
   const closeModal = () => {
@@ -59,16 +67,52 @@ export default function Policies() {
   const deletePolicy = (e) => {
     e.preventDefault();
     setDeleteProcessing(true);
-
     router.delete(route('policies.destroy', deletingPolicyId), {
       onSuccess: () => {
         setConfirmingPolicyDeletion(false);
         setDeleteProcessing(false);
       },
-      onError: () => {
-        setDeleteProcessing(false);
+      onError: () => setDeleteProcessing(false),
+    });
+  };
+
+  const openEditModal = (policy) => {
+    setEditingPolicy(policy);
+    setData({
+      title: policy.title,
+      description: policy.description,
+      uploaded_date: policy.uploaded_date,
+      file: null,
+    });
+    setShowEditModal(true);
+  };
+
+  const closeEditModal = () => {
+    setEditingPolicy(null);
+    setShowEditModal(false);
+    reset();
+  };
+
+  const updatePolicy = (e) => {
+    e.preventDefault();
+    if (!editingPolicy) return;
+
+    router.post(route('policies.update', editingPolicy.id), {
+      _method: 'put',
+      ...data,
+    }, {
+      onSuccess: () => {
+        closeEditModal();
       },
     });
+  };
+
+  const handleMenuOpen = (event, id) => {
+    setMenuAnchorEls((prev) => ({ ...prev, [id]: event.currentTarget }));
+  };
+
+  const handleMenuClose = (id) => {
+    setMenuAnchorEls((prev) => ({ ...prev, [id]: null }));
   };
 
   const columns = [
@@ -107,34 +151,73 @@ export default function Policies() {
       headerAlign: 'center',
       align: 'center',
       sortable: false,
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5, width: '100%' }}>
-          <IconButton
-            href={route('policies.view', params.row.id)}
-            target="_blank"
-            rel="noopener"
-          >
-            <VisibilityIcon color="action" />
-          </IconButton>
+      renderCell: (params) => {
+        const open = Boolean(menuAnchorEls[params.row.id]);
+        const userRole = user.user_role;
+        const selectedPolicy = policies.find(p => p.id === params.row.id);
 
-          <IconButton
-            href={route('policies.download', params.row.id)}
-            target="_blank"
-            rel="noopener"
-          >
-            <DownloadIcon color="primary" />
-          </IconButton>
-
-          {(user.user_role === 'admin' || user.user_role === 'hr') && (
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
             <IconButton
-              onClick={() => confirmPolicyDelete(params.row.id)}
-              color="error"
+              href={route('policies.view', params.row.id)}
+              target="_blank"
+              rel="noopener"
+              size="small"
+              sx={{ mr: 1 }}
             >
-              <DeleteIcon />
+              <VisibilityIcon color="action" />
             </IconButton>
-          )}
-        </Box>
-      ),
+
+            <IconButton
+              aria-controls={open ? `actions-menu-${params.row.id}` : undefined}
+              aria-haspopup="true"
+              aria-expanded={open ? 'true' : undefined}
+              onClick={(e) => handleMenuOpen(e, params.row.id)}
+              size="small"
+            >
+              <MoreVertIcon />
+            </IconButton>
+
+            <Menu
+              id={`actions-menu-${params.row.id}`}
+              anchorEl={menuAnchorEls[params.row.id]}
+              open={open}
+              onClose={() => handleMenuClose(params.row.id)}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+              <MenuItem
+                component="a"
+                href={route('policies.download', params.row.id)}
+                target="_blank"
+                rel="noopener"
+                onClick={() => handleMenuClose(params.row.id)}
+              >
+                <DownloadIcon sx={{ mr: 1 }} />
+                Download
+              </MenuItem>
+
+              {(userRole === 'admin' || userRole === 'hr') && (
+                <>
+                  <MenuItem
+                    onClick={() => {
+                      handleMenuClose(params.row.id);
+                      openEditModal(selectedPolicy);
+                    }}
+                  >
+                    <EditSquareIcon sx={{ mr: 1 }} />
+                    Edit
+                  </MenuItem>
+                  <MenuItem onClick={() => { confirmPolicyDelete(params.row.id); }}>
+                    <DeleteIcon color="error" sx={{ mr: 1 }} />
+                    Delete
+                  </MenuItem>
+                </>
+              )}
+            </Menu>
+          </Box>
+        );
+      },
     },
   ];
 
@@ -198,9 +281,7 @@ export default function Policies() {
                   onChange={(e) => setData('file', e.target.files[0])}
                   className="block"
                 />
-                {errors.file && (
-                  <div className="text-red-500 text-sm mt-1">{errors.file}</div>
-                )}
+                {errors.file && <div className="text-red-500 text-sm mt-1">{errors.file}</div>}
               </div>
 
               <button
@@ -214,40 +295,77 @@ export default function Policies() {
           )}
 
           <div className="mt-8">
-            <div className="w-full max-w-7xl">
-              <Box sx={{ height: 600, width: 'auto', backgroundColor: 'white' }}>
-                <DataGrid
-                  rows={rows}
-                  columns={columns}
-                  pageSize={5}
-                  rowsPerPageOptions={[5, 10]}
-                  disableSelectionOnClick
-                />
-              </Box>
-            </div>
+            <Box sx={{ height: 600, width: 'auto', backgroundColor: 'white' }}>
+              <DataGrid
+                rows={rows}
+                columns={columns}
+                pageSize={5}
+                rowsPerPageOptions={[5, 10]}
+                disableSelectionOnClick
+              />
+            </Box>
           </div>
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Modal */}
       <Modal show={confirmingPolicyDeletion} onClose={closeModal}>
         <form onSubmit={deletePolicy} className="p-6">
           <h2 className="text-lg font-medium text-gray-900">
             Do you want to delete this policy?
           </h2>
-
           <p className="mt-1 text-sm text-gray-600">
             Once deleted, this policy and all related data will be permanently removed. This action cannot be undone.
           </p>
-
           <div className="mt-6 flex justify-end">
             <SecondaryButton onClick={closeModal}>
               Cancel
             </SecondaryButton>
-
             <DangerButton className="ms-3" disabled={deleteProcessing}>
               Delete Policy
             </DangerButton>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal show={showEditModal} onClose={closeEditModal}>
+        <form onSubmit={updatePolicy} className="p-6 space-y-4">
+          <h2 className="text-lg font-medium text-gray-900">Edit Policy</h2>
+
+          <input
+            type="text"
+            placeholder="Policy Title"
+            value={data.title}
+            onChange={(e) => setData('title', e.target.value)}
+            className="w-full border p-2 rounded"
+          />
+          {errors.title && <div className="text-red-500 text-sm mt-1">{errors.title}</div>}
+
+          <textarea
+            placeholder="Description"
+            value={data.description}
+            onChange={(e) => setData('description', e.target.value)}
+            className="w-full border p-2 rounded"
+          />
+          {errors.description && <div className="text-red-500 text-sm mt-1">{errors.description}</div>}
+
+          <input
+            type="file"
+            onChange={(e) => setData('file', e.target.files[0])}
+            className="block"
+          />
+          {errors.file && <div className="text-red-500 text-sm mt-1">{errors.file}</div>}
+
+          <div className="mt-4 flex justify-end">
+            <SecondaryButton onClick={closeEditModal}>Cancel</SecondaryButton>
+            <button
+              type="submit"
+              disabled={processing}
+              className="ml-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Save Changes
+            </button>
           </div>
         </form>
       </Modal>
