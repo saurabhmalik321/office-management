@@ -326,6 +326,15 @@ class UserController extends Controller
         $policy = $this->policyService->viewDoc($id);
         return response()->file(storage_path('app/public/' . $policy->file_path));
     }
+
+    public function deletePolicy($id)
+{
+    $this->policyService->deletePolicy($id);
+
+    return redirect()->route('policies.index')->with('success', 'Policy deleted successfully.');
+}
+
+
     public function postContact(Request $request){
         $contact = new ContactUS();
         $contact -> name = $request -> name;

@@ -122,6 +122,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/policies', [UserController::class, 'storePolicies'])->name('policies.store');
     Route::get('/policies/download/{policy}', [UserController::class, 'download'])->name('policies.download');
     Route::get('/policies/view/{id}', [UserController::class, 'viewDoc'])->name('policies.view');
+    Route::delete('/policies/{id}', [UserController::class, 'deletePolicy'])->name('policies.destroy');
+
     // user performace
     Route::get('/performance/user', [UserController::class, 'getUserPerformace']);
     //message/chat

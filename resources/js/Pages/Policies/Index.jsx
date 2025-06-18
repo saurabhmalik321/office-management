@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { useForm, usePage } from '@inertiajs/react';
+import { useForm, usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { DataGrid } from '@mui/x-data-grid';
-import { Container, Box, IconButton, Alert } from '@mui/material';
+import {
+  Container,
+  Box,
+  IconButton,
+  Alert,
+} from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Modal from '@/Components/Modal';
+import SecondaryButton from '@/Components/SecondaryButton';
+import DangerButton from '@/Components/DangerButton';
 
 export default function Policies() {
   const { policies, flash, auth, errors } = usePage().props;
   const user = auth.user;
-  
+
   const { data, setData, post, reset, processing } = useForm({
     title: '',
     description: '',
@@ -18,11 +27,14 @@ export default function Policies() {
   });
 
   const [showSuccess, setShowSuccess] = useState(!!flash?.success);
+  const [confirmingPolicyDeletion, setConfirmingPolicyDeletion] = useState(false);
+  const [deletingPolicyId, setDeletingPolicyId] = useState(null);
+  const [deleteProcessing, setDeleteProcessing] = useState(false);
 
   useEffect(() => {
     if (flash?.success) {
       setShowSuccess(true);
-      const timer = setTimeout(() => setShowSuccess(false), 3000); // 3 seconds
+      const timer = setTimeout(() => setShowSuccess(false), 3000);
       return () => clearTimeout(timer);
     }
   }, [flash?.success]);
@@ -31,6 +43,31 @@ export default function Policies() {
     e.preventDefault();
     post(route('policies.store'), {
       onSuccess: () => reset(),
+    });
+  };
+
+  const confirmPolicyDelete = (id) => {
+    setDeletingPolicyId(id);
+    setConfirmingPolicyDeletion(true);
+  };
+
+  const closeModal = () => {
+    setConfirmingPolicyDeletion(false);
+    setDeletingPolicyId(null);
+  };
+
+  const deletePolicy = (e) => {
+    e.preventDefault();
+    setDeleteProcessing(true);
+
+    router.delete(route('policies.destroy', deletingPolicyId), {
+      onSuccess: () => {
+        setConfirmingPolicyDeletion(false);
+        setDeleteProcessing(false);
+      },
+      onError: () => {
+        setDeleteProcessing(false);
+      },
     });
   };
 
@@ -52,8 +89,8 @@ export default function Policies() {
     {
       field: 'uploadedDate',
       headerName: 'Uploaded Date',
-      headerAlign: 'center',
       flex: 1,
+      headerAlign: 'center',
       align: 'center',
     },
     {
@@ -79,6 +116,7 @@ export default function Policies() {
           >
             <VisibilityIcon color="action" />
           </IconButton>
+
           <IconButton
             href={route('policies.download', params.row.id)}
             target="_blank"
@@ -86,6 +124,15 @@ export default function Policies() {
           >
             <DownloadIcon color="primary" />
           </IconButton>
+
+          {(user.user_role === 'admin' || user.user_role === 'hr') && (
+            <IconButton
+              onClick={() => confirmPolicyDelete(params.row.id)}
+              color="error"
+            >
+              <DeleteIcon />
+            </IconButton>
+          )}
         </Box>
       ),
     },
@@ -122,7 +169,6 @@ export default function Policies() {
 
           {(user.user_role === 'admin' || user.user_role === 'hr') && (
             <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 rounded shadow">
-              {/* Title Input */}
               <div>
                 <input
                   type="text"
@@ -134,7 +180,6 @@ export default function Policies() {
                 {errors.title && <div className="text-red-500 text-sm mt-1">{errors.title}</div>}
               </div>
 
-              {/* Description */}
               <div>
                 <textarea
                   placeholder="Description"
@@ -147,7 +192,6 @@ export default function Policies() {
                 )}
               </div>
 
-              {/* File Upload */}
               <div>
                 <input
                   type="file"
@@ -159,7 +203,6 @@ export default function Policies() {
                 )}
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={processing}
@@ -170,10 +213,8 @@ export default function Policies() {
             </form>
           )}
 
-          {/* Data Grid */}
           <div className="mt-8">
             <div className="w-full max-w-7xl">
-            
               <Box sx={{ height: 600, width: 'auto', backgroundColor: 'white' }}>
                 <DataGrid
                   rows={rows}
@@ -187,6 +228,29 @@ export default function Policies() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal show={confirmingPolicyDeletion} onClose={closeModal}>
+        <form onSubmit={deletePolicy} className="p-6">
+          <h2 className="text-lg font-medium text-gray-900">
+            Do you want to delete this policy?
+          </h2>
+
+          <p className="mt-1 text-sm text-gray-600">
+            Once deleted, this policy and all related data will be permanently removed. This action cannot be undone.
+          </p>
+
+          <div className="mt-6 flex justify-end">
+            <SecondaryButton onClick={closeModal}>
+              Cancel
+            </SecondaryButton>
+
+            <DangerButton className="ms-3" disabled={deleteProcessing}>
+              Delete Policy
+            </DangerButton>
+          </div>
+        </form>
+      </Modal>
     </AuthenticatedLayout>
   );
 }

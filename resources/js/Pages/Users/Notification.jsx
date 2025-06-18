@@ -53,7 +53,6 @@ const NotificationsList = ({ notifications = [], onClose, setNotifications }) =>
       // Remove from state after collapse
       setTimeout(() => {
         const route = user.user_role === 'admin' || user.user_role === 'hr' ? '/inquiries' : '/notifications';
-        console.log(route, 'test meeee')
         axios
           .delete(`${route}/${id}`)
           .then(() => {
