@@ -6,6 +6,7 @@ use App\Interface\UserInterface;
 use App\Models\User;
 use App\Models\Salary;
 use App\Models\Leave;
+use App\Models\Inquiry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -13,15 +14,21 @@ use App\Services\SalaryService;
 use App\Services\LeaveService;
 use App\Services\PolicyService;
 use App\Models\Notification;
+use App\Models\Message;
+use App\Models\Settings;
 use App\Models\UserHistory;
 use App\Models\Performance;
+use App\Models\SalaryCalculator;
 use App\Models\HrPolicy;
-use App\Models\ContactUs;
+use App\Models\{ContactUs, Quote};
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+
 
 class UserController extends Controller
 {
@@ -48,14 +55,14 @@ class UserController extends Controller
      public function store(Request $request)
     {
         $this->authorize('create', User::class);
-
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'user_role' => 'required|string|in:admin,hr,employee',
         ]);
-
-        return response()->json($this->userInterface->create($request->all()));
+        $data = $this->userInterface->create($request->all());
+        $this->calculatePreview($data->toArray());
+        return response()->json($data);
     }
 
     public function show($id)
@@ -72,14 +79,21 @@ class UserController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
-            'user_role' => 'required|string',
-        ]);
-        $user = User::findOrFail($id);
-        $user->update($request->only('name', 'email', 'user_role'));
-        // return Inertia::location(route('manageusers'));
+        $user = User::where('id',$id)->first();
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->user_role = $request->user_role;
+        $user->salary = $request->salary;
+        $salary = Salary::where('user_id',$id)->first();
+        $salary->amount = $request->salary;
+        $salary->save();
+        $user->save();
+        $data=[
+            'user_id' => $id,
+            'date' => $salary->date,
+            'amount' => $request->salary
+            ];
+        $this->calculatePreview($data);
     }
 
     public function destroy($id)
@@ -98,7 +112,7 @@ class UserController extends Controller
         $salaries = $this->salaryService->getSingleUserSalaries();
         return response()->json($salaries);
     }
-    
+
     public function getSalaryStatus()
     {
           $salaries = $this->salaryService->getSalaryStatus();
@@ -115,6 +129,7 @@ class UserController extends Controller
     {
          $data = (object) $request->all();
          $salary = $this->salaryService->updateSalary($data, $id);
+
         return response()->json($salary, 200);
     }
 
@@ -161,6 +176,43 @@ class UserController extends Controller
         'notifications' => $notifications,
     ]);
     }
+
+
+    public function deleteNotification($id)
+    {
+    $notification = Notification::find($id);
+
+    if (!$notification) {
+        return response()->json(['message' => 'Notification not found.'], 404);
+    }
+
+    // if ($notification->hr_id !== auth()->id()) {
+    //     return response()->json(['message' => 'Unauthorized.'], 403);
+    // }
+
+    $notification->delete();
+
+    return response()->json(['message' => 'Notification deleted successfully.']);
+    }
+
+
+    public function deleteInquiry($id)
+    {
+    $inquiry = Inquiry::find($id);
+
+    if (!$inquiry) {
+        return response()->json(['message' => 'Inquiry not found.'], 404);
+    }
+
+    // if ($notification->hr_id !== auth()->id()) {
+    //     return response()->json(['message' => 'Unauthorized.'], 403);
+    // }
+
+    $inquiry->delete();
+
+    return response()->json(['message' => 'Inquiry deleted successfully.']);
+    }
+
     public function pendingLeave()
     {
         $leaves = $this->leaveService->pendingLeave();
@@ -210,12 +262,12 @@ class UserController extends Controller
      public function getHistory()
     {
      $history = UserHistory::all();
-     return $history;  
+     return $history;
     }
     public function getPerformance()
     {
         $user = Auth::user();
-        
+
         $performances = $performances = Performance::with('user')
                             ->whereYear('evaluated_at', Carbon::now()->year)
                             ->whereMonth('evaluated_at', Carbon::now()->month)
@@ -231,7 +283,7 @@ class UserController extends Controller
     }
 
     public function storePerformance(Request $request): RedirectResponse
-    {    
+    {
         $date = Carbon::parse($request->evaluated_at);
         $curr_month = $date->month;
         $curr_year = $date->year;
@@ -242,7 +294,7 @@ class UserController extends Controller
         if (!$performance) {
             $performance = new Performance();
             $performance->user_id = $request->user_id;
-            $performance->evaluated_at = $request->evaluated_at; 
+            $performance->evaluated_at = $request->evaluated_at;
         }
 
         $performance->category = implode(',', $request->category);
@@ -274,6 +326,15 @@ class UserController extends Controller
         $policy = $this->policyService->viewDoc($id);
         return response()->file(storage_path('app/public/' . $policy->file_path));
     }
+
+    public function deletePolicy($id)
+{
+    $this->policyService->deletePolicy($id);
+
+    return redirect()->route('policies.index')->with('success', 'Policy deleted successfully.');
+}
+
+
     public function postContact(Request $request){
         $contact = new ContactUS();
         $contact -> name = $request -> name;
@@ -287,10 +348,206 @@ class UserController extends Controller
     public function getContacts(){
         $contact = ContactUS::all();
         return response()->json([
-            'message' => 'Contact list fetched successfully', 
+            'message' => 'Contact list fetched successfully',
             'success' => true,
             'data' => $contact
         ]);
+    }
+    public function getQoute(Request $request){
+        $quote = new Quote();
+        $quote -> name = $request -> name;
+        $quote -> phone = $request -> phone;
+        $quote -> email = $request -> email;
+        $quote -> microsoft_team_id = $request -> teams_id;
+        $quote -> source = $request -> hear_about_us;
+         $quote -> message = $request -> message;
+        $quote -> save();
+        return response()->json(['message' => 'submit successfully', 'success' => true]);
+    }
+
+    // auth employee performance
+    public function getUserPerformace(){
+        $performance = Performance::with('user')->where('user_id',Auth::id())->get();
+        return $performance;
+    }
+
+    // messaging/chat
+    public function getMessages($userId)
+    {
+       $receiver = User::findOrFail($userId);
+        return Inertia::render('ChatBox', [
+            'receiverId' => $receiver->id,
+            'receiverName' => $receiver->name,
+        ]);
+    }
+
+    public function storeMessages(Request $request)
+    {
+        $message = Message::create([
+            'sender_id' => Auth::id(),
+            'receiver_id' => $request->receiver_id,
+            'message' => $request->message,
+        ]);
+        return response()->json($message->load(['sender', 'receiver']));
+    }
+    // getAllMessages
+    public function getAllMessages(Request $request)
+    {
+        $messages = Message::with(['sender', 'receiver'])->get();
+        return response()->json($messages);
+    }
+    public function messagesBox()
+    {
+        return Inertia::render('ChatBox');
+    }
+
+    public function filter(Request $request)
+    {
+        if(Auth::user()->user_role == 'admin' || Auth::user()->user_role == 'hr'){
+            $query = Salary::join('users', 'salaries.user_id', '=', 'users.id')
+                ->select('salaries.*', 'users.name as name');
+            if ($request->has('month') && $request->has('year')) {
+                $query->whereMonth('salaries.date', $request->month)
+                    ->whereYear('salaries.date', $request->year);
+            }
+            $salaries = $query->get();
+        }else{
+             $query = Salary::join('users', 'salaries.user_id', '=', 'users.id')
+                ->select('salaries.*', 'users.name as name')->where('salaries.user_id', Auth::id());
+            if ($request->has('month') && $request->has('year')) {
+                $query->whereMonth('salaries.date', $request->month)
+                    ->whereYear('salaries.date', $request->year);
+            }
+            $salaries = $query->get();
+        }
+
+        return response()->json($salaries);
+    }
+
+
+    public function updateNewSalaries(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'amount' => 'required|numeric',
+            'date' => 'required|date',
+        ]);
+
+        $user = User::where('id',$request->user_id)->first();
+        $user -> salary = $request->amount;
+        $user -> save();
+        $salary = Salary::where('user_id',$request->user_id)->first();
+        $salary -> amount = $request->amount;
+        $salary->date = $request->date;
+        $salary->save();
+        $this->calculatePreview($request->all());
+        return $salary;
+    }
+
+     // Salary Calculator
+    public function calculatePreview(array $request)
+    {
+            $userId = $request['user_id'] ?? $request['id'] ?? null;
+            $salary = $request['salary'] ?? $request['amount'] ?? null;
+            $date = $request['joining_date'] ?? $request['date'] ?? null;
+            if (!$userId) {
+                return response()->json(['error' => 'User ID is required.'], 422);
+            }
+
+            $data = [
+                'user_id' => $userId,
+                'amount' => $salary,
+                'pf_percent' => 1000,
+                'bonus' => isset($request['bonus']) ? (float) $request['bonus'] : 0,
+                'unpaid_leave_days' => isset($request['unpaid_leave_days']) ? (int) $request['unpaid_leave_days'] : 0,
+                'date' => $date,
+            ];
+            $WORKING_DAYS = 22;
+            $per_day = $data['amount'] / $WORKING_DAYS;
+            $pf =$data['pf_percent'];
+            $leave_deduction = $per_day * $data['unpaid_leave_days'];
+            $net_salary = $data['amount'] + $data['bonus'] - $pf - $leave_deduction;
+            $salary_cal = new SalaryCalculator();
+            $salary_cal->user_id = $data['user_id'];
+            $salary_cal->net_salary = $net_salary;
+            $salary_cal->bonus = $data['bonus'];
+            $salary_cal->providant_fund = $data['pf_percent'];
+            $salary_cal->leave_deduction = $leave_deduction;
+            $salary_cal->date = $data['date'];
+            $salary_cal->save();
+            return response()->json([
+                'salary_preview' => $salary_cal
+            ]);
+    }
+
+
+
+    public function getPreviousMonthLeaveDaysForEmployee()
+    {
+        $user = Auth::user();
+        if (!$user || $user->user_role !== 'employee') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $start = Carbon::now()->subMonth()->startOfMonth()->toDateString();
+        $end = Carbon::now()->subMonth()->endOfMonth()->toDateString();
+
+        $totalDays = DB::table('leaves')
+            ->where('status', 'approved')
+            ->where('user_id', Auth::id())
+            ->where(function ($query) use ($start, $end) {
+                $query->whereBetween('start_date', [$start, $end])
+                    ->orWhereBetween('end_date', [$start, $end])
+                    ->orWhere(function ($q) use ($start, $end) {
+                        $q->where('start_date', '<', $start)
+                        ->where('end_date', '>', $end);
+                    });
+            })
+            ->select(DB::raw("SUM(DATEDIFF(LEAST(end_date, '$end'), GREATEST(start_date, '$start')) + 1) as total"))
+            ->value('total');
+
+        return response()->json((int) $totalDays);
+    }
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'new_password' => 'required|min:6',
+            'confirm_password' => 'required|same:new_password',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return back()->with('success', 'Password updated successfully.');
+    }
+
+    public function viewSalary(Request $request)
+    {
+       $salary_data = SalaryCalculator::with('user')
+                                    ->where('user_id', $request->id)
+                                    ->where('date', $request->date)
+                                    ->get();
+        return $salary_data;
+    }
+    public function getBonus($id)
+    {
+       $bonus = SalaryCalculator::where('user_id', $id)->first();
+       return $bonus->bonus;
+    }
+
+     public function getDate()
+    {
+       $date = Settings::all();
+       return $date;
+    }
+     public function putDate(Request $request)
+    {
+       $date = new Settings();
+       $date->date=$request->date;
+       $date->save();
+       return $date;
     }
 
 }

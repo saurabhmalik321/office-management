@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import {
-  Container,
+//   Container,
   Typography,
   TextField,
   Button,
@@ -38,6 +38,15 @@ export default function Performance() {
   const [users, setUsers] = useState([]);
   const [open, setOpen] = useState(false);
 
+// State for filters
+const [searchUser, setSearchUser] = useState('');
+const [filterMonth, setFilterMonth] = useState(() => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based, so add 1
+  return `${year}-${month}`;
+});
+
   // Local errors state for client-side validation
   const [localErrors, setLocalErrors] = useState({});
 
@@ -66,7 +75,6 @@ export default function Performance() {
     if (!form.category || form.category.length === 0) errors.category = 'At least one category must be selected.';
     if (!form.score) errors.score = 'Performance rating is required.';
     if (!form.evaluated_at) errors.evaluated_at = 'Evaluation date is required.';
-    // Remarks optional, no validation needed or you can add min length if you want
 
     setLocalErrors(errors);
     return Object.keys(errors).length === 0;
@@ -74,7 +82,7 @@ export default function Performance() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!validate()) return; // Stop if validation fails
+    if (!validate()) return;
 
     router.post(route('performances.store'), form, {
       onSuccess: () => {
@@ -115,7 +123,7 @@ export default function Performance() {
   const columns = [
     {
       field: 'user',
-      headerName: 'User',
+      headerName: 'Employees',
       flex: 0.7,
       renderCell: (params) => params.row.user || '',
     },
@@ -183,6 +191,7 @@ export default function Performance() {
     setLocalErrors((prev) => ({ ...prev, category: '' }));
   };
 
+  // Prepare rows from performances
   const rows = performances.map((perf, index) => ({
     id: index,
     user: perf.user.name,
@@ -192,11 +201,104 @@ export default function Performance() {
     remarks: perf.remarks,
   }));
 
+  // Filter rows based on search and month
+  const filteredRows = rows.filter((row) => {
+    const matchesUser = searchUser
+      ? row.user.toLowerCase().includes(searchUser.toLowerCase())
+      : true;
+
+    const matchesMonth = filterMonth
+      ? new Date(row.evaluated_at).toISOString().slice(0, 7) === filterMonth
+      : true;
+
+    return matchesUser && matchesMonth;
+  });
+
   return (
     <AuthenticatedLayout header={<Typography variant="h5">Employee Performance</Typography>} count={count}>
       <div className="py-12">
         <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-          <Box display="flex" justifyContent="flex-end" mb={2}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Box display="flex" gap={2}>
+              <TextField
+               label="Search"
+              variant="outlined"
+              size="small"
+              value={searchUser}
+              onChange={(e) => setSearchUser(e.target.value)}
+              fullWidth
+              InputProps={{
+                sx: {
+                  borderRadius: 2,
+                  '&.MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: '#ccc',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#bbb',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#ccc',
+                    },
+                  },
+                  '& input': {
+                    boxShadow: 'none !important',
+                  },
+                },
+              }}
+              InputLabelProps={{
+                sx: {
+                  color: '#666',
+                  '&.Mui-focused': {
+                    color: '#666',
+                  },
+                },
+              }}
+              sx={{
+                maxWidth: 200,
+                backgroundColor: 'background.paper',
+              }}
+              />
+              <TextField
+                type="month"
+                variant="outlined"
+                size="small"
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                fullWidth
+                InputProps={{
+                    sx: {
+                    borderRadius: 2,
+                    '&.MuiOutlinedInput-root': {
+                        '& fieldset': {
+                        borderColor: '#ccc',
+                        },
+                        '&:hover fieldset': {
+                        borderColor: '#bbb',
+                        },
+                        '&.Mui-focused fieldset': {
+                        borderColor: '#ccc',
+                        },
+                    },
+                    '& input': {
+                        boxShadow: 'none !important',
+                    },
+                    },
+                }}
+                InputLabelProps={{
+                    sx: {
+                    color: '#666',
+                    '&.Mui-focused': {
+                        color: '#666',
+                    },
+                    },
+                }}
+                sx={{
+                    maxWidth: 170,
+                    backgroundColor: 'background.paper',
+                }}
+                />
+            </Box>
             <Button onClick={() => setOpen(true)} variant="contained" sx={{ textTransform: 'capitalize', borderRadius: 2 }}>
               Add Performance
             </Button>
@@ -205,7 +307,7 @@ export default function Performance() {
           {/* Popup Dialog Form */}
           <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
             <DialogTitle sx={{ m: 0, p: 2 }}>
-              Add Employee Performance 
+              Add Employee Performance
               <IconButton
                 aria-label="close"
                 onClick={() => setOpen(false)}
@@ -371,7 +473,7 @@ export default function Performance() {
             <Divider />
             <CardContent>
               <DataGrid
-                rows={rows}
+                rows={filteredRows}
                 columns={columns}
                 pageSize={5}
                 autoHeight

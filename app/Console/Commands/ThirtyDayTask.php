@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 use App\Models\Salary;
 use Illuminate\Console\Command;
-
+use Carbon\Carbon;
 class ThirtyDayTask extends Command
 {
     /**
@@ -25,10 +25,25 @@ class ThirtyDayTask extends Command
      */
     public function handle()
     {
-        $salaries = Salary::where('status','paid')->get();
-        foreach ($salaries as $salary) {
-            $salary->status = 'pending';
-            $salary->save();
+       $setting = Settings::latest()->first();
+
+        if ($setting && $setting->date->toDateString() === Carbon::now()->toDateString()) {
+            $users = User::whereIn('user_role', ['employee', 'hr'])->get();
+
+            foreach ($users as $user) {
+                $previousSalary = Salary::where('user_id', $user->id)
+                    ->orderBy('date', 'desc')
+                    ->first();
+
+                $amount = $previousSalary ? $previousSalary->amount : 0;
+
+                $salary = new Salary();
+                $salary->user_id = $user->id;
+                $salary->amount = $amount;
+                $salary->status = 'pending';
+                $salary->date = Carbon::now()->toDateString();
+                $salary->save();
+            }
         }
      \Log::info('Updated individual salaries to pending.');
     }

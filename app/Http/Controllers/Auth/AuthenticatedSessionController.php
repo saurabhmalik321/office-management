@@ -1,17 +1,18 @@
 <?php
- 
+
 namespace App\Http\Controllers\Auth;
- 
+
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
- 
+
 class AuthenticatedSessionController extends Controller
 {
     /**
@@ -24,43 +25,52 @@ class AuthenticatedSessionController extends Controller
             'status' => session('status'),
         ]);
     }
- 
+
     /**
-     * Handle an incoming authentication request.
+     * Handle an incoming authentication request for regular users.
      */
-    
     public function store(LoginRequest $request): RedirectResponse
     {
-        // $request->authenticate();
-        
-        // $request->session()->regenerate();
-        
-        // return redirect()->intended(route('dashboard', absolute: false));
-        
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
-        
-        // Find user by email
+        $credentials = $request->only('email', 'password');
+
+        // Check if email exists
         $user = User::where('email', $credentials['email'])->first();
-        //  dd($user);
-        // Ensure the user exists and has the 'admin' role
-        if ($user==null || $user->user_role === 'admin') {
-            return redirect()->route('login')->withErrors([
-                'email' => 'Invalid credentials or unauthorized access.',
-            ]);
+
+        if (!$user) {
+            return back()->withErrors([
+                'email' => 'The provided email does not exist.',
+            ])->onlyInput('email');
         }
-        
-        
-        if (Auth::attempt($credentials)) {
+
+        // Check if user is not an admin
+        if ($user->user_role === 'admin') {
+            return back()->withErrors([
+                'email' => 'This email is registered as an admin. Please use the admin login.',
+            ])->onlyInput('email');
+        }
+
+        // Check if password matches
+        if (!Hash::check($credentials['password'], $user->password)) {
+            return back()->withErrors([
+                'password' => 'The provided password is incorrect.',
+            ])->onlyInput('email', 'password');
+        }
+
+        // Attempt authentication
+        if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
             return redirect()->intended(route('dashboard', absolute: false));
         }
-        
-        return back()->withErrors(['email' => 'Invalid user credentials']);
+
+        // Fallback error (shouldn't reach here)
+        return back()->withErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ])->onlyInput('email');
     }
-    
+
+    /**
+     * Display the admin login view.
+     */
     public function adminCreate(): Response
     {
         return Inertia::render('Auth/AdminLogin', [
@@ -68,46 +78,60 @@ class AuthenticatedSessionController extends Controller
             'status' => session('status'),
         ]);
     }
+
+    /**
+     * Handle an incoming authentication request for admins.
+     */
     public function adminStore(LoginRequest $request): RedirectResponse
     {
-    $credentials = $request->validate([
-        'email' => ['required', 'email'],
-        'password' => ['required'],
-    ]);
-    $user = User::where('email', $credentials['email'])->first();
+        $credentials = $request->only('email', 'password');
 
-    // Check if user exists
-    // If user doesn't exist or doesn't have the correct role
-    if (!$user || !in_array($user->user_role, ['admin'])) {
-        return redirect()->route('admin.login')->withErrors([
-            'email' => 'Invalid credentials or unauthorized access.',
-        ]);
+        // Check if email exists
+        $user = User::where('email', $credentials['email'])->first();
+
+        if (!$user) {
+            return back()->withErrors([
+                'email' => 'The provided email does not exist.',
+            ])->onlyInput('email');
+        }
+
+        // Check if user is an admin
+        if ($user->user_role !== 'admin') {
+            return back()->withErrors([
+                'email' => 'This email is not registered as an admin.',
+            ])->onlyInput('email');
+        }
+
+        // Check if password matches
+        if (!Hash::check($credentials['password'], $user->password)) {
+            return back()->withErrors([
+                'password' => 'The provided password is incorrect.',
+            ])->onlyInput('email', 'password');
+        }
+
+        // Attempt authentication
+        if (Auth::attempt($credentials, $request->filled('remember'))) {
+            $request->session()->regenerate();
+            return redirect()->intended(route('dashboard', absolute: false));
+        }
+
+        // Fallback error (shouldn't reach here)
+        return back()->withErrors([
+            'email' => 'The provided admin credentials do not match our records.',
+        ])->onlyInput('email');
     }
 
-    // Try authenticating the user
-    if (Auth::attempt($credentials)) {
-        $request->session()->regenerate();
-
-        return redirect()->intended(route('dashboard', absolute: false));
-    }
-
-    return back()->withErrors([
-        'email' => 'Invalid admin credentials.',
-    ]);
-    }
-
- 
     /**
      * Destroy an authenticated session.
      */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
- 
+
         $request->session()->invalidate();
- 
+
         $request->session()->regenerateToken();
- 
+
         return redirect('/');
     }
 }

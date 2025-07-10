@@ -5,23 +5,23 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Box, Typography} from '@mui/material';
- 
+import { Box } from '@mui/material';
+
 export default function AdminLogin({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
         remember: false,
     });
- 
+
     const submit = (e) => {
         e.preventDefault();
- 
+
         post(route('admin.login.attempt'), {
             onFinish: () => reset('password'),
         });
     };
- 
+
     return (
         <Box>
             <Box>
@@ -41,22 +41,18 @@ export default function AdminLogin({ status, canResetPassword }) {
                 </Link>
             </Box>
             <GuestLayout>
- 
+
                 <Head title="Log in" />
                 {status && (
                     <div className="mb-4 text-sm font-medium text-green-600">
                         {status}
                     </div>
                 )}
- 
+
                 <form onSubmit={submit}>
                     <div>
-                         <Typography variant="h6" sx={{justifyContent : 'center' , display : "flex"}} component="h2">
-                            Admin Login
-                        </Typography>
-                         {errors.email && <Alert severity="error">{errors.email}</Alert>}
                         <InputLabel htmlFor="email" value="Email" />
- 
+
                         <TextInput
                             id="email"
                             type="email"
@@ -67,13 +63,13 @@ export default function AdminLogin({ status, canResetPassword }) {
                             isFocused={true}
                             onChange={(e) => setData('email', e.target.value)}
                         />
- 
+
                         <InputError message={errors.email} className="mt-2" />
                     </div>
- 
+
                     <div className="mt-4">
                         <InputLabel htmlFor="password" value="Password" />
- 
+
                         <TextInput
                             id="password"
                             type="password"
@@ -83,10 +79,10 @@ export default function AdminLogin({ status, canResetPassword }) {
                             autoComplete="current-password"
                             onChange={(e) => setData('password', e.target.value)}
                         />
- 
+
                         <InputError message={errors.password} className="mt-2" />
                     </div>
- 
+
                     <div className="mt-4 block">
                         <label className="flex items-center">
                             <Checkbox
@@ -101,7 +97,7 @@ export default function AdminLogin({ status, canResetPassword }) {
                             </span>
                         </label>
                     </div>
- 
+
                     <div className="mt-4 flex items-center justify-end">
                         {canResetPassword && (
                             <Link
@@ -111,7 +107,7 @@ export default function AdminLogin({ status, canResetPassword }) {
                                 Forgot your password?
                             </Link>
                         )}
- 
+
                         <PrimaryButton className="ms-4" disabled={processing}>
                             Log in
                         </PrimaryButton>
@@ -119,6 +115,6 @@ export default function AdminLogin({ status, canResetPassword }) {
                 </form>
             </GuestLayout>
         </Box>
- 
+
     );
 }

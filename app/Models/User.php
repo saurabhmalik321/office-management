@@ -13,6 +13,7 @@ use App\Models\Salary;
 use App\Models\Inquiry;
 use App\Models\UserHistory;
 use App\Models\Performance;
+use App\Models\SalaryCalculator;
 
 class User extends Authenticatable
 {
@@ -29,6 +30,11 @@ class User extends Authenticatable
         'email',
         'password',
         'user_role',
+        'joining_date',
+        'current_address',
+        'permanent_address',
+        'phone',
+        'alternate_phone'
     ];
 
     /**
@@ -73,6 +79,10 @@ class User extends Authenticatable
     public function user()
     {
         return $this->hasMany(Performance::class,'user_id');
+    }
+     public function salary_calculator()
+    {
+        return $this->hasMany(SalaryCalculator::class,'user_id');
     }
 }
 
