@@ -93,9 +93,11 @@ Route::post('/chat', [UserController::class, 'handleMessage']);
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/notifications', [UserController::class, 'sendNotification']);
+    Route::post('/notification/seen', [UserController::class, 'NotificationSeen']);
     Route::get('/employee', [UserController::class, 'onlyEmployee']);
     Route::get('/notification/{id}', [UserController::class, 'getNotification']);
     Route::delete('/notifications/{id}', [UserController::class, 'deleteNotification']);
+    Route::get('/seen-notification', [UserController::class, 'notificationSeenData']);
 });
 
 Route::middleware('auth')->group(function () {
