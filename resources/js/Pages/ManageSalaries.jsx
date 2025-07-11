@@ -123,7 +123,6 @@ export default function ManageSalaries() {
         return 'default';
     }
   };
-
    const months = [
     { value: '1', label: 'January' },
     { value: '2', label: 'February' },
@@ -410,7 +409,6 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
     getDefaultMonth();
     }, []);
 
-
   const columns = [
   {
     field: 'name',
@@ -474,30 +472,34 @@ const isTablet = useMediaQuery(theme.breakpoints.down('md'));
         //  {console.log(params.row.status,"status")}
       ),
   },
-  ...(!isRestricted
-    ? [
-      {
-        field: 'Salary Status',
-        headerName: 'Salary Status',
-        flex: 1,
-        minWidth: 160,
-        hide: isMobile || isTablet, // Hides on tablet & mobile
-        headerAlign: 'center',
-        align: 'center',
-        sortable: false,
-        renderCell: (params) => (
-          <Button
-          onClick={() => handleOpenNotification(params.row.id)}
-          size="small"
-          variant="outlined"
-          color="secondary"
-          sx={{ textTransform: 'capitalize', marginBottom:2.5}}
-          >
-              Mark Paid
-            </Button>
-          ),
-        },
-      ]
+    ...(!isRestricted 
+      ? [
+          {
+            field: 'Salary Status',
+            headerName: 'Salary Status',
+            flex: 1,
+            minWidth: 160,
+            hide: isMobile || isTablet,
+            headerAlign: 'center',
+            align: 'center',
+            sortable: false,
+            renderCell: (params) => {
+              return params.row.status !== 'paid' ? (
+                <Button
+                  onClick={() => handleOpenNotification(params.row.id)}
+                  size="small"
+                  variant="outlined"
+                  color="secondary"
+                  sx={{ textTransform: 'capitalize', marginBottom: 2.5 }}
+                >
+                  Mark Paid
+                </Button>
+              ) : (
+                <span style={{ color: 'green', fontWeight: 500 }}></span>
+              );
+            }
+          },
+        ]
       : []),
       {
         field: 'actions',

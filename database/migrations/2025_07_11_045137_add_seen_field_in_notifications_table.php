@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('settings', function (Blueprint $table) {
-            $table->id();
-            $table->date('date');
-            $table->timestamps();
+        Schema::table('notifications', function (Blueprint $table) {
+            $table->boolean('seen')->default(0)->nullable();
         });
     }
 
@@ -23,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('settings');
+        Schema::table('notifications', function (Blueprint $table) {
+            $table->dropColumn('seen');
+        });
     }
 };

@@ -8,6 +8,5 @@ class Settings extends Model
 {
     protected $fillable=[
         'date',
-        'day',
     ];
 }
