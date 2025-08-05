@@ -7,7 +7,11 @@ use App\Models\User;
 class Notification extends Model
 {
     protected $fillable = [
-        'hr_id', 'employee_id', 'title', 'message',
+        'hr_id', 
+        'employee_id', 
+        'title',
+        'message',
+        'seen',
     ];
 
     public function employee()

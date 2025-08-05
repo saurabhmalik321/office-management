@@ -663,7 +663,7 @@ const EmployeeDashboard = ({ auth, salary, performanceData, sectionLoading }) =>
                     >
                         Request Time Off
                     </Button>
-                    <Button
+                    {/* <Button
                         onClick={() => window.location.href = '/profile'}
                         variant="outlined"
                         sx={{
@@ -675,7 +675,7 @@ const EmployeeDashboard = ({ auth, salary, performanceData, sectionLoading }) =>
                         }}
                     >
                         Update Employee Profile
-                    </Button>
+                    </Button> */}
                 </Box>
             </div>
         </div>

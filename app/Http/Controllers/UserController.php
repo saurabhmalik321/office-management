@@ -539,7 +539,7 @@ class UserController extends Controller
 
      public function getDate()
     {
-       $date = Settings::all();
+       $date = Settings::orderBy('created_at', 'desc')->first();
        return $date;
     }
      public function putDate(Request $request)
@@ -548,6 +548,30 @@ class UserController extends Controller
        $date->date=$request->date;
        $date->save();
        return $date;
+    }
+
+    public function NotificationSeen(Request $request)
+    {
+       if($request->data['role']){
+       $notifications = Inquiry::where('user_id',$request->data['id'])->get();
+       }else{
+           $notifications = Notification::where('employee_id',$request->data['id'])->get();
+       }
+       foreach($notifications as $notification){
+           $notification->seen=$request->data['seen'];
+           $notification->save();
+        }
+       return $notifications;
+    }
+
+    public function notificationSeenData()
+    {
+        if(Auth::user()->user_role == 'hr'){
+            $notifications = Inquiry::where('user_id',Auth::id())->where('seen',0)->get();
+        }else{
+            $notifications = Notification::where('employee_id',Auth::id())->where('seen',0)->get();
+        }
+       return count($notifications);
     }
 
 }

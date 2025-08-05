@@ -40,7 +40,7 @@ export default function Settings() {
   };
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Messages</h2>}
+            header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Settings</h2>}
         >
 
         <Box p={3} maxWidth={400} mx="auto">
